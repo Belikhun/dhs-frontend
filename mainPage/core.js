@@ -456,6 +456,9 @@ const core = {
 			const createInput = (type, id, label, value, required = false) => {
 				let formGroup = document.createElement("div");
 				formGroup.classList.add("formGroup");
+				formGroup.dataset.soundhoversoft = "";
+				formGroup.dataset.soundselectsoft = "";
+				sounds.applySound(formGroup);
 		
 				let formField = document.createElement(type === "textarea" ? type : "input");
 				formField.type = type;
@@ -463,8 +466,6 @@ const core = {
 				formField.classList.add("formField");
 				formField.placeholder = label;
 				formField.value = value;
-				formField.dataset.soundselectsoft = "";
-				sounds.applySound(formField);
 				if (required)
 					formField.required = true;
 		
@@ -611,6 +612,36 @@ const core = {
 						else if (item.type === "checkbox")
 							input = createSwitch(item.label, item.color || "pink", item.value || false);
 
+						else if (item.type === "switch") {
+							input = { input: null }
+
+							if (!settingList[item.name])
+								settingList[item.name] = {
+									type: "switch",
+									inputList: {},
+									changeHandler: [],
+									onChange(key, f = () => {}) { this.changeHandler.push({ key: key, f: f }) },
+									triggerChange(e) {
+										clog("DEBG", "Switch Change", e);
+										for (let h of this.changeHandler)
+											h.f({ ...e, target: this.inputList[h.key] });
+									},
+									getValue() {
+										for (let key of Object.keys(this.inputList))
+											if (this.inputList[key].checked === true)
+												return this.inputList[key].value;
+									}
+								}
+							
+							let _i = createSwitch(item.label, item.color || "blue", item.value || false, "radio");
+							_i.input.addEventListener("change", e => settingList[item.name].triggerChange(e));
+							_i.input.name = item.name;
+							_i.input.value = key;
+
+							settingList[item.name].inputList[key] = _i.input;
+							input.group = _i.group;
+						}
+
 						else if (item.type === "radio") {
 							let defValue = item.type.default || null;
 							let group = document.createElement("div");
@@ -639,21 +670,34 @@ const core = {
 									}
 								}
 							}
-						} else
+						}
+						
+						else
 							reject({ code: -1, description: "Unknown item type when Script preparing settings value: " + item.type, data: item })
 
 						if (item.depend) {
 							let _t = item;
 							let _i = input.input;
 
-							_i.disabled = (!settingList[_t.depend].value) ^ (_t.doubt || false);
-							settingList[_t.depend]
-								.inputElement
-								.addEventListener("change", e => _i.disabled = (!e.target.checked) ^ (_t.doubt || false));
+							let _o = _t.depend.split(":");
+							if (_o.length === 2) {
+								_i.disabled = (!settingList[_o[0]].inputList[_o[1]].checked) ^ (_t.doubt || false);
+								settingList[_o[0]]
+									.onChange(_o[1], e => { _i.disabled = (!e.target.checked) ^ (_t.doubt || false) });
+							} else {
+								_i.disabled = (!settingList[_t.depend].inputElement.checked) ^ (_t.doubt || false);
+								settingList[_t.depend]
+									.inputElement
+									.addEventListener("change", e => { _i.disabled = (!e.target.checked) ^ (_t.doubt || false) });
+							}
 						}
 
 						this.script.settings.form.appendChild(input.group);
-						settingList[key].inputElement = input.input;
+
+						if (input.input)
+							settingList[key].inputElement = input.input;
+						else
+							delete settingList[key];
 					}
 
 					let buttonBox = document.createElement("span");
@@ -682,6 +726,8 @@ const core = {
 								returnData[key] = item.inputElement.checked;
 							else if (item.type === "radio")
 								returnData[key] = item.inputElement.getValue();
+							else if (item.type === "switch")
+								returnData[key] = item.getValue();
 							else if (item.type === "note")
 								continue;
 							else

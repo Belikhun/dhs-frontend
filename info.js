@@ -8,7 +8,7 @@
 const APPNAME = "Deal Hunter Suite";
 const DESCRIPTION = "Provide all the Tools needed for Sale Hunter!";
 const CODENAME = "Nadeshiko";
-const VERSION = "1.0";
+const VERSION = "1.1";
 
 const AUTHOR = "Team DHS";
 // const SERVER_ADDR = "http://localhost";
