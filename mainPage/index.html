@@ -26,6 +26,7 @@
     <link rel="stylesheet" type="text/css" media="screen" href="/assets/css/button.css" />
     <!-- Main Script -->
     <link rel="stylesheet" type="text/css" media="screen" href="tutorial.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="subScreen.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="style.css" />
     
     <!-- App info -->
@@ -33,7 +34,7 @@
 </head>
 
 <body class="dark">
-    <div id="mainBox" class="main" data-layout="1">
+    <span id="mainBox" class="main" data-layout="1">
         <div class="splash">
             <img class="icon" src="/assets/img/icon@64x64.png">
             <span class="info">
@@ -208,7 +209,9 @@
             <span id="tutorialPageIndicator" class="pageIndicator"></span>
             <button id="tutorialPageButton" class="sq-btn blue sounds" data-soundhover data-soundselect>Tiếp</button>
         </div>
-    </div>
+    </span>
+
+    <span id="subScreen" class="sub"></span>
     
     <!-- Javascript lib -->
     <script type="text/javascript" src="/assets/js/belibrary.js"></script>

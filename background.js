@@ -6,7 +6,7 @@ chrome.browserAction.onClicked.addListener(tab => {
     chrome.windows.create({
         url: chrome.extension.getURL("/mainPage/index.html"),
         width: 420,
-        height: 680,
+        height: 700,
         type: "panel",
         setSelfAsOpener: true
     });

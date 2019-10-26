@@ -393,6 +393,24 @@ const core = {
 		this.mainBox.dataset.layout = id;
 	},
 
+	subScreen: {
+		container: $("#subScreen"),
+
+		show(node = document.createElement("span"), layout = "blank") {
+			this.container.innerHTML = "";
+			this.container.setAttribute("layout", layout);
+			this.container.append(...node.childNodes);
+			window.resizeTo(1340, window.outerHeight);
+			this.container.classList.add("show");
+		},
+
+		hide() {
+			this.container.classList.remove("show");
+			this.container.innerHTML = "";
+			window.resizeTo(420, window.outerHeight);
+		}
+	},
+
 	dataSave(data) {
 		return new Promise((resolve, reject) => {
 			chrome.storage.local.set(data, (res) => {
@@ -466,8 +484,15 @@ const core = {
 				formField.classList.add("formField");
 				formField.placeholder = label;
 				formField.value = value;
+
 				if (required)
 					formField.required = true;
+
+				if (type === "textarea") {
+					formField.style.fontFamily = "Consolas";
+					formField.style.fontWeight = "bold";
+					formField.style.fontSize = "15px";
+				}
 		
 				let formLabel = document.createElement("label");
 				formLabel.htmlFor = id;
@@ -538,16 +563,16 @@ const core = {
 				else
 					this.script.settings.info.container.style.display = "flex";
 
-				if (id)
+				if (id !== null)
 					this.script.settings.info.id.innerText = id;
 
-				if (title)
+				if (title !== null)
 					this.script.settings.info.title.innerText = title;
 
-				if (price)
+				if (price !== null)
 					this.script.settings.info.price.innerText = price;
 
-				if (tags)
+				if (tags !== null)
 					this.script.settings.info.tags.innerHTML = tags.map(i => `<tag>${i}</tag>`).join("");
 			}
 
@@ -656,6 +681,7 @@ const core = {
 								btn.input.name = `ssr_${key}`;
 								btn.input.value = _i.value;
 								btn.input.required = item.required || false;
+								btn.input.checked = _i.checked || false;
 								group.appendChild(btn.group);
 							}
 
@@ -853,59 +879,58 @@ const core = {
 			} = {}) => {
 				this.script.status.container.dataset.dataType = dataType;
 
-				if (status)
+				if (status !== null)
 					this.script.status.status.innerText = status;
 
-				if (time) {
+				if (time !== null) {
 					let _t = parseTime(time);
 					this.script.status.timer.innerHTML = `${_t.str}<ms>${_t.ms}</ms>`;
 				}
 
-				if (progress) {
+				if (progress !== null) {
 					progress = Math.min(progress, 100);
 					this.script.status.bar.dataset.color = (progress >= 80 && progWarn) ? "red" : "green";
 					this.script.status.bar.style.width = `${progress}%`;
 				}
 
-				if (now)
+				if (now !== null)
 					this.script.status.barNow.innerText = now;
 
-				if (end)
+				if (end !== null)
 					this.script.status.barEnd.innerText = end;
 
 				if (dataType === "price") {
 					this.script.status.current.classList.add("price");
 					this.script.status.target.classList.add("price");
 
-					if (current)
+					if (current !== null)
 						this.script.status.current.innerText = priceFormat(current);
 
-					if (target)
+					if (target !== null)
 						this.script.status.target.innerText = priceFormat(target);
 				} else {
 					this.script.status.current.classList.remove("price");
 					this.script.status.target.classList.remove("price");
 
-					if (current)
+					if (current !== null)
 						this.script.status.current.innerText = current;
 
-					if (target)
+					if (target !== null)
 						this.script.status.target.innerText = target;
 				}
 
 				if (typeof saved === "number") {
-					clog("debg", saved);
 					this.script.status.priceSaved.dataset.color = (saved === 0) ? "yellow" : (saved < 0) ? "green" : "red";
 					this.script.status.priceSaved.innerText = `${(saved < 0) ? "-" : "+"}${Math.abs(saved).toFixed(2)}%`;
 				}
 
-				if (itemStatus)
+				if (itemStatus !== null)
 					this.script.status.itemStatus.innerText = itemStatus;
 
-				if (itemStatusColor)
+				if (itemStatusColor !== null)
 					this.script.status.itemStatus.dataset.color = itemStatusColor;
 
-				if (checkDetail)
+				if (checkDetail !== null)
 					this.script.status.checkDetail.innerHTML = checkDetail;
 			}
 

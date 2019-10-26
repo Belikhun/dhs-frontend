@@ -70,7 +70,7 @@ function myajax({
                     return;
                 }
                 
-                if ((this.responseText === "" || !this.responseText) && this.status !== 200) {
+                if ((this.responseText === "" || !this.responseText) && this.status >= 400) {
                     clog("errr", {
                         color: flatc("red"),
                         text: `HTTP ${this.status}:`
@@ -102,7 +102,7 @@ function myajax({
                         return;
                     }
 
-                    if (this.status !== 200 || (res.code !== 0 && res.code < 100)) {
+                    if (this.status >= 400 || (res.code !== 0 && res.code < 100)) {
                         clog("errr", {
                             color: flatc("magenta"),
                             text: method
@@ -139,10 +139,10 @@ function myajax({
 
                     data = res;
                 } else {
-                    if (this.status !== 200) {
+                    if (this.status >= 400) {
                         clog("errr", {
                             color: flatc("red"),
-                            text: "HTTP " + this.status
+                            text: "HTTP" + this.status
                         }, this.statusText, {
                             color: flatc("magenta"),
                             text: method
