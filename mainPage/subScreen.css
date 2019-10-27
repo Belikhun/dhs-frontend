@@ -228,7 +228,6 @@
     font-weight: bold;
     font-size: 18px;
     color: #98ea98;
-    margin-right: 10px;
 }
 
 #subScreen[layout="dealHunt"] .container .itemList .item .priceInfo .old {
@@ -245,12 +244,35 @@
     margin-left: 10px;
 }
 
+#subScreen[layout="dealHunt"] .container .itemList .item .blackList {
+    position: absolute;
+    display: block;
+    bottom: 10px;
+    left: 10px;
+    cursor: pointer;
+}
+
+#subScreen[layout="dealHunt"] .container .itemList .item .blackList::before {
+    content: "\f056";
+    font-family: "Font Awesome 5 Free";
+    font-size: 20px;
+    font-weight: 900;
+    color: rgb(86, 86, 86);
+
+    transition: color 0.3s ease;
+}
+
+#subScreen[layout="dealHunt"] .container .itemList .item .blackList:hover::before {
+    color: rgb(244, 108, 108);
+}
+
 #subScreen[layout="dealHunt"] .container.allList .itemList {
 	flex-direction: column;
 }
 
 #subScreen[layout="dealHunt"] .container.allList .itemList .item {
-	flex-direction: row;
+    flex-direction: row;
+    align-items: center;
     width: calc(100% - 20px);
     max-width: unset;
     padding: 10px 20px;
@@ -287,4 +309,11 @@
 
 #subScreen[layout="dealHunt"] .container.allList .item .priceInfo .discount {
 	margin-left: unset;
+}
+
+#subScreen[layout="dealHunt"] .container.allList .itemList .item .blackList {
+    position: relative;
+    bottom: unset;
+    left: unset;
+    margin-left: 20px;
 }

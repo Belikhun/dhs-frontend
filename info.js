@@ -8,11 +8,14 @@
 const APPNAME = "Deal Hunter Suite";
 const DESCRIPTION = "Provide all the Tools needed for Sale Hunter!";
 const CODENAME = "Nadeshiko";
-const VERSION = "1.2";
+const VERSION = "1.5";
+const STATE = "indev";
 
 const AUTHOR = "Team DHS";
-const SERVER_ADDR = "http://localhost";
-// const SERVER_ADDR = "https://dealhunter.000webhostapp.com";
+const SERVER_ADDR = {
+    release: "https://dealhunter.000webhostapp.com",
+    indev: "http://localhost"
+}[STATE];
 
 const API = {
     avatar: "/api/avatar",

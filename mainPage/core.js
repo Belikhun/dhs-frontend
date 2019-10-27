@@ -109,9 +109,17 @@ const core = {
 		splash.set({ p: 10, i: "Preparing infoPopup" });
 		await popup.init();
 
+		//? |-----------------------|
+		//? |      SOUNDS INIT      |
+		//? |-----------------------|
+
 		splash.set({ p: 20, i: "Loading all the sounds thingy" });
 		cookie.set("__s_m", true);
 		await sounds.init();
+
+		//? |-----------------------|
+		//? |     INFOPAGE INIT     |
+		//? |-----------------------|
 
 		splash.set({ p: 30, i: "Preparing Info Page" });
 		this.appInfo.title.innerText = APPNAME;
@@ -146,8 +154,16 @@ const core = {
 				this.changeLayout(7);
 		})
 
+		//? |-----------------------|
+		//? |     GENERATE UUID     |
+		//? |-----------------------|
+
 		splash.set({ p: 40, i: "Generating Client UUID" });
 		this.uniqueKeys = await this.generateKey();
+
+		//? |-----------------------|
+		//? |   SERVER COMM CHECK   |
+		//? |-----------------------|
 
 		splash.set({ p: 50, i: "Kiểm tra kết nối tới máy chủ" });
 		try {
@@ -171,6 +187,20 @@ const core = {
 
 		this.info = serverStatus.data;
 
+		if (this.info.EXTENSION_ANNOUNCEMENT.enabled === true) {
+			let a = this.info.EXTENSION_ANNOUNCEMENT;
+
+			let aBox = document.createElement("div");
+			aBox.classList.add("note", a.level);
+
+			let aBoxInner = document.createElement("div");
+			aBoxInner.classList.add("inner");
+			aBoxInner.innerHTML = a.message;
+
+			aBox.appendChild(aBoxInner);
+			this.script.info.container.appendChild(aBox);
+		}
+
 		if (this.info.EXTENSION_VERSION !== VERSION) {
 			await popup.show({
 				title: "Đã có phiên bản mới!",
@@ -185,6 +215,10 @@ const core = {
 			});
 		}
 
+		//? |-----------------------|
+		//? |     LICENSE CHECK     |
+		//? |-----------------------|
+
 		splash.set({ p: 60, i: "Đang kiểm tra bản quyền" });
 		while (!await this.auth()) { clog("INFO", "Auth failed. Retrying"); }
 
@@ -198,21 +232,49 @@ const core = {
 		this.appInfo.license.appendChild(licenseTimer);
 		this.appInfo.key.innerText = this.session.keyData.key;
 
+		//? |-----------------------|
+		//? |     TAB COMM CHECK    |
+		//? |-----------------------|
+
 		splash.set({ p: 70, i: "Kiểm tra liên lạc với trang hiện tại" });
-		clog("DEBG", "Page communication check result:", await this.sendCommand("status"));
+		let commCheck = {}
+		try {
+			commCheck = await this.sendCommand("status");
+		} catch(e) {
+			clog("ERRR", "COMM Check Failed!");
+			//! Ignore this Error
+		} finally {
+			clog("DEBG", "Page communication check result:", commCheck);
+		}
+
+		//? |-----------------------|
+		//? |   FETCH SCRIPT LIST   |
+		//? |-----------------------|
 
 		splash.set({ p: 80, i: "Lấy thông tin danh sách script" });
 		await this.fetchScriptList();
 
+		//? |-----------------------|
+		//? |    ATTACH LISTENER    |
+		//? |-----------------------|
+
 		splash.set({ p: 90, i: "Setting up Listeners" });
 		chrome.tabs.onUpdated.addListener((t, c) => this.checkPage(t, c));
 		this.script.info.reload.addEventListener("mouseup", e => this.reload(true));
+
+		//? |-----------------------|
+		//? |     TRIANGLES INIT    |
+		//? |-----------------------|
 
 		splash.set({ p: 95, i: "Beautifying The Layout" });
 		triBg(this.script.info.container, { color: "brown", triangleCount: 12 });
 		triBg(this.script.settings.info.container, { color: "gray", triangleCount: 12 });
 		triBg(this.script.status.container, { color: "dark" });
 		triBg(this.appInfo.container, { color: "navyBlue" });
+
+		//? |-----------------------|
+		//? |       END INIT        |
+		//? |-----------------------|
 
 		clearInterval(randMsgI);
 		splash.set({ p: 100, i: "" });
@@ -258,7 +320,7 @@ const core = {
 		this.script.info.title.innerText = this.page.title;
 		this.script.info.path.innerText = this.page.url.pathname;
 
-		this.script.info.tab.innerText = this.page.id;
+		this.script.info.tab.innerText = this.page.id || "Không Rõ";
 	},
 
 	findTarget() {
@@ -270,6 +332,17 @@ const core = {
 			}, (tabs) => {
 				if (!tabs[0]) {
 					reject({ code: -1, description: "Vui lòng khởi động tool trên 1 trang web!" });
+					
+					this.page = {
+						url: {
+							hostname: "Không Thể Liên Lạc Tới Tab Hiện Tại",
+							pathname: "/"
+						},
+						title: "Vui lòng đi tới 1 trang web và nhấn nút làm mới để kết nối lại",
+						id: null
+					}
+
+					this.updatePageInfo();
 					return;
 				}
 
@@ -279,14 +352,19 @@ const core = {
 					this.page.url = new URL(this.page.url);
 
 				this.updatePageInfo();
-				resolve(true);
+				resolve();
 			});
 		})
 	},
 
 	async sendCommand(command = "status", data = Array()) {
 		if (!this.page.id)
-			await this.findTarget();
+			try {
+				await this.findTarget();
+			} catch(e) {
+				clog("ERRR", e);
+				return new Promise((resolve, reject) => reject(e));
+			}
 
 		return new Promise((resolve, reject) => {
 			chrome.tabs.sendMessage(this.page.id, { action: command, data: data }, response => {
@@ -558,10 +636,7 @@ const core = {
 				tags = null,
 				hide = false
 			} = {}) => {
-				if (hide)
-					this.script.settings.info.container.style.display = "none";
-				else
-					this.script.settings.info.container.style.display = "flex";
+				this.script.settings.info.container.dataset.hide = hide;
 
 				if (id !== null)
 					this.script.settings.info.id.innerText = id;
@@ -629,8 +704,12 @@ const core = {
 						else if (item.type === "note") {
 							let group = document.createElement("div");
 							group.classList.add("note", item.level || "info");
-							group.innerHTML = item.text;
+							
+							let inner = document.createElement("div");
+							inner.classList.add("inner");
+							inner.innerHTML = item.text;
 
+							group.appendChild(inner);
 							input = { group: group }
 						}
 						
@@ -996,6 +1075,13 @@ const core = {
 		let ram = await this.__getRAMInfo();
 		let disk = await this.__getDiskInfo();
 		let keyString = "";
+		let diskCap = 0;
+
+		for (let item of disk)
+			if (item.type === "fixed")  {
+				diskCap = item.capacity;
+				break;
+			}
 
 		// Get raw key
 		keyString = [
@@ -1004,7 +1090,7 @@ const core = {
 			cpu.modelName,
 			cpu.numOfProcessors,
 			ram.capacity,
-			disk[0].capacity
+			diskCap
 		].join(":");
 
 		// encode as UTF-8
