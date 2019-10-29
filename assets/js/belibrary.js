@@ -140,10 +140,26 @@ function myajax({
                     data = res;
                 } else {
                     if (this.status >= 400) {
+                        let code = "HTTP" + this.status;
+                        let text = this.statusText;
+                        let resData = res;
+
+                        let header = this.getResponseHeader("output-json");
+
+                        if (header) {
+                            let headerJSON = JSON.parse(header);
+
+                            if (!resData)
+                                resData = headerJSON;
+
+                            code = `HTTP ${headerJSON.status} [${headerJSON.code}]`
+                            text = headerJSON.description;
+                        }
+
                         clog("errr", {
                             color: flatc("red"),
-                            text: "HTTP" + this.status
-                        }, this.statusText, {
+                            text: code
+                        }, text, {
                             color: flatc("magenta"),
                             text: method
                         }, {
@@ -151,7 +167,7 @@ function myajax({
                             text: url
                         });
 
-                        let errorObj = { code: 3, description: `HTTP ${this.status}: ${this.statusText}`, data: res }
+                        let errorObj = { code: 3, description: `${code}: ${text}`, data: resData }
                         error(errorObj);
                         reject(errorObj);
 

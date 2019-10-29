@@ -60,7 +60,10 @@ const core = {
 				price: $("#scriptSettingsInfoPrice"),
 				tags: $("#scriptSettingsInfoTags")
 			},
-			form: $("#scriptSettingsForm")
+			form: $("#scriptSettingsForm"),
+			formList: $("#scriptSettingsFormList"),
+			formCancel: $("#scriptSettingsFormCancel"),
+			formSubmit: $("#scriptSettingsFormSubmit")
 		},
 		logs: $("#scriptRunLogs"),
 		status: {
@@ -653,7 +656,7 @@ const core = {
 
 			const setup = async (settingList, { confirm = "Bắt đầu", cancel = "Hủy" } = {}) => {
 				return new Promise((resolve, reject) => {
-					this.script.settings.form.innerHTML = "";
+					this.script.settings.formList.innerHTML = "";
 
 					for (let key of Object.keys(settingList)) {
 						let item = settingList[key];
@@ -797,7 +800,7 @@ const core = {
 							}
 						}
 
-						this.script.settings.form.appendChild(input.group);
+						this.script.settings.formList.appendChild(input.group);
 
 						if (input.input)
 							settingList[key].inputElement = input.input;
@@ -805,16 +808,9 @@ const core = {
 							delete settingList[key];
 					}
 
-					let buttonBox = document.createElement("span");
-					buttonBox.classList.add("buttonBox");
-					let confirmButton = createBtn(confirm, "green");
-					confirmButton.type = "submit";
-					let cancelButton = createBtn(cancel, "red");
-					cancelButton.addEventListener("mouseup", e => { scriptCancelHandler(); this.changeLayout(3) });
-					buttonBox.appendChild(cancelButton);
-					buttonBox.appendChild(confirmButton);
-
-					this.script.settings.form.appendChild(buttonBox);
+					this.script.settings.formSubmit.innerText = confirm;
+					this.script.settings.formCancel.innerText = cancel;
+					this.script.settings.formCancel.onmouseup = e => { scriptCancelHandler(); this.changeLayout(3) }
 					this.changeLayout(5);
 
 					// Form submit action
@@ -846,7 +842,7 @@ const core = {
 						clog("INFO", "Script settings Submitted");
 					}
 
-					this.script.settings.form.scrollTop = 0;
+					this.script.settings.formList.scrollTop = 0;
 				});
 			}
 

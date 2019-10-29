@@ -607,31 +607,29 @@ body {
 .main .container .scriptSettings .settingsPage {
     position: relative;
     display: flex;
-    flex-grow: 0;
-    flex-shrink: 1;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.main .container .scriptSettings .settingsPage .list {
+    position: relative;
+    display: flex;
+    flex-grow: 1;
     flex-direction: column;
     align-items: center;
-    padding: 0 20px;
+    padding: 20px;
     box-sizing: border-box;
     overflow: auto;
 }
 
-.main .container .scriptSettings .settingsPage > :first-child {
-    margin-top: 20px;
-}
-
-.main .container .scriptSettings .settingsPage > :last-child {
-    margin-bottom: 20px;
-}
-
-.main .container .scriptSettings .settingsPage .formGroup {
+.main .container .scriptSettings .settingsPage .list .formGroup {
     display: flex;
     flex-direction: row;
     align-items: center;
     width: 100%;
 }
 
-.main .container .scriptSettings .settingsPage .switchContainer {
+.main .container .scriptSettings .settingsPage .list .switchContainer {
     position: relative;
     display: flex;
     flex-direction: row;
@@ -642,7 +640,7 @@ body {
     padding: 16px 0 10px 0;
 }
 
-.main .container .scriptSettings .settingsPage .switchContainer > span {
+.main .container .scriptSettings .settingsPage .list .switchContainer > span {
     position: relative;
     flex-grow: 1;
     margin-right: 10px;
@@ -650,7 +648,7 @@ body {
     color: #dadada;
 }
 
-.main .container .scriptSettings .settingsPage .radioGroup {
+.main .container .scriptSettings .settingsPage .list .radioGroup {
     position: relative;
     display: block;
     max-width: 300px;
@@ -658,7 +656,7 @@ body {
     margin-top: 20px;
 }
 
-.main .container .scriptSettings .settingsPage .radioGroup .label {
+.main .container .scriptSettings .settingsPage .list .radioGroup .label {
     position: relative;
     display: block;
     font-weight: bold;
@@ -669,16 +667,23 @@ body {
 .main .container .scriptSettings .settingsPage .buttonBox {
     position: relative;
     display: flex;
+    flex-grow: 0;
     flex-wrap: wrap;
     flex-direction: row;
     align-items: center;
     justify-content: center;
     width: 100%;
-    margin-top: 20px;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    background-color: #1e1e1e;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
 }
 
 .main .container .scriptSettings .settingsPage .buttonBox > button {
     margin: 5px;
+    flex-grow: 1;
+    flex-basis: 0;
 }
 
 .main .container .scriptRunLogs {
