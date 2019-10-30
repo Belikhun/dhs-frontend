@@ -12,6 +12,12 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             response = { code: 0, description: "Command received!", data: { loaded: pageLoaded } }
             break;
 
+        case "stopLoad":
+            window.stop();
+            
+            response = { code: 0, description: "Success!", data: {} }
+            break;
+
         case "queryText":
             var _e = document.querySelector(message.data.query);
 

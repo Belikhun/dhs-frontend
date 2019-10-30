@@ -715,6 +715,11 @@ const core = {
 							group.appendChild(inner);
 							input = { group: group }
 						}
+
+						else if (item.type === "customNode") {
+							item.node.classList.add("customNode");
+							input = { group: item.node }
+						}
 						
 						else if (item.type === "checkbox")
 							input = createSwitch(item.label, item.color || "pink", item.value || false);
@@ -829,7 +834,7 @@ const core = {
 								returnData[key] = item.inputElement.getValue();
 							else if (item.type === "switch")
 								returnData[key] = item.getValue();
-							else if (item.type === "note")
+							else if (item.type === "note" || item.type === "customNode")
 								continue;
 							else
 								returnData[key] = item.inputElement.value;

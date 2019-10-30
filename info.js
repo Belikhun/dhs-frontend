@@ -8,7 +8,7 @@
 const APPNAME = "Deal Hunter Suite";
 const DESCRIPTION = "Provide all the Tools needed for Sale Hunter!";
 const CODENAME = "Nadeshiko";
-const VERSION = "1.6";
+const VERSION = "1.7";
 const STATE = "release";
 
 const AUTHOR = "Team DHS";

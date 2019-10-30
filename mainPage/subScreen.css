@@ -68,14 +68,14 @@
     align-items: center;
 }
 
-#subScreen[layout="dealHunt"] .container .header .pageChange .next,
-#subScreen[layout="dealHunt"] .container .header .pageChange .prev {
+#subScreen[layout="dealHunt"] .container .header .pageChange > span {
 	position: relative;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
     width: 26px;
     height: 26px;
+    margin: 0 5px;
     background-color: #3b3b3b;
 	border-radius: 50%;
 	cursor: pointer;
@@ -84,25 +84,36 @@
 		background-color 0.3s ease;
 }
 
-#subScreen[layout="dealHunt"] .container .header .pageChange .next:hover,
-#subScreen[layout="dealHunt"] .container .header .pageChange .prev:hover {
+#subScreen[layout="dealHunt"] .container .header .pageChange > span:hover {
     background-color: #525252;
 }
 
-#subScreen[layout="dealHunt"] .container .header .pageChange .next::before,
-#subScreen[layout="dealHunt"] .container .header .pageChange .prev::before {
+#subScreen[layout="dealHunt"] .container .header .pageChange > span::before {
 	content: "\f105";
     position: relative;
     font-family: "Font Awesome 5 Free";
     font-size: 16px;
 	font-weight: 900;
-	padding: 0 0 0 2px;
     color: rgb(204, 204, 204);
 }
 
+#subScreen[layout="dealHunt"] .container .header .pageChange .forward::before {
+    content: "\f050";
+    font-size: 13px;
+}
+
+#subScreen[layout="dealHunt"] .container .header .pageChange .next::before {
+	padding: 0 0 0 2px;
+}
+
 #subScreen[layout="dealHunt"] .container .header .pageChange .prev::before {
-	content: "\f104";
+    content: "\f104";
 	padding: 0 2px 0 0;
+}
+
+#subScreen[layout="dealHunt"] .container .header .pageChange .backward::before {
+    content: "\f049";
+    font-size: 13px;
 }
 
 #subScreen[layout="dealHunt"] .container .header .pageChange .current {
@@ -110,7 +121,7 @@
     font-size: 12px;
 	font-weight: bold;
     letter-spacing: 1.5px;
-    margin: 0 10px;
+    margin: 0 5px;
 }
 
 #subScreen[layout="dealHunt"] .container .itemList {

@@ -1,0 +1,99 @@
+/* 
+? |-----------------------------------------------------------------------------------------------|
+? |  /popupPage/settingCustomNode.css                                                             |
+? |                                                                                               |
+? |  Copyright (c) 2018-2019 Belikhun. All right reserved                                         |
+? |  Licensed under the MIT License. See LICENSE in the project root for license information.     |
+? |-----------------------------------------------------------------------------------------------|
+*/
+
+.customNode.priceHistory {
+	position: relative;
+    display: block;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.customNode.priceHistory .title {
+	font-family: Calibri;
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.customNode.priceHistory .chart {
+	position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    width: 100%;
+    height: 40px;
+}
+
+.customNode.priceHistory .chart > .bar {
+	position: relative;
+    display: inline-block;
+	flex-grow: 1;
+	margin: 0 1px;
+    background-color: #666666;
+}
+
+.customNode.priceHistory .chart > .bar.max {
+	background-color: #dd5c5c;
+}
+
+.customNode.priceHistory .chart > .bar.min {
+	background-color: #8aef65;
+}
+
+.customNode.priceHistory .chart > .avgLine {
+	position: absolute;
+	display: block;
+	left: 0px;
+	width: 100%;
+	height: 2px;
+	background-color: rgba(236, 226, 82, 0.8);
+}
+
+.customNode.priceHistory .info {
+	position: relative;
+    display: flex;
+    flex-direction: row;
+	align-items: center;
+	margin-top: 10px;
+}
+
+.customNode.priceHistory .info .col {
+	position: relative;
+	display: flex;
+	flex: 1 0 0;
+	flex-direction: column;
+	align-items: center;
+}
+
+.customNode.priceHistory .info .col t {
+	font-family: Exo;
+    font-weight: 600;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: #b7b7b7;
+}
+
+.customNode.priceHistory .info .col .price {
+	font-family: Calibri;
+    font-size: 17px;
+    font-weight: bold;
+}
+
+.customNode.priceHistory .info .col.max .price {
+	color: #ffa3a3;
+}
+
+.customNode.priceHistory .info .col.avg .price {
+	color: #f9e764;
+}
+
+.customNode.priceHistory .info .col.min .price {
+	color: #cbf34f;
+}
