@@ -11,7 +11,7 @@
 	position: relative;
     display: block;
     width: 100%;
-    margin-bottom: 20px;
+	margin-bottom: 20px;
 }
 
 .customNode.priceHistory .title {
@@ -27,7 +27,25 @@
     flex-direction: row;
     align-items: flex-end;
     width: 100%;
-    height: 40px;
+	height: 40px;
+}
+
+.customNode.priceHistory.noData .chart::after {
+	content: "Không có lịch sử giá";
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    font-family: Exo;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background-color: rgba(41, 41, 41, 0.5);
 }
 
 .customNode.priceHistory .chart > .bar {
@@ -35,7 +53,15 @@
     display: inline-block;
 	flex-grow: 1;
 	margin: 0 1px;
-    background-color: #666666;
+	cursor: pointer;
+	background-color: #666666;
+	
+	filter: brightness(1);
+	transition: filter 0.3s ease;
+}
+
+.customNode.priceHistory .chart > .bar:hover {
+	filter: brightness(1.4);
 }
 
 .customNode.priceHistory .chart > .bar.max {
