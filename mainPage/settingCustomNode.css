@@ -28,6 +28,7 @@
     align-items: flex-end;
     width: 100%;
 	height: 40px;
+	margin-top: 20px;
 }
 
 .customNode.priceHistory.noData .chart::after {
@@ -48,6 +49,16 @@
     background-color: rgba(41, 41, 41, 0.5);
 }
 
+.customNode.priceHistory .chart > .deltaTime {
+	position: absolute;
+    display: block;
+	font-family: Consolas;
+	font-size: 11px;
+	color: #dddddd;
+    top: -20px;
+    right: 0;
+}
+
 .customNode.priceHistory .chart > .bar {
 	position: relative;
     display: inline-block;
@@ -65,20 +76,25 @@
 }
 
 .customNode.priceHistory .chart > .bar.max {
-	background-color: #dd5c5c;
+	background-color: #ff8383;
 }
 
 .customNode.priceHistory .chart > .bar.min {
 	background-color: #8aef65;
 }
 
+.customNode.priceHistory .chart > .bar.cur {
+	background-color: #1d617c;
+}
+
 .customNode.priceHistory .chart > .avgLine {
 	position: absolute;
 	display: block;
-	left: 0px;
+	bottom: 0;
+	left: 0;
 	width: 100%;
 	height: 2px;
-	background-color: rgba(236, 226, 82, 0.8);
+	background-color: rgba(236, 226, 82, 1);
 }
 
 .customNode.priceHistory .info {
