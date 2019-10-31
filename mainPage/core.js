@@ -282,6 +282,7 @@ const core = {
 		clearInterval(randMsgI);
 		splash.set({ p: 100, i: "" });
 		clog("OKAY", "Initialized");
+		_gaq.push(["_trackEvent", "pageLoad", "initialized", "core.js Initialized"]);
 		
 		if (!(await this.dataLoad("licensed")).licensed) {
 			tutorial.init();
@@ -523,6 +524,7 @@ const core = {
 			return false;
 
 		clog("INFO", "Call to scriptPreInit ScriptID", id);
+		_gaq.push(["_trackEvent", "runScript", id, `Run Script ID ${id}`]);
 		this.scriptIniting = true;
 		this.changeLayout(4);
 		sounds.confirm();
