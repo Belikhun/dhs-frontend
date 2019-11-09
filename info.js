@@ -8,8 +8,8 @@
 const APPNAME = "Deal Hunter Suite";
 const DESCRIPTION = "Provide all the Tools needed for Deal Hunter!";
 const CODENAME = "Nadeshiko";
-const VERSION = "1.11";
-const STATE = "release";
+const VERSION = "1.12";
+const STATE = "indev";
 
 const AUTHOR = "Team DHS";
 const SERVER_ADDR = {
