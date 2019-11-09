@@ -1,7 +1,7 @@
 {
     "name": "Deal Hunter Suite",
-    "version": "1.9",
-    "description": "Provide all the Tools needed for Sale Hunter!",
+    "version": "1.11",
+    "description": "Provide all the Tools needed for Deal Hunter!",
     "manifest_version": 2,
     "minimum_chrome_version": "16.0.884",
     "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyI4HGOmPfeK3oX50o2JUPoQtVL7l/6CArnTOkGbZqvj14Ni/fStaDRIj33uWNm+V4px9fNFEi0VxhtqKjchhqrvEhw/vCqr6T0y8lbC8BFQ3Mwct4yUpg+z0Yzs6SwDUKSrYGeZ3v7VsbxSRE7VauQpNHH41WIpVtNp/6g2owPglnFVIVm72oo4ugdhIiF4ylCJPNmyP5ZxaPiQF5+U0LwwIzrVOzZgC66xJaM6csrEuwv2BUarvwf31rXg5Wmsq9tmo0PyDRJ/ZoICTEOXDZXp5asgxlYiqLG4Q8DcJTL3HNEMBhUMlJQl5a+tm3QfzSBgJ5V9gWbc3InxoBnXFfwIDAQAB",

@@ -6,10 +6,10 @@
 //? |-----------------------------------------------------------------------------------------------|
 
 const APPNAME = "Deal Hunter Suite";
-const DESCRIPTION = "Provide all the Tools needed for Sale Hunter!";
+const DESCRIPTION = "Provide all the Tools needed for Deal Hunter!";
 const CODENAME = "Nadeshiko";
-const VERSION = "1.9";
-const STATE = "indev";
+const VERSION = "1.11";
+const STATE = "release";
 
 const AUTHOR = "Team DHS";
 const SERVER_ADDR = {

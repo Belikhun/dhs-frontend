@@ -257,6 +257,21 @@
     margin-left: 10px;
 }
 
+#subScreen[layout="dealHunt"] .container .itemList .item .dealInfo {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #797979;
+}
+
+#subScreen[layout="dealHunt"] .container .itemList .item .dealInfo .open {
+    font-size: 11px;
+    text-align: right;
+}
+
 #subScreen[layout="dealHunt"] .container .itemList .item .blackList {
     position: absolute;
     display: block;

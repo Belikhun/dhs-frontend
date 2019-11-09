@@ -226,6 +226,7 @@ const core = {
 		while (!await this.auth()) { clog("INFO", "Auth failed. Retrying"); }
 
 		this.appInfo.license.innerHTML = `Bản quyền được cấp phép cho <b>${this.session.keyData.name}</b><br>`;
+		_gaq.push(["_trackEvent", "auth", this.session.keyData.name]);
 		let licenseTimer = document.createElement("span");
 		liveTime(licenseTimer, this.session.keyData.expire, {
 			count: "down",
@@ -432,23 +433,31 @@ const core = {
 				</span>
 			`
 
-			if (item.match === "all" || item.match === "*") {
-				itemBox.dataset.soundhover = "";
-				itemBox.dataset.soundselect = "";
-				sounds.applySound(itemBox);
+			itemBox.title = [
+				`ID: ${item.id}`,
+				`Tên: ${item.name}`,
+				`Trang: ${item.site}`,
+				`Phiên Bản: ${item.version}`,
+				item.allow ? `Click Để Chạy!` : `Bạn KHÔNG CÓ QUYỀN chạy Script này!`
+			].join("\n");
 
+			if (item.match === "all" || item.match === "*") {
 				if (item.allow) {
+					itemBox.dataset.soundhover = "";
+					itemBox.dataset.soundselect = "";
+					sounds.applySound(itemBox);
+
 					itemBox.dataset.target = item.id;
 					itemBox.addEventListener("click", e => this.scriptPreInit(e.currentTarget.dataset.target));
 				}
 
 				this.script.undependList.appendChild(itemBox);
 			} else if ((new RegExp(item.match)).test(this.page.url.hostname + this.page.url.pathname)) {
-				itemBox.dataset.soundhover = "";
-				itemBox.dataset.soundselect = "";
-				sounds.applySound(itemBox);
-
 				if (item.allow) {
+					itemBox.dataset.soundhover = "";
+					itemBox.dataset.soundselect = "";
+					sounds.applySound(itemBox);
+
 					itemBox.dataset.target = item.id;
 					itemBox.addEventListener("click", e => this.scriptPreInit(e.currentTarget.dataset.target));
 				}
@@ -676,6 +685,9 @@ const core = {
 							if (item.height)
 								input.input.style.height = item.height;
 
+							if (item.step)
+								input.input.step = item.step;
+
 							if (["date", "time"].includes(item.type)) {
 								let btnNow = createBtn("Bây Giờ", "dark");
 								btnNow.style.marginLeft = "10px";
@@ -723,8 +735,12 @@ const core = {
 							input = { group: item.node }
 						}
 						
-						else if (item.type === "checkbox")
+						else if (item.type === "checkbox") {
 							input = createSwitch(item.label, item.color || "pink", item.value || false);
+							
+							if (typeof item.disabled !== "undefined")
+								input.input.disabled = item.disabled;
+						}
 
 						else if (item.type === "switch") {
 							input = { input: null }
@@ -817,7 +833,7 @@ const core = {
 
 					this.script.settings.formSubmit.innerText = confirm;
 					this.script.settings.formCancel.innerText = cancel;
-					this.script.settings.formCancel.onmouseup = e => { scriptCancelHandler(); this.changeLayout(3) }
+					this.script.settings.formCancel.onmouseup = e => { scriptCancelHandler(true); this.changeLayout(3) }
 					this.changeLayout(5);
 
 					// Form submit action
@@ -867,7 +883,7 @@ const core = {
 			}
 
 			const rejectSetup = async (reason) => {
-				await scriptCancelHandler();
+				await scriptCancelHandler(true);
 				heartbeat({ color: "red", beat: false });
 
 				await popup.show({
@@ -883,7 +899,7 @@ const core = {
 			}
 
 			const triggerError = async (error) => {
-				await scriptCancelHandler();
+				await scriptCancelHandler(true);
 				heartbeat({ color: "red", beat: false });
 
 				await errorHandler(error, true);
@@ -891,7 +907,7 @@ const core = {
 			}
 
 			const errored = async (message) => {
-				await scriptCancelHandler();
+				await scriptCancelHandler(true);
 				heartbeat({ color: "red", beat: false });
 				sounds.warning();
 
@@ -926,7 +942,7 @@ const core = {
 				this.script.cancelButton.innerText = "Hủy";
 				this.script.cancelButton.classList.remove("rainbow");
 				this.script.cancelButton.classList.add("yellow");
-				this.script.cancelButton.onclick = () => { scriptCancelHandler(); this.changeLayout(3); }
+				this.script.cancelButton.onclick = () => { scriptCancelHandler(true); this.changeLayout(3); }
 				this.changeLayout(6);
 			}
 
@@ -1017,7 +1033,7 @@ const core = {
 			}
 
 			const complete = async () => {
-				await scriptCancelHandler();
+				await scriptCancelHandler(false);
 				clog("OKAY", "Script", {text: id, color: flatc("blue")}, "completed successfully");
 				heartbeat({ color: "green", beat: false });
 
@@ -1051,14 +1067,14 @@ const core = {
 			try {
 				eval(response);
 			} catch(e) {
-				await scriptCancelHandler();
+				await scriptCancelHandler(true);
 				await errorHandler(e, true);
 				this.changeLayout(3);
 			}
 
 			this.script.settings.header.message.innerText = "Đang chờ thông tin phản hồi";
 			/* javascript-obfuscator:enable */ 
-		})().catch(async e => { scriptCancelHandler(); await errorHandler(e, true); this.changeLayout(3) });
+		})().catch(async e => { scriptCancelHandler(true); await errorHandler(e, true); this.changeLayout(3) });
 	},
 
 	__getCPUInfo() {
@@ -1249,7 +1265,7 @@ const tutorial = {
 	play() {
 		return new Promise((resolve, reject) => {
 			core.changeLayout(8);
-			this.switch(0);
+			this.switch(0, true);
 
 			this.button.addEventListener("click", e => {
 				if (this.prevCard === this.list.length) {
@@ -1261,12 +1277,12 @@ const tutorial = {
 		})
 	},
 
-	async switch(id) {
-		if (id === this.prevCard || this.playing)
+	async switch(card, init = false) {
+		if (card === this.prevCard || this.playing)
 			return false;
 
-		if (id !== 0)
-			sounds.toggle((id < this.prevCard) + 0);
+		if (!init)
+			sounds.warning();
 
 		this.playing = true;
 
@@ -1277,26 +1293,19 @@ const tutorial = {
 			_p.dot.classList.remove("active");
 		}
 
-		id = (id === "next") ? this.prevCard + 1 : id;
-		this.prevCard = id;
+		card = (card === "next") ? this.prevCard + 1 : card;
+		this.prevCard = card;
 
-		if (!this.list[id])
+		if (!this.list[card])
 			return false;
 
-		let _t = this.list[id];
+		let _t = this.list[card];
 		_t.dot.classList.add("active");
 		_t.card.classList.add("show");
-		this.card.style.transform = `translateX(calc(-${id * 100}vw + ${id * 40}px))`;
+		this.card.style.transform = `translateX(calc(-${card * 100}vw + ${card * 40}px))`;
 
-		if (id === this.list.length - 1) {
-			this.button.classList.remove("blue");
-			this.button.classList.add("rainbow");
-			this.button.innerText = "ĐÃ RÕ. BẮT ĐẦU NÀO!";
-		} else {
-			this.button.classList.add("blue");
-			this.button.classList.remove("rainbow");
-			this.button.innerText = "Tiếp";
-		}
+		this.button.className = `sq-btn sound ${_t.card.dataset.buttonColor || "blue"}`;
+		this.button.innerText = _t.card.dataset.buttonText || "Tiếp";
 
 		await delayAsync(600);
 		_t.card.classList.add("play");

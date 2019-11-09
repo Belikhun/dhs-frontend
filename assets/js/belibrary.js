@@ -414,6 +414,8 @@ function liveTime(element, start = time(new Date()), { count = "up", prefix = ""
         if (!document.body.contains(element)) {
             clog("DEBG", "Live Time Element does not exist in document. Clearing...");
             clearInterval(updateInterval);
+            delete element;
+            delete updateInterval;
         }
 
         let t = 0;
