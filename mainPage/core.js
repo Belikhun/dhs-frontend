@@ -120,6 +120,14 @@ const core = {
 	session: {},
 	page: {},
 
+	tagsColor: {
+        vip: "#98ffa9",
+        admin: "#fff57d",
+        trial: "#eac8ff",
+        tester: "#ffc6db",
+        pro: "#a0ffe5"
+    },
+
 	async init() {
 		splash.change({ title: "Deal Hunter Suite", description: loadMsg() });
 
@@ -376,7 +384,15 @@ const core = {
 			await delayAsync(600);
 		}
 
+		
+		let tagsString = "";
+		for (let item of this.session.keyData.tags)
+			tagsString += `<tag ${(typeof this.tagsColor[item.toLowerCase()] === "string") ? `style="background-color: ${this.tagsColor[item.toLowerCase()]}"` : ""}>${item}</tag>`;
+		
 		this.tool.navbar.userName.innerText = this.session.keyData.name;
+		this.tool.navbar.userTag.innerHTML = tagsString;
+		delete tagsString;
+
 		splash.change({ description: `Cấp phép cho: <b>${this.session.keyData.name}</b>` });
 		await delayAsync(500);
 		this.changeLayout(3);
@@ -994,9 +1010,11 @@ const core = {
 				heartbeat({ color: "red", beat: false });
 
 				await popup.show({
+					windowTitle: id,
 					title: "Đã dừng phản hồi!",
+					message: "Script Rejected Setup",
 					description: reason,
-					level: "info",
+					level: "warning",
 					buttonList: {
 						contact: { text: "Báo Lỗi", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
 						back: { text: "Quay lại", color: "green" },

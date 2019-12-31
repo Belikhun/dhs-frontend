@@ -410,7 +410,7 @@ dot {
 .triBg[data-tri-color = "blue"]			{ background-color: #44aadd; }
 .triBg[data-tri-color = "yellow"]		{ background-color: #f6c21c; }
 .triBg[data-tri-color = "red"]			{ background-color: #dd2d44; }
-.triBg[data-tri-color = "brown"]		{ background-color: #231B22; }
+.triBg[data-tri-color = "brown"]		{ background-color: #3f313d; }
 .triBg[data-tri-color = "gray"]			{ background-color: #485e74; }
 .triBg[data-tri-color = "dark"]			{ background-color: #042430; }
 .triBg[data-tri-color = "purple"]		{ background-color: #3f1195; }
@@ -425,7 +425,7 @@ dot {
 .triBg[data-tri-color = "blue"]			.triBgContainer > span { border-bottom-color: #44aadd; }
 .triBg[data-tri-color = "yellow"]		.triBgContainer > span { border-bottom-color: #f6c21c; }
 .triBg[data-tri-color = "red"]			.triBgContainer > span { border-bottom-color: #dd2d44; }
-.triBg[data-tri-color = "brown"]		.triBgContainer > span { border-bottom-color: #231B22; }
+.triBg[data-tri-color = "brown"]		.triBgContainer > span { border-bottom-color: #3f313d; }
 .triBg[data-tri-color = "gray"]			.triBgContainer > span { border-bottom-color: #485e74; }
 .triBg[data-tri-color = "dark"]			.triBgContainer > span { border-bottom-color: #042430; }
 .triBg[data-tri-color = "purple"]		.triBgContainer > span { border-bottom-color: #3f1195; }
