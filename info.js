@@ -8,10 +8,12 @@
 const APPNAME = "Deal Hunter Suite";
 const DESCRIPTION = "Provide all the Tools needed for Deal Hunter!";
 const CODENAME = "Nadeshiko";
-const VERSION = "1.12";
+const VERSION = "2.0";
 const STATE = "indev";
 
 const AUTHOR = "Team DHS";
+var   CONTACT_ADDR = "https://m.me/DealHunterSuite";
+
 const SERVER_ADDR = {
     release: "https://dealhunter.000webhostapp.com",
     indev: "http://localhost"
@@ -22,5 +24,5 @@ const API = {
     status: "/api/status",
     auth: "/api/auth",
     script: { list: "/api/scripts/list", fetch: "/api/scripts/fetch" },
-    updates: { check: "/api/updates/check", latest: "/api/updates/latest" }
+    updates: { check: "/api/updates/check", latest: "/api/updates/latest", changelog: "/api/updates/changelog" }
 }

@@ -51,13 +51,13 @@ body {
     position: relative;
     display: inline-block;
     flex-grow: 1;
-    font-family: Calibri;
+    font-family: "Open Sans";
     font-size: 13px;
     color: #343434;
 }
 
 .note.info {
-    background-color: #cccccc;
+    background-color: #e4e4e4;
 }
 
 .note.info::before {
@@ -96,141 +96,298 @@ body {
 
 .main .splash {
     position: relative;
-    display: block;
-    flex-direction: row;
+    display: flex;
+    flex-direction: column;
     width: 100%;
     overflow: hidden;
     background-color: transparent;
+    z-index: 1;
 }
 
-.main .splash .icon {
-    position: absolute;
-    display: block;
-    top: calc(50% - 80px);
-    left: 50%;
-    transform: translateX(-50%);
-    width: 70px;
-    height: 70px;
-
-    transition: all 0.4s cubic-bezier(0.785, 0.135, 0.15, 0.86);
-}
-
-.main .splash .info {
-    position: absolute;
+.main .splash .changelog {
+    position: relative;
     display: flex;
     flex-direction: column;
-    top: calc(50% + 20px);
-    left: 50%;
-    transform: translateX(-50%);
-    width: 80%;
-
-    transition: all 0.4s cubic-bezier(0.785, 0.135, 0.15, 0.86);
+    flex-grow: 1;
+    flex-shrink: 1;
+    overflow: auto;
 }
 
-.main .splash .info .title {
-    position: relative;
-    display: block;
-    margin: auto;
-    font-family: "Exo";
-    font-weight: bold;
-    font-size: 16px;
-    text-align: center;
-    letter-spacing: 1px;
-    color: #eeeeee;
-    text-transform: uppercase;
-}
-
-.main .splash .info .description {
-    position: relative;
-    display: block;
-    text-align: center;
-    margin: 0 auto 6px auto;
-    color: #aaaaaa;
-    font-family: Calibri;
-    font-weight: normal;
-    font-size: 15px;
-}
-
-.main .splash .info .infoBtn {
+.main .splash .changelog .simple-spinner {
     position: absolute;
-    display: inline-block;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    cursor: pointer;
+    top: calc(50% - 6px);
+    left: calc(50% - 6px);
+
+    opacity: 1;
+    transition: opacity 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
 }
 
-.main .splash .info .infoBtn::before {
-    content: "\f05a";
+.main .splash .changelog .container {
     position: relative;
-    font-family: "Font Awesome 5 Free";
-    font-size: 20px;
-    font-weight: 900;
-    color: rgb(204, 204, 204);
-    transition: color 0.3s ease;
+    display: block;
+    flex-grow: 1;
+    width: calc(100% - 40px);
+    margin: 10px 20px;
+    font-family: "Open Sans";
+    font-size: 13px;
+    color: #e0e0e0;
+
+    overflow: auto;
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
 }
 
-.main .splash .info .infoBtn:hover::before {
+.main .splash .changelog[data-loaded="true"] .simple-spinner {
+    opacity: 0;
+}
+
+.main .splash .changelog[data-loaded="true"] .container {
+    opacity: 1;
+}
+
+.main .splash .changelog .container h2 {
+    font-family: "Exo";
     color: white;
 }
 
-.main .splash .info .progressInfo {
+.main .splash .loadPanel {
     position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 0;
+    flex-shrink: 0;
+    background-color: #1e1e1e;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    overflow: hidden;
+
+    opacity: 1;
+    transition: opacity 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
+}
+
+.main .splash .loadPanel::before {
+    content: "";
+    position: absolute;
     display: block;
-    text-align: center;
-    margin: 6px auto 0 auto;
-    color: #888888;
-    font-weight: normal;
+    width: 30px;
+    height: 6px;
+    background-color: #d6d6d6;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 3px;
+}
+
+.main .splash .loadPanel .icon {
+    position: relative;
+    display: inline-block;
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 78px;
+    height: 78px;
+    margin: 30px 10px 20px 20px;
+}
+
+.main .splash .loadPanel .info {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    margin: 30px 20px 20px 10px;
+}
+
+.main .splash .loadPanel .info .title {
+    font-family: Exo;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.main .splash .loadPanel .info .progressBar {
+    margin-top: 10px;
+}
+
+.main .splash .loadPanel .info .progressInfo {
+    font-family: "Open Sans";
     font-size: 11px;
+    color: #cacaca;
+    letter-spacing: .2px;
+    margin-top: 4px;
 }
 
-.main .splash .info > button {
-    margin-top: 20px;
-    display: none;
-}
-
-.main:not([data-layout="1"]) .splash {
-    background-color: rgba(128, 128, 128, 0.1);
-}
-
-.main:not([data-layout="1"]) .splash .icon {
-    top: 50%;
-    left: 15px;
-    transform: translateY(-50%);
-    width: 40px;
+.main .splash .navbar {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    bottom: 0;
+    width: 100%;
     height: 40px;
+    background-color: #282828;
+
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
 }
 
-.main:not([data-layout="1"]) .splash .info {
+.main .splash .navbar .icon {
+    position: relative;
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin: 0 6px 0 10px;
+}
+
+.main .splash .navbar .clock {
+    position: relative;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: flex-end;
+    font-family: "Open Sans";
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: .3px;
+    margin-right: 10px;
+    color: #e2e2e2;
+    user-select: none;
+}
+
+.main .splash .navbar .clock sub {
+    font-weight: normal;
+    font-size: 10px;
+    line-height: 16px;
+    margin-right: 2px;
+}
+
+.main .splash .navbar .clock ms {
+    font-size: 13px;
+}
+
+.main .splash .navbar .clock ms::before {
+    content: ".";
+}
+
+.main .splash .navbar .user {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.main .splash .navbar .user .name {
+    font-family: Exo;
+    font-weight: bold;
+    font-size: 15px;
+    font-style: italic;
+    color: white;
+}
+
+.main .splash .navbar .user .tag {
+    position: relative;
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-left: 4px;
+}
+
+.main .splash .navbar .user .tag > span {
+    position: relative;
+    display: inline-block;
+    margin: 0 4px;
+    padding: 2px 6px;
+    background-color: #038bcc;
+    border-radius: 4px;
+    font-family: Calibri;
+    font-weight: bold;
+    font-size: 11px;
+    letter-spacing: .2px;
+    color: white;
+}
+
+.main .splash .navbar .hamburger {
+    position: relative;
+    width: 20px;
+    height: 18px;
+    margin: 0 10px;
+    cursor: pointer;
+    -webkit-transition: all 1s cubic-bezier(0.06, 0.81, 0, 0.98);
+    -o-transition: all 1s cubic-bezier(0.06, 0.81, 0, 0.98);
+    transition: all 1s cubic-bezier(0.06, 0.81, 0, 0.98);
+}
+
+.main .splash .navbar .hamburger span {
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    border-radius: 4px;
+    background-color: rgb(216, 216, 216);
+    left: 0;
+    -webkit-transition-property: opacity, -webkit-transform;
+    -o-transition-property: transform, opacity;
+    transition-property: transform, opacity;
+    -webkit-transition-duration: 0.5s;
+         -o-transition-duration: 0.5s;
+            transition-duration: 0.5s;
+    -webkit-transition-timing-function: ease;
+         -o-transition-timing-function: ease;
+            transition-timing-function: ease;
+}
+
+.main .splash .navbar .hamburger span:nth-child(1) {
+    top: 0;
+}
+
+.main .splash .navbar .hamburger span:nth-child(2) {
     top: 50%;
-    left: 70px;
-    transform: translateY(-50%);
-    width: calc(100% - 70px);
+    -webkit-transform: translateY(-50%);
+        -ms-transform: translateY(-50%);
+            transform: translateY(-50%);
 }
 
-.main:not([data-layout="1"]) .splash .info .title,
-.main:not([data-layout="1"]) .splash .info .description {
-    margin: unset;
-    text-align: left;
+.main .splash .navbar .hamburger span:nth-child(3) {
+    bottom: 0;
 }
 
-.main:not([data-layout="1"]) .splash .info .title {
-    font-size: 13px;
+.main .splash .navbar .hamburger.active span:nth-child(1) {
+    -webkit-transform: translateY(7px) rotate(45deg);
+        -ms-transform: translateY(7px) rotate(45deg);
+            transform: translateY(7px) rotate(45deg);
 }
 
-.main:not([data-layout="1"]) .splash .info .description {
-    font-size: 13px;
+.main .splash .navbar .hamburger.active span:nth-child(2) {
+    opacity: 0;
 }
 
-.main[data-layout="1"] .splash .info .infoBtn {
+.main .splash .navbar .hamburger.active span:nth-child(3) {
+    -webkit-transform: translateY(-7px) rotate(-45deg);
+        -ms-transform: translateY(-7px) rotate(-45deg);
+            transform: translateY(-7px) rotate(-45deg);
+}
+
+.main:not([data-layout = "1"]) .splash .toolChangelog {
+    opacity: 0;
+}
+
+.main:not([data-layout = "1"]) .splash .loadPanel {
+    opacity: 0;
+}
+
+.main:not([data-layout = "1"]) .splash .navbar {
+    opacity: 1;
+}
+
+.main .splash.optimize {
+    z-index: 100;
+}
+
+.main .splash.optimize .changelog,
+.main .splash.optimize .loadPanel {
     display: none;
 }
 
-.main:not([data-layout="1"]) .splash .info > .progressInfo,
-.main:not([data-layout="1"]) .splash .info > .progressBar,
-.main:not([data-layout="1"]) .splash .info > button {
-    display: none;
-}
+/*? MAIN CONTAINER */
 
 .main .container {
     position: relative;
@@ -248,23 +405,33 @@ body {
     overflow: hidden;
 }
 
+.main .container .scriptContainer .announcement {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
 .main .container .scriptContainer .header {
     position: relative;
     display: flex;
-    flex-grow: 0;
+    flex-direction: row;
     flex-shrink: 0;
-    flex-direction: column;
+    margin: 10px;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
-.main .container .scriptContainer .header .top {
+.main .container .scriptContainer .header .left {
+    position: relative;
+    display: inline-block;
+    flex-grow: 1;
+    margin: 10px 20px;
+}
+
+.main .container .scriptContainer .header .left .currentPage {
     position: relative;
     display: block;
-    width: 100%;
-    padding: 10px 20px;
-    box-sizing: border-box;
-}
-
-.main .container .scriptContainer .header .top .currentPage {
     font-family: "Exo";
     font-weight: bolder;
     font-size: 18px;
@@ -273,68 +440,62 @@ body {
     color: white;
 }
 
-.main .container .scriptContainer .header .top .currentTitle {
+.main .container .scriptContainer .header .left .currentTitle {
+    position: relative;
+    display: block;
     font-family: Calibri;
     font-size: 14px;
 }
 
-.main .container .scriptContainer .header .top .currentPath {
+.main .container .scriptContainer .header .left .tabId {
+    position: relative;
+    display: block;
     font-size: 11px;
     padding-top: 10px;
-    color: rgb(175, 175, 175);
+    color: rgb(230, 230, 230);
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
 }
 
-.main .container .scriptContainer .header .bottom {
-    position: relative;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: 10px 20px;
-    box-sizing: border-box;
-    border-top: 1px solid rgba(128, 128, 128, 0.5);
-}
-
-.main .container .scriptContainer .header .bottom .left {
-    position: relative;
-    display: inline-block;
-    flex-grow: 1;
-    flex-shrink: 1;
-}
-
-.main .container .scriptContainer .header .bottom .left .tabId {
-    font-family: "Calibri";
-    font-size: 13px;
-}
-
-.main .container .scriptContainer .header .bottom .left .tabId::before {
+.main .container .scriptContainer .header .left .tabId::before {
     content: "Đang theo dõi TabID: ";
 }
 
-.main .container .scriptContainer .header .bottom .right {
+.main .container .scriptContainer .header .right {
     position: relative;
-    display: inline-block;
     flex-grow: 0;
     flex-shrink: 0;
 }
 
-.main .container .scriptContainer .header .bottom .right .reloadIcon {
+.main .container .scriptContainer .header .right .reloadBtn {
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
     cursor: pointer;
+    background-color: rgba(36, 36, 36, 0.1);
+
+    transition: background-color 0.3s ease;
 }
 
-.main .container .scriptContainer .header .bottom .right .reloadIcon::before {
+.main .container .scriptContainer .header .right .reloadBtn::before {
     content: "\f2f1";
     font-family: "Font Awesome 5 Free";
     font-size: 16px;
     font-weight: 900;
-    color: rgb(180, 180, 180);
+    color: rgb(212, 212, 212);
     transition: color 0.3s ease;
 }
 
-.main .container .scriptContainer .header .bottom .right .reloadIcon:hover::before {
+.main .container .scriptContainer .header .right .reloadBtn:hover {
+    background-color: rgba(36, 36, 36, 0.3);
+}
+
+.main .container .scriptContainer .header .right .reloadBtn:hover::before {
     color: white;
 }
 
@@ -361,9 +522,9 @@ body {
     width: calc(100% - 20px);
     margin: 6px 10px;
     padding: 6px 15px;
-    border-radius: 10px;
+    border-radius: 8px;
     box-sizing: border-box;
-    font-family: Segoe UI;
+    font-family: "Open Sans";
     font-size: 10px;
     font-weight: bold;
     color: #cccccc;
@@ -734,90 +895,228 @@ body {
     overflow-anchor: auto;
 }
 
-.main .appInfo {
+.main .toolInfo {
+    position: relative;
+    display: block;
+    width: 100%;
+    padding: 0 10px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.main .toolInfo .header {
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
-    padding: 0 20px;
-    box-sizing: border-box;
-    overflow: hidden;
+    margin-bottom: 20px;
 }
 
-.main .appInfo .icon {
+.main .toolInfo .header .icon {
     position: relative;
     display: block;
     margin-top: 20px;
-    width: 84px;
-    height: 84px;
+    width: 92px;
+    height: 92px;
 }
 
-.main .appInfo .title {
+.main .toolInfo .header .toolName {
+    text-align: center;
     font-family: Exo;
     font-weight: bold;
     font-size: 20px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
     color: white;
     margin-top: 10px;
 }
 
-.main .appInfo .description {
+.main .toolInfo .header .toolDetail {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.main .toolInfo .header .toolDetail > t {
+    position: relative;
+    flex-grow: 1;
+    text-align: center;
+    font-family: "Open Sans";
+    font-weight: bold;
+    font-size: 13px;
+    color: rgb(224, 224, 224);
+    margin: 0 5px;
+}
+
+.main .toolInfo .header .toolDetail > t::before {
+    font-weight: normal;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .2px;
+}
+
+.main .toolInfo .header .toolDetail > .version::before {
+    content: "Phiên bản: ";
+}
+
+.main .toolInfo .header .toolDetail > .codename::before {
+    content: "Codename: ";
+}
+
+.main .toolInfo .header .copyright {
+    font-family: Calibri;
+    font-size: 13px;
+    margin: 5px 0;
+}
+
+.main .toolInfo .title {
+    font-family: "Open Sans";
+    font-size: 14px;
+    font-weight: bolder;
+    text-transform: uppercase;
+    margin: 10px 0;
+}
+
+.main .toolInfo .license {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.main .toolInfo .license .left {
+    position: relative;
+    display: inline-block;
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin: 10px 10px 10px 20px;
+}
+
+.main .toolInfo .license .left .name {
     font-family: Exo;
     font-weight: bold;
-    font-size: 11px;
-    letter-spacing: .4px;
+    font-size: 20px;
+    font-style: italic;
+    color: white;
+}
+
+.main .toolInfo .license .left .allow {
+    font-weight: bold;
+    font-size: 13px;
+    color: white;
+}
+
+.main .toolInfo .license .left .allow::before {
+    content: "Cho Phép: ";
+    font-size: 12px;
+    font-weight: normal;
     text-transform: uppercase;
-    color: #f1f1f1;
 }
 
-.main .appInfo .copyright {
-    font-family: Calibri;
-    font-size: 13px;
+.main .toolInfo .license .left .timeDesc {
     margin-top: 10px;
+    font-family: "Open Sans";
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #efefef;
 }
 
-.main .appInfo .license {
-    font-family: Calibri;
-    font-size: 15px;
-    margin-top: 20px;
-    text-align: center;
+.main .toolInfo .license .left .timer {
+    position: relative;
+    display: block;
+    font-family: Segoe UI;
+    font-weight: bold;
+    font-size: 21px;
+    letter-spacing: .5px;
+    line-height: 22px;
+    user-select: none;
 }
 
-.main .appInfo .license > span {
-    font-size: 13px;
+.main .toolInfo .license .left .timer > days {
+    font-size: 23px;
 }
 
-.main .appInfo .key {
+.main .toolInfo .license .left .timer > days::after {
+    content: "+";
+}
+
+.main .toolInfo .license .left .timer > ms {
+    font-size: 16px;
+}
+
+.main .toolInfo .license .left .timer > ms::before {
+    content: ".";
+}
+
+.main .toolInfo .license .left .licenseKey {
+    position: relative;
+    display: block;
+    margin-top: 10px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.main .toolInfo .license .left .licenseKey .keyDesc {
+    font-family: "Open Sans";
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #efefef;
+}
+
+.main .toolInfo .license .left .licenseKey .key {
+    margin-top: 2px;
     max-width: 100%;
-    text-align: center;
+    text-align: left;
     font-family: Consolas;
     font-weight: bold;
     font-size: 15px;
     color: white;
-    margin-top: 20px;
+    word-break: break-all;
 }
 
-.main .appInfo .keyWarning {
-    font-family: Exo;
-    font-size: 11px;
-    font-style: italic;
-    -webkit-font-smoothing: antialiased;
-    text-align: center;
-    color: #f3e75f;
+.main .toolInfo .license .right {
+    position: relative;
+    flex-grow: 0;
+    flex-shrink: 0;
 }
 
-.main .appInfo .keyWarning > b {
-    font-style: normal;
+.main .toolInfo .license .right .keyBtn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    cursor: pointer;
+    background-color: rgba(36, 36, 36, 0.1);
+
+    transition: background-color 0.3s ease;
 }
 
-.main .appInfo .author {
-    font-size: 14px;
-    font-weight: bold;
-    text-transform: uppercase;
-    margin-top: 25px;
+.main .toolInfo .license .right .keyBtn::before {
+    content: "\f084";
+    font-family: "Font Awesome 5 Free";
+    font-size: 16px;
+    font-weight: 900;
+    color: rgb(212, 212, 212);
+    transition: color 0.3s ease;
 }
 
-.main .appInfo .authorList {
+.main .toolInfo .license .right .keyBtn:hover {
+    background-color: rgba(36, 36, 36, 0.3);
+}
+
+.main .toolInfo .license .right .keyBtn:hover::before {
+    color: white;
+}
+
+.main .toolInfo .authorList {
     position: relative;
     display: flex;
     flex-direction: row;
@@ -825,16 +1124,16 @@ body {
     justify-content: center;
 }
 
-.main .appInfo .authorList .item {
+.main .toolInfo .authorList .item {
     position: relative;
     display: flex;
     flex-grow: 1;
     flex-direction: column;
     align-items: center;
-    padding: 10px 20px;
+    padding: 0 20px;
 }
 
-.main .appInfo .authorList .item .avatar {
+.main .toolInfo .authorList .item .avatar {
     position: relative;
     display: block;
     width: 60px;
@@ -842,7 +1141,7 @@ body {
     border-radius: 50%;
 }
 
-.main .appInfo .authorList .item .authorName {
+.main .toolInfo .authorList .item .authorName {
     font-family: Exo;
     font-weight: bold;
     font-size: 16px;
@@ -850,9 +1149,13 @@ body {
     letter-spacing: .5px;
 }
 
-.main .appInfo .authorList .item .authorInfo {
+.main .toolInfo .authorList .item .authorInfo {
     font-size: 12px;
     color: #cecece;
+}
+
+.main .toolInfo.optimize {
+    display: none;
 }
 
 .main .runStatus {
@@ -1011,14 +1314,6 @@ body {
 
 .main .popup {
     position: relative;
-    display: flex;
-
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-
-    overflow: hidden;
-    z-index: 1;
 }
 
 .main .splash,
@@ -1031,7 +1326,7 @@ body {
 .main .container .scriptSettings .header,
 .main .container .scriptSettings .itemInfo,
 .main .container .scriptSettings .settingsPage,
-.main .appInfo,
+.main .toolInfo,
 .main .tutorial {
     flex-grow: 0;
     height: 0;
@@ -1040,83 +1335,8 @@ body {
         background-color 0.4s cubic-bezier(0.785, 0.135, 0.15, 0.86);
 }
 
-.main .popup .icon {
-    position: relative;
-    margin-bottom: 20px;
-}
-
-.main .popup .icon::before {
-    content: "\f05a";
-    position: relative;
-    font-family: "Font Awesome 5 Free";
-    font-size: 54px;
-    font-weight: 900;
-    color: white;
-}
-
-.main .popup .title {
-    position: relative;
-    margin-bottom: 4px;
-    font-family: Exo;
-    font-size: 21px;
-    font-weight: bold;
-    font-style: italic;
-    color: rgb(236, 236, 236);
-    text-align: center;
-    letter-spacing: 1px;
-}
-
-.main .popup .description {
-    position: relative;
-    text-align: center;
-    margin-bottom: 10px;
-    padding: 0 20px;
-    font-size: 13px;
-    color: rgb(228, 228, 228);
-}
-
-.main .popup .custom {
-    position: relative;
-    display: block;
-    max-width: 100%;
-    margin: 10px 0;
-    padding: 0 20px;
-    box-sizing: border-box;
-}
-
-.main .popup .button {
-    position: relative;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    margin-top: 6px;
-}
-
-.main .popup .button > button {
-    margin: 4px;
-}
-
-.main .popup[data-level = "warning"] .icon::before {
-    content: "\f071";
-    color: #f8fa6c;
-}
-
-.main .popup[data-level = "warning"] .title {
-    color: #fdff75;
-}
-
-.main .popup[data-level = "offline"] .icon::before {
-    content: "\f127";
-    color: #a7a7a7;
-}
-
-.main .popup[data-level = "error"] .icon::before {
-    content: "\f06a";
-    color: #fa6c6c;
-}
-
-.main .popup[data-level = "error"] .title {
-    color: #ff8282;
+.popupContainer {
+    padding-top: 40px;
 }
 
 /* Layout */
@@ -1126,17 +1346,17 @@ body {
 }
 
 .main:not([data-layout = "1"]) .splash {
-    height: 60px;
+    height: 40px;
 }
 
 .main[data-layout = "2"] .popup {
-    height: calc(100% - 60px);
+    height: calc(100% - 40px);
 }
 
 .main[data-layout = "3"] .container,
 .main[data-layout = "4"] .container,
 .main[data-layout = "5"] .container {
-    height: calc(100% - 60px);
+    height: calc(100% - 40px);
 }
 
 .main[data-layout = "3"] .container .scriptContainer {
@@ -1165,7 +1385,7 @@ body {
 }
 
 .main[data-layout = "6"] .container {
-    height: calc(100% - 220px);
+    height: calc(100% - 200px);
 }
 
 .main[data-layout = "6"] .runStatus {
@@ -1176,7 +1396,7 @@ body {
     height: 100%;
 }
 
-.main[data-layout = "7"] .appInfo {
+.main[data-layout = "7"] .toolInfo {
     height: 100%;
 }
 

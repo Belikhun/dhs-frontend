@@ -24,7 +24,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             if (_e)
                 response = { code: 0, description: "Success!", data: { text: _e.innerText } }
             else
-                response = { code: -1, description: "Element not found!", data: { query: message.data.query } }
+                response = { code: -1, description: `Element not found!`, data: { query: message.data.query } }
             
             break;
 
@@ -58,11 +58,26 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             
             break;
 
+        case "disabled":
+            var _e = document.querySelector(message.data.query);
+
+            if (_e)
+                response = { code: 0, description: "Success!", data: { disabled: _e.disabled } }
+            else
+                response = { code: -1, description: "Element not found!", data: { query: message.data.query } }
+            
+            break;
+
         case "setInput":
             var _e = document.querySelector(message.data.query);
 
             if (_e) {
                 _e.value = message.data.value;
+
+                _e.dispatchEvent(new Event("focus"));
+                _e.dispatchEvent(new Event("blur"));
+                _e.dispatchEvent(new Event("keydown"));
+
                 response = { code: 0, description: "Success!", data: { value: _e.value } }
             }
             else
@@ -74,7 +89,19 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             var _e = document.querySelector(message.data.query);
 
             if (_e) {
+                _e.focus();
                 _e.click();
+                _e.checked = true;
+
+                _e.dispatchEvent(new Event("focus"));
+                _e.dispatchEvent(new Event("blur"));
+                _e.dispatchEvent(new Event("mousedown"));
+                _e.dispatchEvent(new Event("keydown"));
+                _e.dispatchEvent(new Event("pointerdown"));
+                _e.dispatchEvent(new Event("touchend"));
+                _e.dispatchEvent(new Event("hashchange"));
+                _e.dispatchEvent(new Event("submit"));
+
                 response = { code: 0, description: "Success!", data: { clicked: true } }
             } else
                 response = { code: -1, description: "Element not found!", data: { query: message.data.query } }
@@ -82,6 +109,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
             break;
 
         case "clickWithText":
+            let success = false;
             var _e = document.querySelectorAll(message.data.query);
             
             if (_e.length === 0) {
@@ -98,10 +126,13 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
                 if (item.innerText === message.data.text) {
                     item.click();
                     response = { code: 0, description: "Success", data: { query: message.data.query, text: message.data.text } }
-                    return;
+                    
+                    success = true;
+                    break;
                 }
 
-            response = { code: -1, description: "Element with specified text not found", data: { query: message.data.query, text: message.data.text } }
+            if (!success)
+                response = { code: -1, description: "Element with specified text not found", data: { query: message.data.query, text: message.data.text } }
             break;
 
         case "changeLocation":

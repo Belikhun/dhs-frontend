@@ -35,15 +35,25 @@ const loadMsg = () => {
 
 const core = {
 	mainBox: $("#mainBox"),
-	script: {
-		info: {
+	tool: {
+		tracking: {
 			container: $("#scriptPageInfo"),
 			page: $("#scriptCurrentPage"),
 			title: $("#scriptCurrentTitle"),
-			path: $("#scriptCurrentPath"),
-			tab: $("#scriptCurrentTabId"),
-			reload: $("#scriptReloadInfo"),
+			tabID: $("#scriptCurrentTabId")
 		},
+		navbar: {
+			clock: $("#navbarClock"),
+			userName: $("#navbarUserName"),
+			userTag: $("#navbarUserTag"),
+			hamburger: $("#navbarHamburger"),
+		},
+		reloadBtn: $("#scriptReloadInfo"),
+		announcement: $("#announcementBox"),
+		changelog: $("#toolChangelog"),
+		changelogContainer: $("#toolChangelogContainer")
+	},
+	script: {
 		thisPageList: $("#scriptThisPageList"),
 		undependList: $("#scriptUndependList"),
 		availableList: $("#scriptAvailableList"),
@@ -83,16 +93,24 @@ const core = {
 		},
 		cancelButton: $("#scriptRunCancel")
 	},
-	appInfo: {
-		container: $("#appInfo"),
-		toggler: $("#appInfoButton"),
-		title: $("#appInfoTitle"),
-		description: $("#appInfoDescription"),
-		copyright: $("#appInfoCopyright"),
-		version: $("#appInfoVersion"),
-		license: $("#appInfoLicense"),
-		key: $("#appInfoKey"),
-		author: $("#appInfoAuthor")
+	toolInfo: {
+		container: $("#toolInfo"),
+		name: $("#toolInfoName"),
+		version: $("#toolInfoVersion"),
+		codename: $("#toolInfoCodename"),
+		copyright: $("#toolInfoCopyright"),
+		license: {
+			container: $("#toolInfoLicense"),
+			licensee: $("#toolInfoLicenseName"),
+			allow: $("#toolInfoLicenseAllow"),
+			timer: $("#toolInfoLicenseTimer"),
+			key: {
+				button: $("#toolInfoLicenseKeyBtn"),
+				container: $("#toolInfoLicenseKey"),
+				key: $("#toolInfoLicenseKeyKey")
+			},
+		},
+		author: $("#toolInfoAuthor")
 	},
 	uniqueKeys: null,
 	scriptIniting: false,
@@ -104,34 +122,37 @@ const core = {
 
 	async init() {
 		splash.change({ title: "Deal Hunter Suite", description: loadMsg() });
-		let randMsgI = setInterval(() => splash.change({ description: loadMsg() }), 3000);
-		
-		splash.set({ p: 0, i: "Cool down the system" });
-		await delayAsync(500);
-
-		splash.set({ p: 10, i: "Preparing infoPopup" });
-		await popup.init();
 
 		//? |-----------------------|
 		//? |      SOUNDS INIT      |
 		//? |-----------------------|
 
-		splash.set({ p: 20, i: "Loading all the sounds thingy" });
+		splash.set({ p: 0, i: "Loading all the sounds thingy" });
 		cookie.set("__s_m", true);
 		await sounds.init();
 
 		//? |-----------------------|
-		//? |     INFOPAGE INIT     |
+		//? |      POPUP INIT       |
 		//? |-----------------------|
 
-		splash.set({ p: 30, i: "Preparing Info Page" });
-		this.appInfo.title.innerText = APPNAME;
-		this.appInfo.description.innerText = DESCRIPTION;
-		this.appInfo.copyright.innerHTML = `Copyright (C) ${AUTHOR}. All right reserved`;
-		this.appInfo.version.innerHTML = `Phiên bản <b>v${VERSION}</b> - Codename: <b>${CODENAME}</b>`;
-		this.appInfo.license.innerHTML = `BẠN CHƯA ĐĂNG NHẬP`;
-		this.appInfo.key.innerText = "KHÔNG RÕ";
-		this.appInfo.author.innerHTML = `
+		splash.set({ p: 10, i: "Preparing infoPopup" });
+		await popup.init();
+
+		//? |-----------------------|
+		//? |     TOOLINFO INIT     |
+		//? |-----------------------|
+
+		splash.set({ p: 20, i: "Preparing Tool Info Panel" });
+		
+		this.toolInfo.name.innerText = APPNAME;
+		this.toolInfo.version.innerText = VERSION;
+		this.toolInfo.codename.innerText = CODENAME;
+		this.toolInfo.copyright.innerHTML = `Copyright (C) 2019-2020 ${AUTHOR}. All right reserved`;
+
+		this.toolInfo.license.container.dataset.triColor = "red";
+		this.toolInfo.license.licensee.innerText = `Bạn chưa đăng nhập`;
+		this.toolInfo.license.key.key.innerText = "KHÔNG RÕ";
+		this.toolInfo.author.innerHTML = `
 			<span class="item">
 				<img class="avatar" src="${SERVER_ADDR + API["avatar"]}?u=belivipro9x99">
 				<a href="https://github.com/belivipro9x99" target="_blank" rel="noopener noreferrer" class="authorName">Belikhun</a>
@@ -148,27 +169,23 @@ const core = {
 			</span>
 		`
 
-		this.appInfo.toggler.addEventListener("mouseup", e => {
+		this.tool.navbar.hamburger.addEventListener("mouseup", e => {
 			let l = this.mainBox.dataset.layout;
 
-			if (l == 7)
+			if (l == 7) {
+				this.tool.navbar.hamburger.classList.remove("active");
 				this.changeLayout("back");
-			else
+			} else {
+				this.tool.navbar.hamburger.classList.add("active");
 				this.changeLayout(7);
+			}
 		})
-
-		//? |-----------------------|
-		//? |     GENERATE UUID     |
-		//? |-----------------------|
-
-		splash.set({ p: 40, i: "Generating Client UUID" });
-		this.uniqueKeys = await this.generateKey();
 
 		//? |-----------------------|
 		//? |   SERVER COMM CHECK   |
 		//? |-----------------------|
 
-		splash.set({ p: 50, i: "Kiểm tra kết nối tới máy chủ" });
+		splash.set({ p: 30, i: "Kiểm tra kết nối tới máy chủ" });
 		try {
 			var serverStatus = await myajax({
 				url: SERVER_ADDR + API.status,
@@ -177,8 +194,9 @@ const core = {
 		} catch(e) {
 			splash.change({ description: "Lỗi đã sảy ra! Vui lòng khởi động lại công cụ!" });
 			await popup.show({
-				title: "Không thể kết nối tới máy chủ!",
-				description: "Oops! Máy chủ có vẻ như đang <b>Offline</b>! Vui lòng thử lại sau!<br>Nếu bạn thấy đây là một lỗi, vui lòng báo cáo lỗi tới Admin để được giải quyết trong thời gian sớm nhất!",
+				title: "Không thể kết nối tới máy chủ",
+				message: "Xin lỗi! Hiện tool không thể kết nối tới máy chủ",
+				description: "Vui lòng thử lại sau ít phút!",
 				level: "offline",
 				buttonList: {
 					contact: { text: "Báo lỗi", color: "pink", resolve: false, onClick: () => window.open("http:\/\/m.me\/HunterDealNo1", "_blank") }
@@ -189,6 +207,7 @@ const core = {
 		}
 
 		this.info = serverStatus.data;
+		CONTACT_ADDR = this.info.contact;
 
 		if (this.info.EXTENSION_ANNOUNCEMENT.enabled === true) {
 			let a = this.info.EXTENSION_ANNOUNCEMENT;
@@ -201,7 +220,7 @@ const core = {
 			aBoxInner.innerHTML = a.message;
 
 			aBox.appendChild(aBoxInner);
-			this.script.info.container.appendChild(aBox);
+			this.tool.announcement.appendChild(aBox);
 		}
 
 		if (this.info.EXTENSION_VERSION !== VERSION) {
@@ -212,11 +231,28 @@ const core = {
 				buttonList: {
 					downZip: { text: "Tải về (zip)", color: "green", resolve: false, onClick: () => window.open(SERVER_ADDR + API.updates.latest + "?type=zip", "_blank") },
 					downCrx: { text: "Tải về (crx)", color: "blue", resolve: false, onClick: () => window.open(SERVER_ADDR + API.updates.latest + "?type=crx", "_blank") },
-					contact: { text: "Hỗ trợ", color: "pink", resolve: false, onClick: () => window.open("http:\/\/m.me\/HunterDealNo1", "_blank") },
+					contact: { text: "Hỗ trợ", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
 					continue: { text: "Tiếp tục chạy!", color: "yellow" }
 				}
 			});
 		}
+
+		splash.set({ p: 40, i: "Fetching changelog" });
+		this.tool.changelogContainer.innerHTML = await myajax({
+			url: SERVER_ADDR + API.updates.changelog,
+			method: "GET",
+			type: "text",
+			force: true,
+			reRequest: false
+		})
+		this.tool.changelog.dataset.loaded = "true";
+
+		//? |-----------------------|
+		//? |     GENERATE UUID     |
+		//? |-----------------------|
+
+		splash.set({ p: 50, i: "Generating Client UUID" });
+		this.uniqueKeys = await this.generateKey();
 
 		//? |-----------------------|
 		//? |     LICENSE CHECK     |
@@ -225,16 +261,52 @@ const core = {
 		splash.set({ p: 60, i: "Đang kiểm tra bản quyền" });
 		while (!await this.auth()) { clog("INFO", "Auth failed. Retrying"); }
 
-		this.appInfo.license.innerHTML = `Bản quyền được cấp phép cho <b>${this.session.keyData.name}</b><br>`;
-		_gaq.push(["_trackEvent", "auth", this.session.keyData.name]);
-		let licenseTimer = document.createElement("span");
-		liveTime(licenseTimer, this.session.keyData.expire, {
-			count: "down",
-			prefix: "Hết hạn sau: ",
-			ended: "đã hết hạn"
+		this.toolInfo.license.container.dataset.triColor = "blue";
+		this.toolInfo.license.licensee.innerText = this.session.keyData.name;
+		this.toolInfo.license.allow.innerText = this.session.keyData.allow.split(";").join(", ");
+		this.toolInfo.license.key.key.innerText = "ĐÃ BỊ ẨN";
+
+		this.toolInfo.license.key.button.addEventListener("mouseup", async e => {
+			let warningNode = document.createElement("t");
+			warningNode.style.fontFamily = "Open Sans";
+			warningNode.style.color = "#f3e75f";
+			warningNode.innerHTML = `<b>⚠ Lưu ý:</b> Tuyệt đối không chia sẻ key cho người khác! Bạn sẽ bị đăng xuất nếu có máy khác sử dụng key của bạn!`;
+
+			let response = await popup.show({
+				title: "Xác Nhận",
+				message: "Hiển Thị License Key",
+				description: `Bạn có chắc muốn hiển thị key bản quyền của bạn không?`,
+				level: "confirm",
+				additionalNode: warningNode,
+				buttonList: {
+					confirm: { text: "Xác Nhận", color: "pink" },
+					close: { text: "Đóng", color: "blue" }
+				}
+			});
+
+			if (response === "confirm")
+				this.toolInfo.license.key.key.innerText = this.session.keyData.key;
+
+			delete warningNode;
+			delete response;
 		});
-		this.appInfo.license.appendChild(licenseTimer);
-		this.appInfo.key.innerText = this.session.keyData.key;
+
+		setInterval(() => {
+			let now = time();
+			let remain = this.session.keyData.expire - now;
+
+			let d = Math.floor(remain / 86400);
+			let t = parseTime(remain % 86400);
+
+			this.toolInfo.license.timer.innerHTML = `<days>${d}</days>${t.str}<ms>${t.ms}</ms>`;
+
+			delete now;
+			delete remain;
+			delete d;
+			delete t;
+		}, 64);
+
+		_gaq.push(["_trackEvent", "auth", this.session.keyData.name]);
 
 		//? |-----------------------|
 		//? |     TAB COMM CHECK    |
@@ -258,29 +330,37 @@ const core = {
 		splash.set({ p: 80, i: "Lấy thông tin danh sách script" });
 		await this.fetchScriptList();
 
-		//? |-----------------------|
-		//? |    ATTACH LISTENER    |
-		//? |-----------------------|
+		//? |----------------------------------|
+		//? |    ATTACH LISTENER / INTERVAL    |
+		//? |----------------------------------|
 
 		splash.set({ p: 90, i: "Setting up Listeners" });
 		chrome.tabs.onUpdated.addListener((t, c) => this.checkPage(t, c));
-		this.script.info.reload.addEventListener("mouseup", e => this.reload(true));
+		this.tool.reloadBtn.addEventListener("mouseup", e => this.reload(true));
 
-		//? |-----------------------|
-		//? |     TRIANGLES INIT    |
-		//? |-----------------------|
+		// NAVBAR CLOCK
+		setInterval(() => {
+			let date = new Date();
+			let day = ["Th2", "Th3", "Th4", "Th5", "Th6", "Th7", "CN"][date.getDay() - 1];
+			let h = pleft(date.getHours(), 2);
+			let m = pleft(date.getMinutes(), 2);
+			let s = pleft(date.getSeconds(), 2);
+			let ms = pleft(date.getMilliseconds(), 3);
 
-		splash.set({ p: 95, i: "Beautifying The Layout" });
-		triBg(this.script.info.container, { color: "brown", triangleCount: 12 });
-		triBg(this.script.settings.info.container, { color: "gray", triangleCount: 12 });
-		triBg(this.script.status.container, { color: "dark" });
-		triBg(this.appInfo.container, { color: "navyBlue" });
+			this.tool.navbar.clock.innerHTML = `<sub>${day}</sub>${h}:${m}:${s}<ms>${ms}</ms>`;
+
+			delete date;
+			delete day;
+			delete h;
+			delete m;
+			delete s;
+			delete ms;
+		}, 64);
 
 		//? |-----------------------|
 		//? |       END INIT        |
 		//? |-----------------------|
 
-		clearInterval(randMsgI);
 		splash.set({ p: 100, i: "" });
 		clog("OKAY", "Initialized");
 		_gaq.push(["_trackEvent", "pageLoad", "initialized", "core.js Initialized"]);
@@ -296,6 +376,7 @@ const core = {
 			await delayAsync(600);
 		}
 
+		this.tool.navbar.userName.innerText = this.session.keyData.name;
 		splash.change({ description: `Cấp phép cho: <b>${this.session.keyData.name}</b>` });
 		await delayAsync(500);
 		this.changeLayout(3);
@@ -321,11 +402,10 @@ const core = {
 	},
 
 	updatePageInfo() {
-		this.script.info.page.innerText = this.page.url.hostname;
-		this.script.info.title.innerText = this.page.title;
-		this.script.info.path.innerText = this.page.url.pathname;
+		this.tool.tracking.page.innerText = this.page.url.hostname;
+		this.tool.tracking.title.innerText = this.page.title;
 
-		this.script.info.tab.innerText = this.page.id || "Không Rõ";
+		this.tool.tracking.tabID.innerText = this.page.id || "Không Rõ";
 	},
 
 	findTarget() {
@@ -480,6 +560,33 @@ const core = {
 			sounds.toggle(0);
 		else
 			sounds.toggle(1);
+
+		// Optimize unused layout
+		let layoutToOptimize = document.querySelectorAll(`[data-optimize-target="${pId}"]`);
+		for (let item of layoutToOptimize)
+			setTimeout(() => { item.classList.add("optimize"); }, 300);
+
+		// UnOptimize unused layout
+		let layoutToUnOptimize = document.querySelectorAll(`[data-optimize-target="${id}"]`);
+		for (let item of layoutToUnOptimize)
+			item.classList.remove("optimize");
+
+		// Find and unload previous triBg
+		let prevTriContainer = document.querySelectorAll(`[data-tri-layout="${pId}"]`);
+		for (let item of prevTriContainer) {
+			let box = fcfn(item, "triBgContainer");
+			item.removeChild(box);
+
+			delete box;
+		}
+
+		// Load current layout's triBg
+		let triContainer = document.querySelectorAll(`[data-tri-layout="${id}"]`);
+		for (let item of triContainer)
+			triBg(item, {
+				color: item.dataset.triColor || "gray",
+				triangleCount: item.dataset.triCount || 16
+			})
 
 		this.mainBox.dataset.layout = id;
 	},
@@ -692,7 +799,7 @@ const core = {
 								let btnNow = createBtn("Bây Giờ", "dark");
 								btnNow.style.marginLeft = "10px";
 
-								input.input.step = 1;
+								input.input.step = (typeof item.step === "number") ? item.step : 1;
 								let now = new Date();
 
 								if (item.type === "date")
@@ -891,7 +998,8 @@ const core = {
 					description: reason,
 					level: "info",
 					buttonList: {
-						contact: { text: "Quay lại", color: "green" },
+						contact: { text: "Báo Lỗi", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
+						back: { text: "Quay lại", color: "green" },
 					}
 				});
 
@@ -1054,7 +1162,7 @@ const core = {
 				}, text);
 
 				let logItem = document.createElement("li");
-				logItem.innerText = text;
+				logItem.innerHTML = text;
 				this.script.logs.appendChild(logItem);
 				this.script.logs.scrollTop = this.script.logs.scrollHeight;
 			}
@@ -1139,7 +1247,7 @@ const core = {
 					description: "Oops! Máy chủ có vẻ như đang <b>Offline</b>! Vui lòng thử lại sau!<br>Nếu bạn thấy đây là một lỗi, vui lòng báo cáo lỗi tới Admin để được giải quyết trong thời gian sớm nhất!",
 					level: "offline",
 					buttonList: {
-						contact: { text: "Báo lỗi", color: "pink", resolve: false, onClick: () => window.open(this.info.contact, "_blank") }
+						contact: { text: "Báo lỗi", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") }
 					}
 				})
 
@@ -1161,7 +1269,7 @@ const core = {
 						level: "warning",
 						additionalNode: keyBox,
 						buttonList: {
-							contact: { text: "Liên Hệ Đăng Kí", color: "pink", resolve: false, onClick: () => window.open(this.info.contact, "_blank") },
+							contact: { text: "Liên Hệ Đăng Kí", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
 							reload: { text: "Kiểm Tra Lại", color: "blue" }
 						}
 					})
@@ -1197,7 +1305,7 @@ const core = {
 						level: "warning",
 						additionalNode: box,
 						buttonList: {
-							contact: { text: "Liên Hệ", color: "pink", resolve: false, onClick: () => window.open(this.info.contact, "_blank") },
+							contact: { text: "Liên Hệ", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
 							reload: { text: "Kiểm Tra Lại", color: "blue" }
 						}
 					})
@@ -1217,7 +1325,7 @@ const core = {
 						level: "error",
 						additionalNode: infoBox,
 						buttonList: {
-							contact: { text: "Liên Hệ", color: "pink", resolve: false, onClick: () => window.open(this.info.contact, "_blank") },
+							contact: { text: "Liên Hệ", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
 							reload: { text: "Thử Lại", color: "blue" }
 						}
 					})
@@ -1313,76 +1421,6 @@ const tutorial = {
 	}
 }
 
-const popup = {
-	container: $("#infoPopup"),
-	title: $("#infoPopupTitle"),
-	description: $("#infoPopupDescription"),
-	custom: $("#infoPopupCustomNode"),
-	button: $("#infoPopupButton"),
-	initialized: false,
-
-	async init() {
-		triBg(this.container, { color: "dark" });
-
-		this.initialized = true;
-		clog("okay", "Initialised:", {
-			color: flatc("red"),
-			text: "core.popup"
-		});
-	},
-
-	show({
-		title = "Title",
-		description = "Description",
-		level = "info",
-		additionalNode = null,
-		buttonList = {}
-	} = {}) {
-		return new Promise((resolve) => {
-			this.container.dataset.level = level;
-			
-			this.title.innerHTML = title;
-			this.description.innerHTML = description;
-			this.custom.innerHTML = "";
-
-			if (additionalNode)
-				this.custom.appendChild(additionalNode);
-
-			this.button.innerHTML = "";
-			let buttonKeyList = Object.keys(buttonList);
-
-			if (buttonKeyList.length)
-				for (let key of buttonKeyList) {
-					let item = buttonList[key];
-					let button = document.createElement("button");
-
-					button.classList.add("sq-btn", item.color || "blue");
-					button.innerText = item.text || "Text";
-					button.onclick = item.onClick || null;
-					button.returnValue = key;
-					button.dataset.soundhover = "";
-					button.dataset.soundselect = "";
-					sounds.applySound(button);
-
-					if (!(typeof item.resolve === "boolean") || item.resolve !== false)
-						button.addEventListener("mouseup", e => {
-							resolve(e.target.returnValue);
-							this.hide();
-						});
-
-					this.button.appendChild(button);
-				}
-
-			core.changeLayout(2);
-			sounds.select();
-		})
-	},
-
-	hide() {
-		core.changeLayout("back");
-	}
-}
-
 const splash = {
 	title: $("#splashTitle"),
 	description: $("#splashDescription"),
@@ -1440,19 +1478,20 @@ const errorHandler = async (error, returnable = false) => {
 		returnBtn.back = { text: "Quay lại", color: "green" }
 
 	let errorBox = document.createElement("pre");
-	errorBox.classList.add("dark", "break", "center");
+	errorBox.classList.add("dark", "break");
 	errorBox.innerText = `${e} >>> ${d}`;
 	errorBox.style.fontSize = "16px";
-	errorBox.style.margin = "unset";
 
 	splash.change({ description: "Lỗi đã sảy ra!" });
 	await popup.show({
+		windowTitle: "Error Handler",
 		title: "Oops!",
+		message: "EXCEPTION OCCURED",
 		description: "Một lỗi không mong muốn đã sảy ra!",
 		level: "error",
 		additionalNode: errorBox,
 		buttonList: {
-			contact: { text: "Báo Lỗi", color: "pink", resolve: false, onClick: () => window.open(core.info.contact || "http:\/\/m.me\/HunterDealNo1", "_blank") },
+			contact: { text: "Báo Lỗi", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
 			...returnBtn
 		}
 	})

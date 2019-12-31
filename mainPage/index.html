@@ -10,6 +10,7 @@
     
     <!-- Fonts -->
     <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/calibri.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/opensans.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/exo.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/consolas.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/fontawesome.css" />
@@ -41,34 +42,49 @@
 
 <body class="dark">
     <span id="mainBox" class="main" data-layout="1">
-        <div class="splash">
-            <img class="icon" src="/assets/img/icon@64x64.png">
-            <span class="info">
-                <t id="splashTitle" class="title">Deal Hunter Suite</t>
-                <t id="splashDescription" class="description">Đang tải...</t>
-                <span id="appInfoButton" class="infoBtn sound" data-soundhover data-soundselect></span>
-                <div class="progressBar"><div id="splashProgress" class="bar"></div></div>
-                <t id="splashProgressInfo" class="progressInfo"></t>
-                <button id="splashButton" class="sq-btn sound" data-soundhover data-soundselect>Sample Text!</button>
-            </span>
+        <div class="splash" data-optimize-target="1">
+            <div id="toolChangelog" class="changelog">
+                <div class="simple-spinner"></div>
+                <div id="toolChangelogContainer" class="container"></div>
+            </div>
+            <div class="loadPanel">
+                <img class="icon" src="/assets/img/icon@128x128.png">
+                <span class="info">
+                    <t id="splashTitle" class="title">Deal Hunter Suite</t>
+                    <t id="splashDescription" class="description">Đang tải...</t>
+                    <div class="progressBar"><div id="splashProgress" class="bar"></div></div>
+                    <t id="splashProgressInfo" class="progressInfo"></t>
+                </span>
+            </div>
+            <div class="navbar">
+                <img class="icon" src="/assets/img/icon@32x32.png">
+                <span id="navbarClock" class="clock"><sub>Th0</sub> 00:00:00</span>
+                <span class="user">
+                    <t id="navbarUserName" class="name">Sample name</t>
+                    <div id="navbarUserTag" class="tag"></div>
+                </span>
+                <span id="navbarHamburger" class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+            </div>
         </div>
 
         <div class="container">
             <div class="scriptContainer">
-                <div id="scriptPageInfo" class="header">
-                    <span class="top">
+                <div class="announcement" id="announcementBox"></div>
+
+                <div id="scriptPageInfo" class="header" data-tri-layout="3" data-tri-color="gray">
+                    <span class="left">
                         <t id="scriptCurrentPage" class="currentPage">n/a</t>
                         <t id="scriptCurrentTitle" class="currentTitle">n/a</t>
-
-                        <t id="scriptCurrentPath" class="currentPath">n/a</t>
+    
+                        <t id="scriptCurrentTabId" class="tabId">n/a</t>
                     </span>
-                    <span class="bottom">
-                        <span class="left">
-                            <t id="scriptCurrentTabId" class="tabId">n/a</t>
-                        </span>
-                        <span class="right">
-                            <span id="scriptReloadInfo" class="reloadIcon sound" data-soundhover data-soundselect></span>
-                        </span>
+
+                    <span class="right">
+                        <div id="scriptReloadInfo" class="reloadBtn sound" data-soundhover data-soundselect></div>
                     </span>
                 </div>
 
@@ -85,7 +101,7 @@
                     <t id="scriptSettingsHeaderMessage" class="message">Đang tải</t>
                 </div>
 
-                <div id="scriptSettingsInfo" class="itemInfo">
+                <div id="scriptSettingsInfo" class="itemInfo" data-tri-layout="5" data-tri-color="gray">
                     <t id="scriptSettingsInfoId" class="id"></t>
                     <t id="scriptSettingsInfoTitle" class="title"></t>
                     <span id="scriptSettingsInfoPrice" class="price"></span>
@@ -104,7 +120,7 @@
             <ul id="scriptRunLogs" class="scriptRunLogs textView small"></ul>
         </div>
 
-        <div id="scriptRunStatus" class="runStatus">
+        <div id="scriptRunStatus" class="runStatus" data-tri-layout="6" data-tri-color="dark">
             <t id="scriptRunStatusStatus" class="status"></t>
             <t id="scriptRunStatusTimer" class="timer"></t>
             <div class="progressBar textBottom">
@@ -126,27 +142,43 @@
             <button id="scriptRunCancel" class="sq-btn yellow cancelButton sound" data-soundhover data-soundselect>Hủy</button>
         </div>
 
-        <div id="infoPopup" class="popup">
-            <span class="icon"></span>
-            <t id="infoPopupTitle" class="title"></t>
-            <t id="infoPopupDescription" class="description"></t>
-            <div id="infoPopupCustomNode" class="custom"></div>
-            <div id="infoPopupButton" class="button"></div>
-        </div>
+        <!--! UNUSED, WILL MAKE USE OF THIS IN THE FUTURE -->
+        <div id="infoPopup" class="popup"></div>
 
-        <div id="appInfo" class="appInfo">
-            <img class="icon" src="/assets/img/icon@128x128.png">
-            <t id="appInfoTitle" class="title"></t>
-            <t id="appInfoDescription" class="description"></t>
-            <t id="appInfoCopyright" class="copyright"></t>
-            <t id="appInfoVersion" class="version"></t>
-            <t id="appInfoLicense" class="license"></t>
-            <t id="appInfoKey" class="key"></t>
-            <t class="keyWarning" title="Tuyệt đối không chia sẻ key cho người khác! Bạn sẽ bị đăng xuất nếu có máy khác sử dụng key của bạn!"><b>⚠ Lưu ý:</b> Tuyệt đối không chia sẻ key cho người khác! Bạn sẽ bị đăng xuất nếu có máy khác sử dụng key của bạn!</t>
+        <div id="toolInfo" class="toolInfo" data-optimize-target="7">
+            <div class="header">
+                <img class="icon" src="/assets/img/icon@128x128.png">
+                <t id="toolInfoName" class="toolName">appname</t>
+                <span class="toolDetail">
+                    <t id="toolInfoVersion" class="version">0.0</t>
+                    <t id="toolInfoCodename" class="codename">bruh</t>
+                </span>
+                <t id="toolInfoCopyright" class="copyright">no data</t>
+            </div>
 
-            <t class="author">CO-FOUNDER</t>
+            <t class="title">Bản Quyền</t>
 
-            <span id="appInfoAuthor" class="authorList"></span>
+            <div id="toolInfoLicense" class="license" data-tri-layout="7" data-tri-color="red">
+                <span class="left">
+                    <t id="toolInfoLicenseName" class="name">Bạn chưa đăng nhập</t>
+                    <t id="toolInfoLicenseAllow" class="allow">Không Rõ</t>
+                    <t class="timeDesc">Hiệu Lực Còn</t>
+                    <div id="toolInfoLicenseTimer" class="timer"><days>0</days>00:00:00<ms>000</ms></div>
+
+                    <div id="toolInfoLicenseKey" class="licenseKey">
+                        <t class="keyDesc">Khóa Bản Quyền</t>
+                        <t id="toolInfoLicenseKeyKey" class="key"></t>
+                    </div>
+                </span>
+
+                <span class="right">
+                    <div id="toolInfoLicenseKeyBtn" class="keyBtn sound" data-soundhoversoft data-soundselectsoft></div>
+                </span>
+            </div>
+
+            <t class="title">Author</t>
+
+            <span id="toolInfoAuthor" class="authorList"></span>
         </div>
 
         <div id="tutorialPage" class="tutorial">

@@ -31,7 +31,7 @@ function myajax({
             let errorObj = {}
             switch (__connection__.onlineState) {
                 case "offline":
-                    errorObj = { code: 106, description: "Disconnected to Server" }
+                    errorObj = { code: 106, description: "Mất kết nối tới máy chủ" }
                     break;
                 case "ratelimited":
                     errorObj = { code: 32, description: "Rate Limited" }
@@ -63,7 +63,7 @@ function myajax({
                     if (changeState === true)
                         __connection__.stateChange("offline");
                         
-                    let errorObj = { code: 106, description: "Disconnected to Server" };
+                    let errorObj = { code: 106, description: "Mất kết nối tới máy chủ" };
                     reject(errorObj);
                     error(errorObj);
 
@@ -93,9 +93,9 @@ function myajax({
                     try {
                         var res = JSON.parse(this.responseText);
                     } catch (data) {
-                        clog("errr", "Error parsing JSON.");
+                        clog("errr", "Lỗi phân tích JSON");
 
-                        let errorObj = { code: 2, description: `Error parsing JSON`, data: data }
+                        let errorObj = { code: 2, description: `Lỗi phân tích JSON`, data: data }
                         error(errorObj);
                         reject(errorObj);
 
@@ -340,17 +340,22 @@ function checkServer(ip, callback = () => {}) {
                     pon = {
                         code: -1,
                         description: `Server "${ip}" is Offline`,
+                        online: false,
                         address: ip
                     }
+
                     reject(pon);
                 } else {
                     pon = {
                         code: 0,
                         description: `Server "${ip}" is Online`,
+                        online: true,
                         address: ip
                     }
+
                     resolve(pon);
                 }
+
                 callback(pon);
             }
         })
@@ -732,18 +737,20 @@ function clog(level, ...args) {
     ]
 
     text = text.concat(args);
+    var n = 2;
     var out = new Array();
     out[0] = "%c";
     out[1] = "padding-left: 10px";
-    var n = 2;
     // i | 1   2   3   4   5     6
     // j | 0   1   2   3   4     5
     // n | 1 2 3 4 5 6 7 8 9 10 11
 
-    for (var i = 1; i <= text.length; i++) {
+    for (let i = 1; i <= text.length; i++) {
         item = text[i-1];
         if (typeof item === "string" || typeof item === "number") {
-            if (i > 4) str += `${item} `;
+            if (i > 4)
+                str += `${item} `;
+
             out[0] += `%c${item} `;
             out[n] = `font-size: ${size}px; font-family: ${font}; color: ${flatc("black")}`;
             n += 1;
@@ -752,11 +759,18 @@ function clog(level, ...args) {
                 out[n] = item;
                 n += 1;
 
+                if (item.code && item.description)
+                    str += `[${item.code}] ${item.description} `;
+                else
+                    str += JSON.stringify(item) + " ";
+
                 continue;
             }
 
-            var t = pleft(item.text, ((item.padding) ? item.padding : 0));
-            if (i > 4) str += t + " ";
+            let t = pleft(item.text, ((item.padding) ? item.padding : 0));
+            if (i > 4)
+                str += `${t} `;
+
             out[0] += `%c${t}`;
             
             if (item.seperate) {
@@ -798,33 +812,136 @@ function clog(level, ...args) {
     }
 }
 
-if (typeof document.__onclog === "undefined")
-    document.__onclog = (lv, t, m) => {};
+const popup = {
+    tree: {},
+    popup: {},
+    popupNode: null,
 
-// Init
-sc = new stopClock();
-clog("info", "Log started at:", {
-    color: flatc("green"),
-    text: (new Date()).toString()
-})
+    levelTemplate: {
+        light: {
+            okay: { bg: "green", icon: "check", h: "dark", b: "light" },
+            warning: { bg: "yellow", icon: "exclamation", h: "dark", b: "light" },
+            error: { bg: "red", icon: "bomb", h: "light", b: "light" },
+            offline: { bg: "gray", icon: "unlink", h: "light", b: "light" },
+            confirm: { bg: "blue", icon: "question", h: "dark", b: "light" }
+        },
+        dark: {
+            okay: { bg: "darkGreen", icon: "check", h: "light", b: "dark" },
+            warning: { bg: "darkYellow", icon: "exclamation", h: "light", b: "dark" },
+            error: { bg: "darkRed", icon: "bomb", h: "light", b: "dark" },
+            offline: { bg: "gray", icon: "unlink", h: "light", b: "dark" },
+            confirm: { bg: "darkBlue", icon: "question", h: "light", b: "dark" }
+        }
+    },
 
-// Error handling
+    init() {
+        const tree = [{type:"div",class:"popupWindow",name:"popup",list:[{type:"div",class:"header",name:"header",list:[{type:"span",class:"top",name:"top",list:[{type:"t",class:["windowTitle","text-overflow"],name:"windowTitle"},{type:"span",class:"close",name:"close"}]},{type:"span",class:"icon",name:"icon"},{type:"t",class:"text",name:"text"}]},{type:"div",class:"body",name:"body",list:[{type:"div",class:"top",name:"top",list:[{type:"t",class:"message",name:"message"},{type:"t",class:"description",name:"description"}]},{type:"div",class:"customNode",name:"customNode"},{type:"div",class:"buttonGroup",name:"button"}]}]}];
 
-window.addEventListener("error", e => {
-    clog("crit", {
-        color: flatc("red"),
-        text: e.message
-    }, "at", {
-        color: flatc("aqua"),
-        text: `${e.filename}:${e.lineno}:${e.colno}`
-    })
-})
+        this.tree = buildElementTree("div", "popupContainer", tree);
+        this.popupNode = this.tree.tree;
+        this.popup = this.tree.obj.popup;
+        document.body.insertBefore(this.popupNode, document.body.childNodes[0]);
 
-// window.addEventListener("unhandledrejection", (e) => {
-//      promise: e.promise; reason: e.reason
-// })
+        this.popup.header.top.close.dataset.soundhover = "";
+        this.popup.header.top.close.dataset.soundselect = "";
 
-__connection__ = {
+        if (typeof sounds !== "undefined")
+            sounds.applySound(this.popup.header.top.close);
+    },
+
+    show({
+        windowTitle = "Popup",
+        title = "Title",
+        message = "Message",
+		description = "Description",
+        level = "info",
+        icon = null,
+        bgColor = null,
+        headerTheme = null,
+        bodyTheme = null,
+		additionalNode = document.createElement("div"),
+		buttonList = {}
+	} = {}) {
+        return new Promise((resolve, reject) => {
+            this.popup.dataset.level = level;
+
+            //* THEME
+            let template = document.body.classList.contains("dark") ? this.levelTemplate.dark : this.levelTemplate.light;
+            
+            if (template[level])
+                template = template[level];
+            else
+                reject({ code: -1, description: `Unknown level: ${level}` })
+
+            triBg(this.popup.header, { color: (typeof bgColor === "string") ? bgColor : template.bg });
+            this.popup.header.icon.dataset.icon = (typeof icon === "string") ? icon : template.icon;
+            this.popup.header.setAttribute("theme", (typeof headerTheme === "string") ? headerTheme : template.h);
+            this.popup.body.setAttribute("theme", (typeof bodyTheme === "string") ? bodyTheme : template.b);
+
+            delete template;
+
+            //* HEADER
+            this.popup.header.top.windowTitle.innerText = windowTitle;
+            this.popup.header.text.innerText = title;
+
+            //* BODY
+            this.popup.body.top.message.innerText = message;
+            this.popup.body.top.description.innerHTML = description;
+
+            additionalNode.classList.add("customNode");
+            this.popup.body.replaceChild(additionalNode, this.popup.body.customNode);
+            this.popup.body.customNode = additionalNode;
+
+            //* BODY BUTTON
+
+            this.popup.header.top.close.onclick = () => {
+                resolve("close");
+                this.hide();
+            }
+
+            this.popup.body.button.innerHTML = "";
+            let buttonKeyList = Object.keys(buttonList);
+            if (buttonKeyList.length) {
+                for (let key of buttonKeyList) {
+                    let item = buttonList[key];
+                    let button = document.createElement("button");
+
+                    button.classList.add("sq-btn", item.color || "blue");
+                    button.innerText = item.text || "Text";
+                    button.onclick = item.onClick || null;
+                    button.returnValue = key;
+                    button.dataset.soundhover = "";
+                    button.dataset.soundselect = "";
+
+                    if (typeof sounds !== "undefined")
+                        sounds.applySound(button);
+
+                    if (!(typeof item.resolve === "boolean") || item.resolve !== false)
+                        button.addEventListener("mouseup", e => {
+                            resolve(e.target.returnValue);
+                            this.hide();
+                        });
+
+                        this.popup.body.button.appendChild(button);
+                }
+            }
+
+            this.popupNode.classList.add("show");
+
+            if (typeof sounds !== "undefined")
+                sounds.select();
+        })
+    },
+
+    hide() {
+        this.popupNode.classList.remove("show");
+        this.popup.header.removeChild(fcfn(this.popup.header, "triBgContainer"));
+        this.popup.body.button.innerHTML = "";
+    }
+}
+
+const __connection__ = {
+    enabled: true,
     onlineState: "online",
     checkEvery: 2000,
     checkInterval: null,
@@ -837,6 +954,9 @@ __connection__ = {
 
     async stateChange(state = "online", data = {}) {
         return new Promise((resolve, reject) => {
+            if (!this.enabled)
+                resolve({ code: 0, description: "Module Disabled", data: { disabled: true } });
+
             const s = ["online", "offline", "ratelimited"];
             if (!typeof state === "string" || state === this.onlineState || s.indexOf(state) === -1) {
                 let t = {code: -1, description: `Unknown state or rejected: ${state}`}
@@ -862,32 +982,51 @@ __connection__ = {
                     break;
 
                 case "offline":
-                    let checkerer = () => {}
+                    let checkerHandler = () => {}
+                    let checkTimeout = null;
+                    var doCheck = true;
 
                     clog("lcnt", "Mất kết nối tới máy chủ.");
                     this.checkCount = 0;
                     this.__sbarItem = (typeof sbar !== "undefined") ? sbar.additem("Đang thử kết nối lại...", "spinner", {aligin: "right"}) : null;
 
-                    this.onDisconnected({
-                        onCount: (f) => checkerer = f
-                    });
+                    // Bind check handler
+                    this.onDisconnected({ onCount: (f) => checkerHandler = f });
 
-                    this.checkInterval = setInterval(() => {
+                    let checker = async () => {
                         this.checkCount++;
                         if (this.__sbarItem)
                             this.__sbarItem.change(`Đang thử kết nối lại... [Lần ${this.checkCount}]`);
                             
-                        checkerer(this.checkCount);
+                        checkerHandler(this.checkCount);
 
-                        checkServer(window.location.origin)
-                            .then((data) => {
-                                if (data.code === 0) {
-                                    this.stateChange("online");
-                                    checkerer("connected");
-                                    resolve();
-                                }
-                            });
-                    }, this.checkEvery);
+                        let data = await checkServer(window.location.origin);
+
+                        if (data.online) {
+                            doCheck = false;
+                            this.stateChange("online");
+                            checkerHandler("connected");
+                            resolve();
+                        }
+                    }
+
+                    let checkHandle = async () => {
+                        clearTimeout(checkTimeout);
+
+                        if (!doCheck)
+                            return;
+
+                        // Start time
+                        let timer = new stopClock();
+                        
+                        try {
+                            await checker();
+                        } catch(e) {}
+                        
+                        checkTimeout = setTimeout(() => checkHandle(), this.checkEvery - timer.stop * 1000);
+                    }
+
+                    checkHandle();
                     break;
 
                 case "ratelimited":
@@ -930,3 +1069,31 @@ __connection__ = {
     }
 
 }
+
+//? =================
+//?    SCRIPT INIT
+
+if (typeof document.__onclog === "undefined")
+    document.__onclog = (lv, t, m) => {};
+
+var sc = new stopClock();
+clog("info", "Log started at:", {
+    color: flatc("green"),
+    text: (new Date()).toString()
+})
+
+// Error handling
+
+window.addEventListener("error", e => {
+    clog("crit", {
+        color: flatc("red"),
+        text: e.message
+    }, "at", {
+        color: flatc("aqua"),
+        text: `${e.filename}:${e.lineno}:${e.colno}`
+    })
+})
+
+// window.addEventListener("unhandledrejection", (e) => {
+//      promise: e.promise; reason: e.reason
+// })
