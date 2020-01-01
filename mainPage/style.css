@@ -1174,7 +1174,7 @@ body {
     color: #cecece;
 }
 
-.main .toolInfo.optimize {
+.main .toolInfo.optimize .license {
     display: none;
 }
 

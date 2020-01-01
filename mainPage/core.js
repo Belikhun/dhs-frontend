@@ -120,6 +120,26 @@ const core = {
 	session: {},
 	page: {},
 
+	authorList: [{
+			name: "Belikhun",
+			avatar: `${SERVER_ADDR + API["avatar"]}?u=belivipro9x99`,
+			link: `https://github.com/belivipro9x99`,
+			role: [
+				"Core Developer",
+				"UI/UX Designer"
+			]
+		}, {
+			name: "Toàn Te",
+			avatar: `${SERVER_ADDR + API["avatar"]}?u=kirk2711`,
+			link: `https://www.facebook.com/HunterDealNo1`,
+			role: [
+				"Administrator",
+				"License Manager",
+				"Product Tester"
+			]
+		}
+	],
+
 	tagsColor: {
         vip: "#98ffa9",
         admin: "#fff57d",
@@ -160,22 +180,47 @@ const core = {
 		this.toolInfo.license.container.dataset.triColor = "red";
 		this.toolInfo.license.licensee.innerText = `Bạn chưa đăng nhập`;
 		this.toolInfo.license.key.key.innerText = "KHÔNG RÕ";
-		this.toolInfo.author.innerHTML = `
-			<span class="item">
-				<img class="avatar" src="${SERVER_ADDR + API["avatar"]}?u=belivipro9x99">
-				<a href="https://github.com/belivipro9x99" target="_blank" rel="noopener noreferrer" class="authorName">Belikhun</a>
-				<t class="authorInfo">Core Developer</t>
-				<t class="authorInfo">UI/UX Designer</t>
-			</span>
 
-			<span class="item">
-				<img class="avatar" src="${SERVER_ADDR + API["avatar"]}?u=kirk2711">
-				<a href="https://www.facebook.com/HunterDealNo1" target="_blank" rel="noopener noreferrer" class="authorName">Toàn Te</a>
-				<t class="authorInfo">Administrator</t>
-				<t class="authorInfo">License Manager</t>
-				<t class="authorInfo">Maintainer</t>
-			</span>
-		`
+		for (let item of this.authorList) {
+			let container = document.createElement("span");
+			container.classList.add("item");
+
+			let avatarDiv = document.createElement("div");
+			avatarDiv.classList.add("lazyload", "avatar");
+
+			let avatar = document.createElement("img");
+			avatar.onload = e => e.target.parentNode.dataset.loaded = 1;
+			avatar.src = item.avatar;
+
+			let spinner = document.createElement("div");
+			spinner.classList.add("simple-spinner");
+
+			avatarDiv.append(avatar, spinner);
+
+			let link = document.createElement("a");
+			link.classList.add("authorName");
+			link.href = item.link;
+			link.target = "_blank";
+			link.innerText = item.name;
+
+			container.append(avatarDiv, link);
+
+			for (let role of item.role) {
+				let text = document.createElement("t");
+				text.classList.add("authorInfo");
+				text.innerText = role;
+				container.append(text);
+
+				delete text;
+			}
+
+			this.toolInfo.author.append(container);
+
+			delete container;
+			delete avatarDiv;
+			delete spinner;
+			delete link;
+		}
 
 		this.tool.navbar.hamburger.addEventListener("mouseup", e => {
 			let l = this.mainBox.dataset.layout;
@@ -231,20 +276,6 @@ const core = {
 			this.tool.announcement.appendChild(aBox);
 		}
 
-		if (this.info.EXTENSION_VERSION !== VERSION) {
-			await popup.show({
-				title: "Đã có phiên bản mới!",
-				description: `Hiện đã có phiên bản mới: <b>v${this.info.EXTENSION_VERSION}</b>. Vui lòng cập nhật bằng link dưới hoặc liên hệ Admin để được hỗ trợ!`,
-				level: "warning",
-				buttonList: {
-					downZip: { text: "Tải về (zip)", color: "green", resolve: false, onClick: () => window.open(SERVER_ADDR + API.updates.latest + "?type=zip", "_blank") },
-					downCrx: { text: "Tải về (crx)", color: "blue", resolve: false, onClick: () => window.open(SERVER_ADDR + API.updates.latest + "?type=crx", "_blank") },
-					contact: { text: "Hỗ trợ", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
-					continue: { text: "Tiếp tục chạy!", color: "yellow" }
-				}
-			});
-		}
-
 		splash.set({ p: 40, i: "Fetching changelog" });
 		this.tool.changelogContainer.innerHTML = await myajax({
 			url: SERVER_ADDR + API.updates.changelog,
@@ -253,7 +284,23 @@ const core = {
 			force: true,
 			reRequest: false
 		})
+
 		this.tool.changelog.dataset.loaded = "true";
+
+		if (this.info.EXTENSION_VERSION !== VERSION) {
+			await popup.show({
+				title: "Đã có phiên bản mới!",
+				description: `Hiện đã có phiên bản mới: <b>v${this.info.EXTENSION_VERSION}</b>. Vui lòng cập nhật bằng link dưới hoặc liên hệ Admin để được hỗ trợ!`,
+				level: "warning",
+				additionalNode: this.tool.changelogContainer.cloneNode(true),
+				buttonList: {
+					downZip: { text: "Tải về (zip)", color: "green", resolve: false, onClick: () => window.open(SERVER_ADDR + API.updates.latest + "?type=zip", "_blank") },
+					downCrx: { text: "Tải về (crx)", color: "blue", resolve: false, onClick: () => window.open(SERVER_ADDR + API.updates.latest + "?type=crx", "_blank") },
+					contact: { text: "Hỗ trợ", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
+					continue: { text: "Tiếp tục chạy!", color: "yellow" }
+				}
+			});
+		}
 
 		//? |-----------------------|
 		//? |     GENERATE UUID     |
@@ -267,7 +314,15 @@ const core = {
 		//? |-----------------------|
 
 		splash.set({ p: 60, i: "Đang kiểm tra bản quyền" });
-		while (!await this.auth()) { clog("INFO", "Auth failed. Retrying"); }
+		while (!await this.auth()) { clog("INFO", "Auth failed. Retrying") }
+
+		let tagsString = "";
+		for (let item of this.session.keyData.tags)
+			tagsString += `<tag ${(typeof this.tagsColor[item.toLowerCase()] === "string") ? `style="background-color: ${this.tagsColor[item.toLowerCase()]}"` : ""}>${item}</tag>`;
+		
+		this.tool.navbar.userName.innerText = this.session.keyData.name;
+		this.tool.navbar.userTag.innerHTML = tagsString;
+		delete tagsString;
 
 		this.toolInfo.license.container.dataset.triColor = "blue";
 		this.toolInfo.license.licensee.innerText = this.session.keyData.name;
@@ -292,14 +347,19 @@ const core = {
 				}
 			});
 
-			if (response === "confirm")
+			if (response === "confirm") {
 				this.toolInfo.license.key.key.innerText = this.session.keyData.key;
+				this.toolInfo.license.container.dataset.triColor = "red";
+			}
 
 			delete warningNode;
 			delete response;
 		});
 
 		setInterval(() => {
+			if (this.toolInfo.container.classList.contains("optimize"))
+				return;
+			
 			let now = time();
 			let remain = this.session.keyData.expire - now;
 
@@ -383,15 +443,6 @@ const core = {
 			await this.dataSave({ licensed: true });
 			await delayAsync(600);
 		}
-
-		
-		let tagsString = "";
-		for (let item of this.session.keyData.tags)
-			tagsString += `<tag ${(typeof this.tagsColor[item.toLowerCase()] === "string") ? `style="background-color: ${this.tagsColor[item.toLowerCase()]}"` : ""}>${item}</tag>`;
-		
-		this.tool.navbar.userName.innerText = this.session.keyData.name;
-		this.tool.navbar.userTag.innerHTML = tagsString;
-		delete tagsString;
 
 		splash.change({ description: `Cấp phép cho: <b>${this.session.keyData.name}</b>` });
 		await delayAsync(500);
@@ -928,10 +979,22 @@ const core = {
 						
 						else
 							reject({ code: -1, description: "Unknown item type when Script preparing settings value: " + item.type, data: item })
+					
+						this.script.settings.formList.appendChild(input.group);
+
+						if (input.input)
+							settingList[key].inputElement = input.input;
+						else
+							delete settingList[key];
+					}
+
+					//* DEPEND HANDLER AND SANITIZER
+					for (let key of Object.keys(settingList)) {
+						let item = settingList[key];
 
 						if (item.depend) {
 							let _t = item;
-							let _i = input.input;
+							let _i = item.inputElement;
 
 							let _o = _t.depend.split(":");
 							if (_o.length === 2) {
@@ -945,13 +1008,6 @@ const core = {
 									.addEventListener("change", e => { _i.disabled = (!e.target.checked) ^ (_t.doubt || false) });
 							}
 						}
-
-						this.script.settings.formList.appendChild(input.group);
-
-						if (input.input)
-							settingList[key].inputElement = input.input;
-						else
-							delete settingList[key];
 					}
 
 					this.script.settings.formSubmit.innerText = confirm;
@@ -1261,13 +1317,14 @@ const core = {
 			if (e.code === 106) {
 				splash.change({ description: "Lỗi đã sảy ra! Vui lòng khởi động lại công cụ!" });
 				await popup.show({
-					title: "Không thể kết nối tới máy chủ!",
-					description: "Oops! Máy chủ có vẻ như đang <b>Offline</b>! Vui lòng thử lại sau!<br>Nếu bạn thấy đây là một lỗi, vui lòng báo cáo lỗi tới Admin để được giải quyết trong thời gian sớm nhất!",
+					title: "Không thể kết nối tới máy chủ",
+					message: "Xin lỗi! Hiện tool không thể kết nối tới máy chủ",
+					description: "Vui lòng thử lại sau ít phút!",
 					level: "offline",
 					buttonList: {
-						contact: { text: "Báo lỗi", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") }
+						contact: { text: "Báo lỗi", color: "pink", resolve: false, onClick: () => window.open("http:\/\/m.me\/HunterDealNo1", "_blank") }
 					}
-				})
+				});
 
 				return false;
 			}
@@ -1278,13 +1335,17 @@ const core = {
 					keyBox.classList.add("dark", "break", "center");
 					keyBox.innerText = e.data.data.key;
 					keyBox.style.fontSize = "16px";
-					keyBox.style.margin = "unset";
 
 					splash.change({ description: "Đăng nhập thất bại!" });
 					await popup.show({
 						title: "Chưa đăng kí bản quyền!",
-						description: "Xin lỗi! Bản copy này của <b>Deal Hunter Suite</b> chưa được đăng kí bản quyền trên máy bạn!<br>Vui lòng gửi mã đăng kí ở phía dưới tới Admin để thực hiện đăng kí sản phẩm!",
-						level: "warning",
+						message: "Xin Lỗi!",
+						description: "Bản copy này của <b>Deal Hunter Suite</b> chưa được đăng kí trên máy bạn!<br>Vui lòng gửi mã đăng kí phía dưới tới Admin để thực hiện đăng kí sản phẩm!",
+						level: "okay",
+						icon: "key",
+						bgColor: "pink",
+						headerTheme: "light",
+						bodyTheme: "dark",
 						additionalNode: keyBox,
 						buttonList: {
 							contact: { text: "Liên Hệ Đăng Kí", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
@@ -1319,7 +1380,8 @@ const core = {
 					splash.change({ description: "Đăng nhập thất bại!" });
 					await popup.show({
 						title: "Bản quyền đã hết hạn!",
-						description: "Xin lỗi! Bản quyền <b>Deal Hunter Suite</b> của máy bạn đã hết hạn!<br>Vui lòng liên hệ với Admin để gia hạn sản phẩm!",
+						message: "Xin lỗi!",
+						description: "Bản quyền <b>Deal Hunter Suite</b> của máy bạn đã hết hạn!<br>Vui lòng liên hệ với Admin để gia hạn sản phẩm!",
 						level: "warning",
 						additionalNode: box,
 						buttonList: {
@@ -1339,7 +1401,8 @@ const core = {
 					splash.change({ description: "Lỗi không rõ!" });
 					await popup.show({
 						title: "Oops!",
-						description: "Xin lỗi! Có lỗi không mong muốn đã sảy ra khi đăng nhập vào máy chủ <b>Deal Hunter Suite</b>!",
+						message: "Xin lỗi!",
+						description: "Có lỗi không mong muốn đã sảy ra khi đăng nhập vào máy chủ <b>Deal Hunter Suite</b>!",
 						level: "error",
 						additionalNode: infoBox,
 						buttonList: {

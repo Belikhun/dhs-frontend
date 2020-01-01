@@ -823,14 +823,16 @@ const popup = {
             warning: { bg: "yellow", icon: "exclamation", h: "dark", b: "light" },
             error: { bg: "red", icon: "bomb", h: "light", b: "light" },
             offline: { bg: "gray", icon: "unlink", h: "light", b: "light" },
-            confirm: { bg: "blue", icon: "question", h: "dark", b: "light" }
+            confirm: { bg: "blue", icon: "question", h: "dark", b: "light" },
+            info: { bg: "purple", icon: "info", h: "light", b: "light" }
         },
         dark: {
             okay: { bg: "darkGreen", icon: "check", h: "light", b: "dark" },
             warning: { bg: "darkYellow", icon: "exclamation", h: "light", b: "dark" },
             error: { bg: "darkRed", icon: "bomb", h: "light", b: "dark" },
             offline: { bg: "gray", icon: "unlink", h: "light", b: "dark" },
-            confirm: { bg: "darkBlue", icon: "question", h: "light", b: "dark" }
+            confirm: { bg: "darkBlue", icon: "question", h: "light", b: "dark" },
+            info: { bg: "purple", icon: "info", h: "light", b: "dark" }
         }
     },
 

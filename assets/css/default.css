@@ -57,25 +57,32 @@ ul {
 
 pre {
 	position: relative;
-	display: block;
+	display: inline-block;
 	max-width: 100%;
 	overflow: auto;
+	margin: unset;
 	font-family: "Consolas";
 	font-weight: bold;
 	color: rgb(22, 22, 22);
+	vertical-align: sub;
 }
 
 pre.break {
+	display: block;
+	margin: 12px 0;
 	overflow: hidden;
 	white-space: pre-wrap;
 	word-wrap: break-word;
 }
 
 pre.center {
+	display: block;
+	margin: 12px 0;
 	text-align: center;
 }
 
-pre.dark {
+pre.dark,
+body.dark pre {
 	color: white;
 }
 
@@ -177,6 +184,7 @@ dot {
 
 	width: 100%;
 	max-width: 460px;
+	max-height: calc(100% - 40px);
 }
 
 .popupContainer .popupWindow .header {
@@ -289,6 +297,14 @@ dot {
 	content: "\f128";
 }
 
+.popupContainer .popupWindow .header .icon[data-icon="info"]::before {
+	content: "\f129";
+}
+
+.popupContainer .popupWindow .header .icon[data-icon="key"]::before {
+	content: "\f084";
+}
+
 /*? /ICON/ */
 
 .popupContainer .popupWindow .header .text {
@@ -321,10 +337,12 @@ dot {
 
 .popupContainer .popupWindow .body {
 	position: relative;
-	display: block;
+	display: flex;
+    flex-direction: column;
 	flex-grow: 1;
 	flex-shrink: 1;
 	padding: 10px 20px;
+	overflow: hidden;
 	background-color: rgb(228, 228, 228);
 }
 
@@ -343,9 +361,11 @@ dot {
 
 .popupContainer .popupWindow .body .customNode {
 	position: relative;
-    display: block;
+	display: block;
+	flex-shrink: 1;
     margin: 10px 0;
 	width: 100%;
+	overflow: auto;
 }
 
 .popupContainer .popupWindow .body .buttonGroup {

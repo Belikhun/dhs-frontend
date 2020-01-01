@@ -6,10 +6,9 @@
 //? |-----------------------------------------------------------------------------------------------|
 
 const APPNAME = "Deal Hunter Suite";
-const DESCRIPTION = "Provide all the Tools needed for Deal Hunter!";
 const CODENAME = "Nadeshiko";
-const VERSION = "2.0";
-const STATE = "indev";
+const VERSION = "2.1";
+const STATE = "release";
 
 const AUTHOR = "Team DHS";
 var   CONTACT_ADDR = "https://m.me/DealHunterSuite";

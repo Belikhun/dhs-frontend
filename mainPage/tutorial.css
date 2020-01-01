@@ -373,3 +373,8 @@
     width: 100px;
     height: 50px;
 }
+
+/* OPTIMIZE */
+.main .tutorial.optimize .cardContainer {
+    display: none;
+}
