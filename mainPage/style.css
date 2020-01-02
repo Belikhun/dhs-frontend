@@ -704,12 +704,11 @@ body {
     position: relative;
     display: flex;
     flex-grow: 0;
-    flex-shrink: 1;
+    flex-shrink: 0;
     flex-direction: column;
     align-items: center;
     margin: 10px;
     border-radius: 8px;
-    box-sizing: border-box;
     overflow: hidden;
 }
 
@@ -718,11 +717,11 @@ body {
 }
 
 .main .container .scriptSettings .itemInfo .id {
+    margin-top: 10px;
     font-weight: lighter;
     font-size: 13px;
     font-family: Calibri;
     color: #f7f7f7;
-    padding-top: 10px;
 }
 
 .main .container .scriptSettings .itemInfo .id::before {
@@ -735,7 +734,7 @@ body {
     font-size: 16px;
     color: white;
     text-align: center;
-    padding-top: 4px;
+    margin: 4px 10px 0 10px;
 }
 
 .main .container .scriptSettings .itemInfo .price {
@@ -747,13 +746,13 @@ body {
 }
 
 .main .container .scriptSettings .itemInfo .tags {
-    position: absolute;
+    position: relative;
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
-    bottom: 8px;
+    margin: 10px 0;
     max-width: 100%;
 }
 
@@ -775,6 +774,8 @@ body {
     position: relative;
     display: flex;
     flex-direction: column;
+    flex-grow: 1;
+    flex-shrink: 1;
     overflow: hidden;
 }
 
@@ -784,7 +785,7 @@ body {
     flex-grow: 1;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
+    padding: 10px 20px;
     box-sizing: border-box;
     overflow: auto;
 }
@@ -1352,8 +1353,23 @@ body {
     height: 0;
     transition:
         height 0.4s cubic-bezier(0.785, 0.135, 0.15, 0.86),
+        max-height 0.4s cubic-bezier(0.785, 0.135, 0.15, 0.86),
         background-color 0.4s cubic-bezier(0.785, 0.135, 0.15, 0.86);
 }
+
+/*! BEGIN SPECIAL RULES */
+
+.main .container .scriptSettings .itemInfo,
+.main .container .scriptSettings .settingsPage {
+    height: unset;
+    max-height: 0;
+}
+
+.main .container .scriptSettings .settingsPage {
+    flex-grow: 1;
+}
+
+/*! END SPECIAL RULES */
 
 .popupContainer {
     padding-top: 40px;
@@ -1393,11 +1409,11 @@ body {
 }
 
 .main[data-layout = "5"] .container .scriptSettings .itemInfo {
-    height: 180px;
+    max-height: 100%;
 }
 
 .main[data-layout = "5"] .container .scriptSettings .settingsPage {
-    height: calc(100% - 180px);
+    max-height: 100%;
 }
 
 .main[data-layout = "5"] .container .scriptSettings .itemInfo[data-hide="true"] + .settingsPage {
