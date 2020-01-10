@@ -409,7 +409,7 @@ const core = {
 		// NAVBAR CLOCK
 		setInterval(() => {
 			let date = new Date();
-			let day = ["Th2", "Th3", "Th4", "Th5", "Th6", "Th7", "CN"][date.getDay() - 1];
+			let day = ["CN", "Th2", "Th3", "Th4", "Th5", "Th6", "Th7"][date.getDay()];
 			let h = pleft(date.getHours(), 2);
 			let m = pleft(date.getMinutes(), 2);
 			let s = pleft(date.getSeconds(), 2);
