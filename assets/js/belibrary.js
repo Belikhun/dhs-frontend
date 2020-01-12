@@ -25,6 +25,7 @@ function myajax({
     force = false,
     changeState = true,
     reRequest = true,
+    withCredentials = false,
 }, callout = () => {}, error = () => {}) {
     return new Promise((resolve, reject) => {
         if (__connection__.onlineState !== "online" && force === false) {
@@ -183,6 +184,9 @@ function myajax({
         })
         
         xhr.open(method, url);
+        xhr.withCredentials = withCredentials;
+        xhr.onreadystatechange = (e) => clog("DEBG", "XHR State Change", e);
+
         let sendData = formData;
 
         for (let key of Object.keys(header))

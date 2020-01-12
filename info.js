@@ -7,8 +7,8 @@
 
 const APPNAME = "Deal Hunter Suite";
 const CODENAME = "Nadeshiko";
-const VERSION = "2.2";
-const STATE = "release";
+const VERSION = "2.3";
+const STATE = "indev";
 
 const AUTHOR = "Team DHS";
 var   CONTACT_ADDR = "https://m.me/DealHunterSuite";
