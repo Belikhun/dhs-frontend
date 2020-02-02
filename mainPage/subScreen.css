@@ -2,7 +2,7 @@
 ? |-----------------------------------------------------------------------------------------------|
 ? |  /popupPage/subScreen.css                                                                     |
 ? |                                                                                               |
-? |  Copyright (c) 2018-2019 Belikhun. All right reserved                                         |
+? |  Copyright (c) 2018-2020 Belikhun. All right reserved                                         |
 ? |  Licensed under the MIT License. See LICENSE in the project root for license information.     |
 ? |-----------------------------------------------------------------------------------------------|
 */
@@ -61,14 +61,34 @@
     color: rgb(212, 212, 212);
 }
 
-#subScreen[layout="dealHunt"] .container .header .pageChange {
+#subScreen[layout="dealHunt"] .container .header .pageFilter {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    margin: 0 10px;
+}
+
+#subScreen[layout="dealHunt"] .container .header .pageFilter .switchContainer {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    direction: rtl;
+    margin: 0 10px;
+}
+
+#subScreen[layout="dealHunt"] .container .header .pageFilter .switchContainer > span {
+    margin-left: 6px;
+}
+
+#subScreen[layout="dealHunt"] .container .header .buttonBox {
 	position: relative;
     display: flex;
     flex-direction: row;
     align-items: center;
 }
 
-#subScreen[layout="dealHunt"] .container .header .pageChange > span {
+#subScreen[layout="dealHunt"] .container .header .buttonBox > span {
 	position: relative;
 	display: inline-flex;
 	align-items: center;
@@ -84,11 +104,11 @@
 		background-color 0.3s ease;
 }
 
-#subScreen[layout="dealHunt"] .container .header .pageChange > span:hover {
+#subScreen[layout="dealHunt"] .container .header .buttonBox > span:hover {
     background-color: #525252;
 }
 
-#subScreen[layout="dealHunt"] .container .header .pageChange > span::before {
+#subScreen[layout="dealHunt"] .container .header .buttonBox > span::before {
 	content: "\f105";
     position: relative;
     font-family: "Font Awesome 5 Free";
@@ -97,26 +117,31 @@
     color: rgb(204, 204, 204);
 }
 
-#subScreen[layout="dealHunt"] .container .header .pageChange .forward::before {
+#subScreen[layout="dealHunt"] .container .header .buttonBox .forward::before {
     content: "\f050";
     font-size: 13px;
 }
 
-#subScreen[layout="dealHunt"] .container .header .pageChange .next::before {
+#subScreen[layout="dealHunt"] .container .header .buttonBox .next::before {
 	padding: 0 0 0 2px;
 }
 
-#subScreen[layout="dealHunt"] .container .header .pageChange .prev::before {
+#subScreen[layout="dealHunt"] .container .header .buttonBox .prev::before {
     content: "\f104";
 	padding: 0 2px 0 0;
 }
 
-#subScreen[layout="dealHunt"] .container .header .pageChange .backward::before {
+#subScreen[layout="dealHunt"] .container .header .buttonBox .backward::before {
     content: "\f049";
     font-size: 13px;
 }
 
-#subScreen[layout="dealHunt"] .container .header .pageChange .current {
+#subScreen[layout="dealHunt"] .container .header .buttonBox .delete::before {
+    content: "\f1f8";
+    font-size: 13px;
+}
+
+#subScreen[layout="dealHunt"] .container .header .buttonBox .current {
     font-family: Exo;
     font-size: 12px;
 	font-weight: bold;
@@ -281,7 +306,7 @@
 }
 
 #subScreen[layout="dealHunt"] .container .itemList .item .blackList::before {
-    content: "\f056";
+    content: "\f05e";
     font-family: "Font Awesome 5 Free";
     font-size: 20px;
     font-weight: 900;

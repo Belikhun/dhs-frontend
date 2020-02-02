@@ -1,7 +1,7 @@
 //? |-----------------------------------------------------------------------------------------------|
 //? |  /mainPage/core.js                                                                            |
 //? |                                                                                               |
-//? |  Copyright (c) 2018-2019 Belikhun. All right reserved                                         |
+//? |  Copyright (c) 2018-2020 Belikhun. All right reserved                                         |
 //? |  Licensed under the MIT License. See LICENSE in the project root for license information.     |
 //? |-----------------------------------------------------------------------------------------------|
 
@@ -54,6 +54,7 @@ const core = {
 		changelogContainer: $("#toolChangelogContainer")
 	},
 	script: {
+		autorunList: $("#scriptAutorunList"),
 		thisPageList: $("#scriptThisPageList"),
 		undependList: $("#scriptUndependList"),
 		availableList: $("#scriptAvailableList"),
@@ -150,6 +151,7 @@ const core = {
 
 	async init() {
 		splash.change({ title: "Deal Hunter Suite", description: loadMsg() });
+		__connection__.enabled = false;
 
 		//? |-----------------------|
 		//? |      SOUNDS INIT      |
@@ -404,7 +406,7 @@ const core = {
 
 		splash.set({ p: 90, i: "Setting up Listeners" });
 		chrome.tabs.onUpdated.addListener((t, c) => this.checkPage(t, c));
-		this.tool.reloadBtn.addEventListener("mouseup", e => this.reload(true));
+		this.tool.reloadBtn.addEventListener("mouseup", e => this.reload({ hard: true }));
 
 		// NAVBAR CLOCK
 		setInterval(() => {
@@ -456,16 +458,17 @@ const core = {
 		if (changeInfo.url)
 			changeInfo.url = new URL(changeInfo.url);
 
+		let doScriptListReload = ((typeof changeInfo.status === "string") && (this.page.status !== changeInfo.status))
 		this.page = Object.assign(this.page, changeInfo);
 		this.updatePageInfo();
-		await this.reload();
+		await this.reload({ reloadScriptList: doScriptListReload });
 
 		clog("DEBG", {
 			text: `tabID ${tabId}`,
 			padding: 10,
 			seperate: true,
 			color: flatc("gray")
-		}, changeInfo);
+		}, `scriptReload = ${doScriptListReload}`, changeInfo);
 	},
 
 	updatePageInfo() {
@@ -552,16 +555,37 @@ const core = {
 				method: "POST",
 				form: { token: this.session.token }
 			})
-
-			this.scriptList = res.data;
+				
+				this.scriptList = res.data;
 		}
 
-		this.script.thisPageList.innerHTML = "";
-		this.script.undependList.innerHTML = "";
-		this.script.availableList.innerHTML = "";
+		clog("DEBG", "Call to fetchScriptList", `hard = ${hard}`);
+
+		// RESET
+		if (this.page.status !== "complete" || hard)
+			await this.autorun.stopAll();
+
+		emptyNode(this.script.thisPageList);
+		emptyNode(this.script.undependList);
+		emptyNode(this.script.availableList);
 
 		for (let key of Object.keys(this.scriptList)) {
 			let item = this.scriptList[key];
+
+			// AUTORUN INIT
+			if (item.autorun) {
+				if (
+						(!this.autorun.running[item.id] || hard)
+					&& 	(
+							item.match === "all"
+						||	item.match === "*"
+						||	(new RegExp(item.match)).test(this.page.url.hostname + this.page.url.pathname)
+					)
+				)
+					this.autorun.init(item);
+			
+				continue;
+			}
 
 			let itemBox = document.createElement("div");
 			itemBox.classList.add("item");
@@ -595,7 +619,7 @@ const core = {
 					sounds.applySound(itemBox);
 
 					itemBox.dataset.target = item.id;
-					itemBox.addEventListener("click", e => this.scriptPreInit(e.currentTarget.dataset.target));
+					itemBox.addEventListener("click", e => this.scriptInit(e.currentTarget.dataset.target));
 				}
 
 				this.script.undependList.appendChild(itemBox);
@@ -606,7 +630,7 @@ const core = {
 					sounds.applySound(itemBox);
 
 					itemBox.dataset.target = item.id;
-					itemBox.addEventListener("click", e => this.scriptPreInit(e.currentTarget.dataset.target));
+					itemBox.addEventListener("click", e => this.scriptInit(e.currentTarget.dataset.target));
 				}
 
 				this.script.thisPageList.appendChild(itemBox);
@@ -614,6 +638,9 @@ const core = {
 
 			this.script.availableList.appendChild(itemBox.cloneNode(true));
 		}
+
+		if (this.page.status === "complete")
+			this.autorun.runAll();
 	},
 
 	changeLayout(id) {
@@ -642,7 +669,7 @@ const core = {
 		let prevTriContainer = document.querySelectorAll(`[data-tri-layout="${pId}"]`);
 		for (let item of prevTriContainer) {
 			let box = fcfn(item, "triBgContainer");
-			item.removeChild(box);
+			emptyNode(box);
 
 			delete box;
 		}
@@ -662,7 +689,7 @@ const core = {
 		container: $("#subScreen"),
 
 		show(node = document.createElement("span"), layout = "blank") {
-			this.container.innerHTML = "";
+			emptyNode(this.container);
 			this.container.setAttribute("layout", layout);
 			this.container.append(...node.childNodes);
 			window.resizeTo(1340, window.outerHeight);
@@ -671,7 +698,7 @@ const core = {
 
 		hide() {
 			this.container.classList.remove("show");
-			this.container.innerHTML = "";
+			emptyNode(this.container);
 			window.resizeTo(420, window.outerHeight);
 		}
 	},
@@ -694,19 +721,19 @@ const core = {
 		})
 	},
 
-	async reload(hard = false) {
-		if (hard) {
+	async reload({ hard = false, reloadScriptList = true }) {
+		if (hard)
 			await this.findTarget();
-		}
 
-		await this.fetchScriptList(hard);
+		if (reloadScriptList)
+			await this.fetchScriptList(hard);
 	},
 
-	async scriptPreInit(id) {
+	async scriptInit(id) {
 		if (this.scriptIniting)
 			return false;
 
-		clog("INFO", "Call to scriptPreInit ScriptID", id);
+		clog("INFO", "Call to scriptInit ScriptID", id);
 		_gaq.push(["_trackEvent", "runScript", id, `Run Script ID ${id}`]);
 		this.scriptIniting = true;
 		this.changeLayout(4);
@@ -727,7 +754,8 @@ const core = {
 			});
 		} catch(e) {
 			this.scriptIniting = false;
-			errorHandler(e);
+			await errorHandler(e);
+			this.changeLayout(3);
 			return;
 		}
 
@@ -737,84 +765,9 @@ const core = {
 
 		(async () => {
 			/* javascript-obfuscator:disable */ 
-			const createInput = (type, id, label, value, required = false) => {
-				let formGroup = document.createElement("div");
-				formGroup.classList.add("formGroup");
-				formGroup.dataset.soundhoversoft = "";
-				formGroup.dataset.soundselectsoft = "";
-				sounds.applySound(formGroup);
-		
-				let formField = document.createElement(type === "textarea" ? type : "input");
-				formField.type = type;
-				formField.id = id;
-				formField.classList.add("formField");
-				formField.placeholder = label;
-				formField.value = value;
-
-				if (required)
-					formField.required = true;
-
-				if (type === "textarea") {
-					formField.style.fontFamily = "Consolas";
-					formField.style.fontWeight = "bold";
-					formField.style.fontSize = "15px";
-				}
-		
-				let formLabel = document.createElement("label");
-				formLabel.htmlFor = id;
-				formLabel.classList.add("formLabel");
-				formLabel.innerText = label;
-		
-				formGroup.appendChild(formField);
-				formGroup.appendChild(formLabel);
-		
-				return { group: formGroup, input: formField }
-			}
-		
-			const createSwitch = (text, color, value, type = "checkbox") => {
-				let container = document.createElement("div");
-				container.classList.add("switchContainer");
-				container.dataset.soundhoversoft = "";
-				sounds.applySound(container);
-		
-				let title = document.createElement("span");
-				title.innerHTML = text;
-		
-				let label = document.createElement("label");
-				label.classList.add("sq-checkbox", color);
-		
-				let input = document.createElement("input");
-				input.type = type;
-				input.checked = value;
-				input.dataset.soundcheck = "";
-				sounds.applySound(input);
-		
-				let mark = document.createElement("span");
-				mark.classList.add("checkmark");
-		
-				label.appendChild(input);
-				label.appendChild(mark);
-				container.appendChild(title);
-				container.appendChild(label);
-		
-				return { group: container, input: input }
-			}
-		
-			const createBtn = (text, color = "blue") => {
-				let btn = document.createElement("button");
-				btn.type = "button";
-				btn.innerText = text;
-				btn.classList.add("sq-btn", color);
-				btn.dataset.soundhover = "";
-				btn.dataset.soundselect = "";
-				sounds.applySound(btn);
-		
-				return btn;
-			}
-
-			const priceFormat = (num) => num.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
-
+			var lockLogs = true;
 			var scriptCancelHandler = async () => {};
+			const priceFormat = (num) => num.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
 			const onCancel = (f) => scriptCancelHandler = f;
 
 			const info = async ({
@@ -839,13 +792,29 @@ const core = {
 					this.script.settings.info.tags.innerHTML = tags.map(i => `<tag>${i}</tag>`).join("");
 			}
 
-			const setup = async (settingList, { confirm = "Bắt đầu", cancel = "Hủy" } = {}) => {
-				return new Promise((resolve, reject) => {
-					this.script.settings.formList.innerHTML = "";
+			const setup = async (settingList, { confirm = "Bắt đầu", cancel = "Hủy", enableSave = true, saveKey = null } = {}) => {
+				return new Promise(async (resolve, reject) => {
+					emptyNode(this.script.settings.formList);
+					const dataSaveKey = `settings.${id}${(typeof saveKey === "string" ? `.${saveKey}` : ``)}`
+					let savedSettings = {}
+
+					// Load saved settings
+					if (enableSave)
+						savedSettings = (await this.dataLoad(dataSaveKey))[dataSaveKey] || {};
 
 					for (let key of Object.keys(settingList)) {
 						let item = settingList[key];
 						let input = null;
+
+						if (enableSave && typeof savedSettings[key] !== "undefined" && item.save !== false)
+							if (item.type === "radio") {
+								for (let i of item.list)
+									if (i.value === savedSettings[key])
+										i.checked = true;
+									else
+										i.checked = false;
+							} else
+								item.value = savedSettings[key];
 
 						if (["text", "textarea", "number", "date", "time"].includes(item.type)) {
 							input = createInput(
@@ -1016,9 +985,11 @@ const core = {
 					this.changeLayout(5);
 
 					// Form submit action
-					this.script.settings.form.onsubmit = (e) => {
+					this.script.settings.form.onsubmit = async (e) => {
 						e.preventDefault();
-						let returnData = {};
+						let returnData = {}
+						let saveType = ["text", "textarea", "number", "date", "time", "checkbox", "radio"]
+						let saveSettings = {}
 						
 						for (let key of Object.keys(settingList)) {
 							let item = settingList[key];
@@ -1035,7 +1006,14 @@ const core = {
 								continue;
 							else
 								returnData[key] = item.inputElement.value;
+
+							// Save Settings
+							if (enableSave && saveType.includes(item.type) && item.save !== false)
+								saveSettings[key] = returnData[key];
 						}
+
+						if (enableSave)
+							await this.dataSave({ [dataSaveKey]: saveSettings });
 						
 						// Run layout init
 						sounds.confirm(1);
@@ -1132,6 +1110,8 @@ const core = {
 				runInfo({ status: "Đang chạy" });
 				heartbeat();
 				sounds.confirm(1);
+
+				lockLogs = true;
 				preRunInit();
 			}
 
@@ -1189,8 +1169,10 @@ const core = {
 					if (target !== null)
 						this.script.status.target.innerText = priceFormat(target);
 				} else {
-					this.script.status.current.classList.remove("price");
-					this.script.status.target.classList.remove("price");
+					if (dataType !== null) {
+						this.script.status.current.classList.remove("price");
+						this.script.status.target.classList.remove("price");
+					}
 
 					if (current !== null)
 						this.script.status.current.innerText = current;
@@ -1220,7 +1202,7 @@ const core = {
 				heartbeat({ color: "green", beat: false });
 
 				sounds.confirm(0);
-				runInfo({ status: "Đã chạy xong!" })
+				runInfo({ status: "Đã chạy xong!", dataType: null })
 				this.script.status.container.dataset.triColor = "purple";
 				this.script.cancelButton.innerText = "Đóng";
 				this.script.cancelButton.classList.add("rainbow");
@@ -1237,26 +1219,537 @@ const core = {
 
 				let logItem = document.createElement("li");
 				logItem.innerHTML = text;
+
 				this.script.logs.appendChild(logItem);
-				this.script.logs.scrollTop = this.script.logs.scrollHeight;
+
+				if (lockLogs)
+					this.script.logs.scrollTop = this.script.logs.scrollHeight;
 			}
 
 			const command = async (command, data = {}) => (await this.sendCommand(command, data)).data;
 
-			// Clear logs
-			this.script.logs.innerHTML = "";
+			// Clear logs and Logs Container Event
+			emptyNode(this.script.logs);
+			this.script.logs.onscroll = (e) => {
+				if (e.target.scrollTop >= (e.target.scrollHeight - e.target.offsetHeight))
+					lockLogs = true;
+				else
+					lockLogs = false;
+			}
+
 			// Start executing the script
+			this.script.settings.header.message.innerText = "Đang chờ thông tin phản hồi";
+			clog("INFO", "Script Initializing");
+
 			try {
-				eval(response);
+				await eval(response);
 			} catch(e) {
 				await scriptCancelHandler(true);
 				await errorHandler(e, true);
 				this.changeLayout(3);
 			}
 
-			this.script.settings.header.message.innerText = "Đang chờ thông tin phản hồi";
-			/* javascript-obfuscator:enable */ 
-		})().catch(async e => { scriptCancelHandler(true); await errorHandler(e, true); this.changeLayout(3) });
+			/* javascript-obfuscator:enable */
+		})().catch(async e => {
+			scriptCancelHandler(true);
+			await errorHandler(e, true);
+			this.changeLayout(3);
+		});
+	},
+
+	autorun: {
+		running: {},
+
+		script: class {
+			get statusList() {
+				return {
+					complete: { icon: "check", bgColor: "green", barColor: "green" },
+					running: { icon: "spinner", bgColor: "blue", barColor: "blue" },
+					waiting: { icon: "pause", bgColor: "pink", barColor: "pink" },
+					warning: { icon: "error", bgColor: "yellow", barColor: "yellow" },
+					errored: { icon: "error", bgColor: "red", barColor: "red" },
+					loading: { icon: "spinner", bgColor: "orange", barColor: "blue" }
+				}
+			}
+
+			set status(status) {
+				if (!this.statusList[status])
+					throw { code: -1, description: `Not a valid status: ${status}` }
+
+				let s = this.statusList[status];
+
+				this.DOM.info.icon.dataset.icon = s.icon;
+				this.DOM.dataset.triColor = s.bgColor;
+				this.DOM.info.bar.progress.dataset.color = s.barColor;
+			}
+
+			constructor(data) {
+				//? VARIABLE INIT
+				this.timer = new stopClock();
+				this.data = data;
+				this.scriptDisabled = !this.data.allow;
+				this.scriptLoaded = false;
+				this.scriptInited = false;
+				this.configable = false;
+				this.configing = false;
+				this.settingsSaveKey = `settings.${this.data.id}`;
+				this.settingsTemplate = {}
+				this.settings = {}
+				this.cancelHandler = () => void 0;
+
+				// Create Status Node
+				let buildTree=[{type:"span",class:"left",name:"left",list:[{type:"t",class:"name",name:"name",text:this.data.name},{type:"t",class:"description",name:"description",text:this.data.description}]},{type:"span",class:"right",name:"right",list:[{type:"t",class:"id",name:"scriptID",text:this.data.id},{type:"t",class:"version",name:"version",text:this.data.version}]},{type:"div",class:"settings",name:"settings"},{type:"ul",class:["textView","light","small","errorLogs"],name:"errorLogs"},{type:"div",class:"runInfo",name:"info",list:[{type:"span",class:"icon",name:"icon"},{type:"t",class:"status",name:"status",text:"Đang khởi chạy"},{type:"t",class:"progress",name:"progress",text:"0%"},{type:"div",class:"progressBar",name:"bar",list:[{type:"div",class:"bar",name:"progress"}]}]}]
+				let builtNode = buildElementTree("div", "item", buildTree);
+				this.DOM = builtNode.obj;
+				this.DOM.info.bar.progress.dataset.color = "green";
+				this.DOM.dataset.soundhover = true;
+				this.DOM.dataset.triLayout = 3;
+				triBg(this.DOM, { color: "yellow" });
+				core.script.autorunList.appendChild(builtNode.tree);
+
+				this.DOM.settings.dataset.soundhoversoft = true;
+				this.DOM.settings.style.display = "none";
+				this.DOM.settings.addEventListener("mouseup", () => this.editConfig());
+				this.DOM.errorLogs.style.display = "none";
+
+				if (this.scriptDisabled) {
+					this.DOM.setAttribute("disabled", true);
+					this.DOM.dataset.triColor = "darkRed";
+					this.DOM.info.status.innerText = "Bạn KHÔNG CÓ QUYỀN chạy Script này!";
+				} else {
+					sounds.applySound(this.DOM);
+					sounds.applySound(this.DOM.settings);
+				}
+
+				clog("OKAY", "Created new autorun.script with ScriptID", this.data.id);
+				_gaq.push(["_trackEvent", "runScript", this.data.id, `Run ScriptID ${this.data.id}`]);
+			}
+
+			async errored(error) {
+				clog("ERRR", "Autorun Runtime", error);
+				sounds.warning();
+
+				let e = error.code ? `[${error.code}]` : error.name || error.data.name || `${error.data.data.file}:${error.data.data.line}`;
+				let d = error.description || error.message || error.data.message || error.data.description || error.description;
+			
+				this.status = "errored";
+				this.DOM.info.bar.progress.style.width = "100%";
+				this.DOM.info.progress.innerHTML = "<b>ERRR</b>";
+				this.DOM.info.status.innerHTML = `${e} >>> ${d}`;
+
+				await this.stop(true);
+			}
+
+			logError(msg) {
+				this.DOM.errorLogs.style.display = "block";
+				let log = document.createElement("li");
+				log.innerHTML = `${pleft(this.timer.stop + "", 6)} | ${msg}`;
+				this.DOM.errorLogs.appendChild(log);
+			}
+
+			async enableConfig(settings) {
+				this.DOM.settings.style.display = "flex";
+				this.configable = true;
+				this.settingsTemplate = settings;
+				
+				//* LOAD SAVED SETTINGS
+				let savedSettings = (await core.dataLoad(this.settingsSaveKey))[this.settingsSaveKey] || {};
+				this.settings = savedSettings;
+
+				for (let key of Object.keys(this.settingsTemplate)) {
+					let item = this.settingsTemplate[key];
+
+					if (typeof savedSettings[key] !== "undefined")
+						if (item.type === "radio") {
+							for (let i of item.list)
+								if (i.value === savedSettings[key])
+									i.checked = true;
+								else
+									i.checked = false;
+							
+							this.settingsTemplate[key] = item;
+						} else
+							this.settingsTemplate[key].value = savedSettings[key];
+
+					if (typeof this.settings[key] === "undefined")
+						if (["text", "textarea", "number", "date", "time", "checkbox"].includes(item.type))
+							this.settings[key] = item.value;
+						else if (item.type === "radio")
+							this.settings[key] = item.list.filter(i => i.checked === true)[0].value;
+				}
+			}
+
+			async editConfig() {
+				if (!this.enableConfig || this.configing)
+					return false;
+				
+				this.configing = true;
+				let settingList = this.settingsTemplate;
+				core.script.settings.info.container.dataset.hide = true;
+				emptyNode(core.script.settings.formList);
+
+				for (let key of Object.keys(settingList)) {
+					let item = settingList[key];
+					let input = null;
+
+					if (["text", "textarea", "number", "date", "time"].includes(item.type)) {
+						input = createInput(
+							item.type,
+							`scriptSetting_${key}`,
+							item.label,
+							item.value || "",
+							item.required || false
+						)
+
+						if (item.height)
+							input.input.style.height = item.height;
+
+						if (item.step)
+							input.input.step = item.step;
+
+						if (["date", "time"].includes(item.type)) {
+							let btnNow = createBtn("Bây Giờ", "dark");
+							btnNow.style.marginLeft = "10px";
+
+							input.input.step = (typeof item.step === "number") ? item.step : 1;
+							let now = new Date();
+
+							if (item.type === "date")
+								btnNow.addEventListener("mouseup",
+									e => input.input.value = [
+										now.getFullYear(),
+										now.getMonth() + 1,
+										now.getDate()
+									].map(v => v < 10 ? "0" + v : v)
+										.join("-")
+								)
+							else if (item.type === "time")
+								btnNow.addEventListener("mouseup",
+									e => input.input.value = [
+										now.getHours(),
+										now.getMinutes(),
+										now.getSeconds()
+									].map(v => v < 10 ? "0" + v : v)
+										.join(":")
+								)
+
+							input.group.appendChild(btnNow);
+						}
+					}
+
+					else if (item.type === "note") {
+						let group = document.createElement("div");
+						group.classList.add("note", item.level || "info");
+						
+						let inner = document.createElement("div");
+						inner.classList.add("inner");
+						inner.innerHTML = item.text;
+
+						group.appendChild(inner);
+						input = { group: group }
+					}
+
+					else if (item.type === "customNode") {
+						item.node.classList.add("customNode");
+						input = { group: item.node }
+					}
+
+					else if (item.type === "checkbox") {
+						input = createSwitch(item.label, item.color || "pink", item.value || false);
+						
+						if (typeof item.disabled !== "undefined")
+							input.input.disabled = item.disabled;
+					}
+
+					else if (item.type === "radio") {
+						let defValue = item.type.default || null;
+						let group = document.createElement("div");
+						group.classList.add("radioGroup");
+						let label = document.createElement("span");
+						label.classList.add("label");
+						label.innerHTML = item.label;
+						group.appendChild(label);
+
+						for (let _i of item.list) {
+							let btn = createSwitch(_i.name, _i.color || "blue", false, "radio");
+							btn.input.name = `ssr_${key}`;
+							btn.input.value = _i.value;
+							btn.input.required = item.required || false;
+							btn.input.checked = _i.checked || false;
+							group.appendChild(btn.group);
+						}
+
+						input = {
+							group: group,
+							input: {
+								name: `ssr_${key}`,
+								list: item.list,
+								getValue: () => {
+									let _e = document.querySelector(`input[name=ssr_${key}]:checked`);
+									return (_e) ? _e.value : defValue;
+								}
+							}
+						}
+					}
+					
+					else
+						reject({ code: -1, description: "Unknown item type when Script preparing settings value: " + item.type, data: item })
+				
+					core.script.settings.formList.appendChild(input.group);
+
+					if (input.input)
+						settingList[key].inputElement = input.input;
+				}
+
+				//* DEPEND HANDLER AND SANITIZER
+				for (let key of Object.keys(settingList)) {
+					let item = settingList[key];
+
+					if (item.depend) {
+						let _t = item;
+						let _i = item.inputElement;
+
+						_i.disabled = (!settingList[_t.depend].inputElement.checked) ^ (_t.doubt || false);
+						settingList[_t.depend]
+							.inputElement
+							.addEventListener("change", e => { _i.disabled = (!e.target.checked) ^ (_t.doubt || false) });
+					}
+				}
+
+				core.script.settings.formSubmit.innerText = "Lưu";
+				core.script.settings.formCancel.innerText = "Hủy";
+				core.script.settings.formCancel.onmouseup = e => { this.configing = false; core.changeLayout(3) };
+				core.changeLayout(5);
+
+				// Form submit action
+				core.script.settings.form.onsubmit = async (e) => {
+					e.preventDefault();
+					let returnData = {}
+					let saveType = ["text", "textarea", "number", "date", "time", "checkbox", "radio"]
+					let saveSettings = {}
+					
+					for (let key of Object.keys(settingList)) {
+						let item = settingList[key];
+
+						if (item.type === "number")
+							returnData[key] = parseInt(item.inputElement.value);
+						else if (item.type === "checkbox")
+							returnData[key] = item.inputElement.checked;
+						else if (item.type === "radio")
+							returnData[key] = item.inputElement.getValue();
+						else if (item.type === "note" || item.type === "customNode")
+							continue;
+						else
+							returnData[key] = item.inputElement.value;
+
+						// Save Settings
+						if (saveType.includes(item.type)) {
+							saveSettings[key] = returnData[key];
+
+							if (item.type === "radio") {
+								for (let i of item.list)
+									if (i.value === saveSettings[key])
+										i.checked = true;
+									else
+										i.checked = false;
+								
+								this.settingsTemplate[key] = item;
+							} else
+								this.settingsTemplate[key].value = saveSettings[key];
+						}
+					}
+
+					this.settings = saveSettings;
+					await core.dataSave({ [this.settingsSaveKey]: saveSettings });
+
+					this.configing = false;
+					sounds.confirm(1);
+					core.changeLayout(3);
+					clog("INFO", "Autorun Script settings saved");
+				}
+
+				core.script.settings.formList.scrollTop = 0;
+			}
+
+			async load() {
+				if (this.scriptDisabled)
+					return false;
+
+				this.status = "loading";
+				this.DOM.info.status.innerText = `Đang tải`;
+				let response = {};
+		
+				try {
+					response = await myajax({
+						url: SERVER_ADDR + API.script.fetch,
+						method: "POST",
+						form: {
+							id: this.data.id,
+							token: core.session.token
+						},
+						type: "text",
+						onDownload: (e) => {
+							if (e.lengthComputable) {
+								let p = (e.loaded / e.total) * 100;
+								this.DOM.info.bar.progress.style.width = `${p}%`;
+								this.DOM.info.progress.innerText = `${p}%`;
+							} else
+								this.DOM.info.progress.innerText = `NUL`;
+						}
+					});
+				} catch(e) {
+					this.scriptLoaded = false;
+					await this.errored(e);
+					return false;
+				}
+
+				this.DOM.info.status.innerText = `Đã tải xong`;
+				this.DOM.info.bar.progress.style.width = `0`;
+				this.DOM.info.progress.innerText = `0`;
+				this.mainScript = response;
+				this.scriptLoaded = true;
+				return true;
+			}
+
+			async run() {
+				if (!this.scriptLoaded)
+					throw { code: -1, description: `Autorun ScriptID ${this.data.id} is not loaded yet` }
+
+				clog("INFO", "Running Autorun ScriptID", this.data.id);
+				this.status = "running";
+				this.DOM.info.progress.innerText = `WAIT`;
+				this.DOM.info.status.innerText = `Đang chạy`;
+
+				(async () => {
+					/* javascript-obfuscator:disable */
+
+					const onCancel = (f) => this.cancelHandler = f;
+
+					const runInfo = ({
+						status = null,
+						info = null,
+						progress = null
+					}) => {
+						if (typeof status === "string")
+							this.status = status;
+
+						if (typeof info === "string") {
+							clog("INFO", {
+								text: this.data.id,
+								color: flatc("green"),
+								padding: 6,
+								seperate: true
+							}, info);
+
+							this.DOM.info.status.innerText = info;
+						}
+
+						if (typeof progress === "number") {
+							this.DOM.info.progress.innerText = `${progress}%`;
+							this.DOM.info.bar.progress.style.width = `${progress}%`;
+						} else if (typeof progress === "string")
+							this.DOM.info.progress.innerHTML = progress;
+					}
+
+					const triggerError = async (error, popupHandler = false) => {
+						await this.errored(error);
+
+						if (popupHandler)
+							await errorHandler(error, true);
+					}
+					
+					const errored = async (error) => {
+						if (typeof error === "string")
+							this.logError(error);
+						else {
+							let e = error.code ? `[${error.code}]` : error.name || error.data.name || `${error.data.data.file}:${error.data.data.line}`;
+							let d = error.description || error.message || error.data.message || error.data.description || error.description;
+						
+							this.logError(`RUNTIME: ${e} >>> ${d}`);
+						}
+					}
+
+					const command = async (command, data = {}) => (await core.sendCommand(command, data)).data;
+					const rejectSetup = async (reason) => await this.errored({ code: -1, description: `Setup Rejected: ${reason}` });
+					const config = async (settings) => await this.enableConfig(settings);
+
+					const complete = async (msg = "Chạy thành công!") => {
+						runInfo({ status: "complete", progress: 100, info: msg });
+						await this.stop(false);
+					}
+
+					const writeLog = (text) =>
+						clog("INFO", {
+							text: this.data.id,
+							color: flatc("green"),
+							padding: 6,
+							seperate: true
+						}, text);
+
+					this.DOM.info.status.innerText = `Đang chờ phản hồi`;
+
+					try {
+						await eval(this.mainScript);
+					} catch(e) { throw e }
+
+					/* javascript-obfuscator:enable */
+				})().catch(async e => { throw e });
+			}
+
+			async stop(clean = true) {
+				clog("INFO", `Stopping Autorun ScriptID ${this.data.id}`);
+				await this.cancelHandler(clean);
+			}
+
+			async clear() {
+				await this.stop(true);
+
+				if (this.DOM)
+					core.script.autorunList.removeChild(this.DOM);
+
+				delete this.DOM;
+			}
+		},
+
+		async init(data) {
+			if (!this.running[data.id])
+				this.running[data.id] = new this.script(data);
+			else
+				clog("ERRR", `Autorun Script ID ${data.id} is RUNNING`);
+		},
+
+		async runAll() {
+			for (let key of Object.keys(this.running)) {
+				let item = this.running[key];
+
+				if (await item.load())
+					try {
+						await item.run();
+					} catch(e) {
+						clog("ERRR", `Start ScriptID ${item.data.id}`, e);
+
+						if (item.errored)
+							await item.errored(e);
+						else
+							errorHandler(e);
+					}
+			}
+		},
+
+		async stopAll() {
+			for (let key of Object.keys(this.running)) {
+				let item = this.running[key];
+
+				try {
+					await item.clear();
+				} catch(e) {
+					clog("ERRR", `Stop ScriptID ${item.data.id}`, e);
+					await errorHandler(e);
+				}
+
+				delete this.running[key];
+			}
+		}
 	},
 
 	__getCPUInfo() {
@@ -1431,7 +1924,7 @@ const tutorial = {
 	playing: false,
 
 	init() {
-		this.indicator.innerHTML = "";
+		emptyNode(this.indicator);
 		let cardList = this.card.getElementsByClassName("card");
 
 		for (let i = 0; i < cardList.length; i++) {

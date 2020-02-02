@@ -89,6 +89,7 @@
                 </div>
 
                 <div class="scriptList">
+                    <div id="scriptAutorunList" class="itemList autorun"></div>
                     <div id="scriptThisPageList" class="itemList thisPage"></div>
                     <div id="scriptUndependList" class="itemList undepend"></div>
                     <div id="scriptAvailableList" class="itemList available"></div>
@@ -138,8 +139,11 @@
             </div>
             <t id="scriptRunStatusItemStatus" class="itemStatus"></t>
             <t id="scriptRunStatusCheckDetail" class="checkDetail"></t>
-            <span id="scriptRunStatusHeartbeat" class="heartbeat" title="Heartbeat"></span>
-            <button id="scriptRunCancel" class="sq-btn yellow cancelButton sound" data-soundhover data-soundselect>Hủy</button>
+
+            <span class="topRight">
+                <span id="scriptRunStatusHeartbeat" class="heartbeat" title="Heartbeat"></span>
+                <button id="scriptRunCancel" class="sq-btn yellow cancelButton sound" data-soundhover data-soundselect>Hủy</button>
+            </span>
         </div>
 
         <!--! UNUSED, WILL MAKE USE OF THIS IN THE FUTURE -->

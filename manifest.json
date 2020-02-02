@@ -1,6 +1,6 @@
 {
     "name": "Deal Hunter Suite",
-    "version": "2.2",
+    "version": "2.3",
     "description": "Provide all the Tools needed for Deal Hunter!",
     "manifest_version": 2,
     "minimum_chrome_version": "16.0.884",
@@ -43,7 +43,9 @@
         "/assets/sounds/generic-confirm-2.mp3",
         "/assets/sounds/notification.mp3",
         "/assets/sounds/generic-value-change.mp3",
-        "/assets/js/belibrary.js"        
+        "/assets/css/default.css",
+        "/assets/css/button.css",
+        "/assets/js/belibrary.js"
     ],
     "background": {
         "scripts": ["/background.js"]
@@ -51,7 +53,8 @@
     "content_scripts": [
         {
             "matches": ["<all_urls>"],
-            "js": ["/assets/js/belibrary.js", "/content.js"]
+            "js": ["/assets/js/belibrary.js", "/content.js"],
+            "css": ["/assets/css/default.css", "/assets/css/button.css"]
         }
     ]
 }

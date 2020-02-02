@@ -2,17 +2,23 @@
 ? |-----------------------------------------------------------------------------------------------|
 ? |  /popupPage/style.css                                                                         |
 ? |                                                                                               |
-? |  Copyright (c) 2018-2019 Belikhun. All right reserved                                         |
+? |  Copyright (c) 2018-2020 Belikhun. All right reserved                                         |
 ? |  Licensed under the MIT License. See LICENSE in the project root for license information.     |
 ? |-----------------------------------------------------------------------------------------------|
 */
+
+html {
+    position: relative;
+    display: block;
+    height: 100%;
+}
 
 body {
     position: relative;
     display: flex;
     flex-direction: row;
     width: 100vw;
-    height: 100vh;
+    height: 100%;
     font-family: "Segoe UI", "Calibri";
     font-weight: normal;
     font-size: 12px;
@@ -128,12 +134,15 @@ body {
     flex-grow: 1;
     width: calc(100% - 40px);
     margin: 10px 20px;
+    padding-right: 10px;
+    box-sizing: border-box;
     font-family: "Open Sans";
     font-size: 13px;
     color: #e0e0e0;
 
     overflow: auto;
     opacity: 0;
+
     transition: opacity 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
 }
 
@@ -281,6 +290,7 @@ body {
     font-weight: bold;
     font-size: 15px;
     font-style: italic;
+    text-align: right;
     color: white;
 }
 
@@ -533,6 +543,10 @@ body {
     background-color: rgba(180, 180, 180, 0.1);
 }
 
+.main .container .scriptContainer .scriptList .itemList:first-child::before {
+    margin-top: 0;
+}
+
 .main .container .scriptContainer .scriptList .itemList:empty::after {
     content: "Trống";
     position: relative;
@@ -552,26 +566,29 @@ body {
     position: relative;
     display: flex;
     flex-direction: row;
-    padding: 20px;
-    cursor: pointer;
-    background-color: transparent;
 
     transition:
         background-color 0.3s ease,
         transform 0.4s cubic-bezier(0.785, 0.135, 0.15, 0.86);
 }
 
-.main .container .scriptContainer .scriptList .itemList .item:not([disabled]):hover {
+.main .container .scriptContainer .scriptList .itemList:not(.autorun) .item {
+    padding: 20px;
+    background-color: transparent;
+    cursor: pointer;
+}
+
+.main .container .scriptContainer .scriptList .itemList:not(.autorun) .item:not([disabled]):hover {
     background-color: rgba(128, 128, 128, 0.1);
 }
 
-.main .container .scriptContainer .scriptList .itemList .item:not([disabled]):active {
+.main .container .scriptContainer .scriptList .itemList:not(.autorun) .item:not([disabled]):active {
     transform: scale(0.95);
 }
 
 .main .container .scriptContainer .scriptList .itemList .item .left {
     position: relative;
-    flex-grow: 1;
+    flex-grow: 2;
     flex-shrink: 1;
     padding-right: 10px;
 }
@@ -599,7 +616,7 @@ body {
     display: inline-flex;
     flex-direction: column;
     justify-content: center;
-    flex-grow: 0;
+    flex-grow: 1;
     flex-shrink: 0;
 }
 
@@ -636,34 +653,242 @@ body {
     content: "\f61f";
 }
 
-.main .container .scriptContainer .scriptList .itemList .item[disabled] {
+.main .container .scriptContainer .scriptList .itemList:not(.autorun) .item[disabled] {
     background-color: #1b1b1b;
     cursor: not-allowed;
 }
 
-.main .container .scriptContainer .scriptList .itemList .item[disabled] .left .name {
+.main .container .scriptContainer .scriptList .itemList:not(.autorun) .item[disabled] .left .name {
     color: #3f3f3f;
 }
 
-.main .container .scriptContainer .scriptList .itemList .item[disabled] .left .description {
+.main .container .scriptContainer .scriptList .itemList:not(.autorun) .item[disabled] .left .description {
     color: #3e3e3e;
 }
 
-.main .container .scriptContainer .scriptList .itemList .item[disabled] .right > t::after,
-.main .container .scriptContainer .scriptList .itemList .item[disabled] .right > t {
+.main .container .scriptContainer .scriptList .itemList:not(.autorun) .item[disabled] .right > t::after,
+.main .container .scriptContainer .scriptList .itemList:not(.autorun) .item[disabled] .right > t {
     color: #404040;
 }
 
+.main .container .scriptContainer .scriptList .autorun::before {
+    content: "Tự động chạy";
+}
+
+.main .container .scriptContainer .scriptList .autorun .item {
+    margin: 0 10px;
+    overflow: hidden;
+    flex-wrap: wrap;
+    user-select: none;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item:first-child {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item:last-child {
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .left,
+.main .container .scriptContainer .scriptList .autorun .item .right {
+    margin:  10px 10px 5px 10px;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .settings {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    cursor: pointer;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .settings::before {
+    content: "\f013";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    font-size: 19px;
+    color: white;
+
+    transition: transform 0.3s ease;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .settings:hover::before {
+    transform: rotate(70deg) scale(1.1);
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .errorLogs {
+    margin: 0 10px;
+    padding: 24px 0 5px 0;
+    border-top: 1px solid rgba(230, 230, 230, 0.5);
+    width: calc(100% - 20px);
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .errorLogs::before {
+    content: "ERROR LOGS";
+    position: absolute;
+    display: block;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding-top: 4px;
+    text-align: center;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .errorLogs > li {
+    margin-left: 20px;
+    color: white;
+    border-left-color: rgba(255, 255, 255, 0.5);
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .errorLogs > li::before {
+    color: #d0d0d0;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .errorLogs > li:hover::before {
+    color: #a9ddff;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .runInfo {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    padding: 5px 10px 10px 10px;
+    flex-grow: 1;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .runInfo::before {
+    content: "";
+    position: absolute;
+    display: block;
+    top: 0;
+    left: 10px;
+    right: 10px;
+    height: 1px;
+    background-color: rgba(230, 230, 230, 0.5);
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .runInfo .icon {
+    position: relative;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .runInfo .icon::before {
+    content: "\f111";
+    position: relative;
+    display: block;
+    font-family: "Font Awesome 5 Free";
+    font-weight: 700;
+    font-size: 21px;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .runInfo .icon[data-icon="check"]::before {
+    content: "\f00c";
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .runInfo .icon[data-icon="pause"]::before {
+    content: "\f04c";
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .runInfo .icon[data-icon="error"]::before {
+    content: "\f071";
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .runInfo .icon[data-icon="spinner"]::before {
+    content: "";
+	width: 16px;
+    height: 16px;
+	border-width: 3px;
+	border-style: solid;
+	border-radius: 50%;
+	border-color: rgb(255, 255, 255);
+	border-right-color: transparent;
+	box-sizing: border-box;
+
+	animation: simple-rotate 0.75s linear 0s infinite;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .runInfo .status {
+    flex-grow: 1;
+    font-family: Consolas;
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .runInfo .progress {
+    margin-left: 10px;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .runInfo .progressBar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background-color: rgba(58, 58, 58, 0.5);
+}
+
+.main .container .scriptContainer .scriptList .autorun .item .left .name,
+.main .container .scriptContainer .scriptList .autorun .item .left .name:hover,
+.main .container .scriptContainer .scriptList .autorun .item .left .description,
+.main .container .scriptContainer .scriptList .autorun .item .right > t,
+.main .container .scriptContainer .scriptList .autorun .item .right > t::after,
+.main .container .scriptContainer .scriptList .autorun .item .runInfo .status,
+.main .container .scriptContainer .scriptList .autorun .item .runInfo .progress {
+    color: white;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item[disabled] {
+    cursor: not-allowed;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item[disabled] .left .name {
+    color: #888888;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item[disabled] .left .description {
+    color: #747474;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item[disabled] .right > t::after,
+.main .container .scriptContainer .scriptList .autorun .item[disabled] .right > t {
+    color: #858585;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item[disabled] .runInfo::before {
+    background-color: rgba(95, 95, 95, 0.5);
+}
+
+.main .container .scriptContainer .scriptList .autorun .item[disabled] .runInfo .icon::before {
+    content: "\f05e";
+    color: #bd2f2f;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item[disabled] .runInfo .status,
+.main .container .scriptContainer .scriptList .autorun .item[disabled] .runInfo .progress {
+    color: #ababab;
+}
+
+.main .container .scriptContainer .scriptList .autorun .item[disabled] .runInfo .progressBar {
+    background-color: rgba(68, 68, 68, 0.4);
+}
+
 .main .container .scriptContainer .scriptList .thisPage::before {
-    content: "Script cho trang hiện tại";
+    content: "Trang hiện tại";
 }
 
 .main .container .scriptContainer .scriptList .undepend::before {
-    content: "Script chạy ngoài";
+    content: "Chạy ngoài";
 }
 
 .main .container .scriptContainer .scriptList .available::before {
-    content: "Tất cả các script";
+    content: "Tất cả";
 }
 
 .main .container .scriptContainer .scriptList .available .item {
@@ -1266,13 +1491,21 @@ body {
     font-size: 12px;
 }
 
-.main .runStatus .heartbeat {
+.main .runStatus .topRight {
     position: absolute;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    top: 10px;
+    right: 20px;
+}
+
+.main .runStatus .topRight .heartbeat {
+    position: relative;
     display: block;
-    top: 20px;
-    right: 96px;
     width: 12px;
     height: 12px;
+    margin-right: 16px;
     border-radius: 50%;
     background-color: #1ff81f;
     opacity: 1;
@@ -1281,15 +1514,15 @@ body {
     animation-fill-mode: forwards;
 }
 
-.main .runStatus .heartbeat[data-color="blue"] {
+.main .runStatus .topRight .heartbeat[data-color="blue"] {
     background-color: #1fbcf8;
 }
 
-.main .runStatus .heartbeat[data-color="yellow"] {
+.main .runStatus .topRight .heartbeat[data-color="yellow"] {
     background-color: #e8e216;
 }
 
-.main .runStatus .heartbeat[data-color="red"] {
+.main .runStatus .topRight .heartbeat[data-color="red"] {
     background-color: #fd6666;
 }
 
@@ -1301,12 +1534,6 @@ body {
     100% {
         opacity: 0.4;
     }
-}
-
-.main .runStatus .cancelButton {
-    position: absolute;
-    top: 10px;
-    right: 20px;
 }
 
 .main .runStatus :not(.bar)[data-color] {
