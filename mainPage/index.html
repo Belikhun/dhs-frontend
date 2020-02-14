@@ -31,9 +31,6 @@
     <link rel="stylesheet" type="text/css" media="screen" href="subScreen.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="settingCustomNode.css" />
     <link rel="stylesheet" type="text/css" media="screen" href="style.css" />
-    
-    <!-- App info -->
-    <script type="text/javascript" src="/info.js"></script>
 
     <!-- Analytics Init -->
     <script type="text/javascript" src="analytics.js"></script>
@@ -118,7 +115,13 @@
                 </form>
             </div>
 
-            <ul id="scriptRunLogs" class="scriptRunLogs textView small"></ul>
+            <div class="scriptRunLogs">
+                <div class="header">
+                    <t id="scriptRunLogsTitle" class="title">logsViewer</t>
+                    <span id="scriptRunLogsClear" class="clear sound" data-soundhover data-soundselect></span>
+                </div>
+                <ul id="scriptRunLogsView" class="view textView small"></ul>
+            </div>
         </div>
 
         <div id="scriptRunStatus" class="runStatus" data-tri-layout="6" data-tri-color="dark">
@@ -162,12 +165,12 @@
 
             <t class="title">Bản Quyền</t>
 
-            <div id="toolInfoLicense" class="license" data-tri-layout="7" data-tri-color="red">
+            <div id="toolInfoLicense" class="licenseInfo" data-tri-layout="7" data-tri-color="red">
                 <span class="left">
                     <t id="toolInfoLicenseName" class="name">Bạn chưa đăng nhập</t>
-                    <t id="toolInfoLicenseAllow" class="allow">Không Rõ</t>
-                    <t class="timeDesc">Hiệu Lực Còn</t>
-                    <div id="toolInfoLicenseTimer" class="timer"><days>0</days>00:00:00<ms>000</ms></div>
+                    <t id="toolInfoLicenseTags" class="tags"></t>
+
+                    <div id="toolInfoLicenses" class="licenses"></div>
 
                     <div id="toolInfoLicenseKey" class="licenseKey">
                         <t class="keyDesc">Khóa Bản Quyền</t>

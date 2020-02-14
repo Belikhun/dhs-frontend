@@ -5,6 +5,27 @@
 //? |  Licensed under the MIT License. See LICENSE in the project root for license information.     |
 //? |-----------------------------------------------------------------------------------------------|
 
+const APPNAME = "Deal Hunter Suite";
+const CODENAME = "Nadeshiko";
+const VERSION = "3.0";
+const STATE = "release";
+
+const AUTHOR = "Team DHS";
+var   CONTACT_ADDR = "https://m.me/DealHunterSuite";
+
+const SERVER_ADDR = {
+    release: "https://dealhunter.000webhostapp.com",
+    indev: "http://localhost"
+}[STATE];
+
+const API = {
+    avatar: "/api/avatar",
+    status: "/api/status",
+    auth: "/api/auth",
+    script: { list: "/api/scripts/list", fetch: "/api/scripts/fetch" },
+    updates: { check: "/api/updates/check", latest: "/api/updates/latest", changelog: "/api/updates/changelog" }
+}
+
 const loadMsg = () => {
 	let msgs = [
 		`Not panicking...totally not panicking...er...everything's fine...`,
@@ -76,7 +97,6 @@ const core = {
 			formCancel: $("#scriptSettingsFormCancel"),
 			formSubmit: $("#scriptSettingsFormSubmit")
 		},
-		logs: $("#scriptRunLogs"),
 		status: {
 			container: $("#scriptRunStatus"),
 			status: $("#scriptRunStatusStatus"),
@@ -102,9 +122,9 @@ const core = {
 		copyright: $("#toolInfoCopyright"),
 		license: {
 			container: $("#toolInfoLicense"),
-			licensee: $("#toolInfoLicenseName"),
-			allow: $("#toolInfoLicenseAllow"),
-			timer: $("#toolInfoLicenseTimer"),
+			name: $("#toolInfoLicenseName"),
+			tags: $("#toolInfoLicenseTags"),
+			licenses: $("#toolInfoLicenses"),
 			key: {
 				button: $("#toolInfoLicenseKeyBtn"),
 				container: $("#toolInfoLicenseKey"),
@@ -113,7 +133,8 @@ const core = {
 		},
 		author: $("#toolInfoAuthor")
 	},
-	uniqueKeys: null,
+	uniqueKeys: `Cơm nhà ai bát nhà lấy.\nBát vỡ cùng nhau không hay tẹo nào.`,
+	generateKey: async () => this.uniqueKeys,
 	scriptIniting: false,
 	prevLayout: 0,
 	scriptList: {},
@@ -180,7 +201,7 @@ const core = {
 		this.toolInfo.copyright.innerHTML = `Copyright (C) 2019-2020 ${AUTHOR}. All right reserved`;
 
 		this.toolInfo.license.container.dataset.triColor = "red";
-		this.toolInfo.license.licensee.innerText = `Bạn chưa đăng nhập`;
+		this.toolInfo.license.name.innerText = `Bạn chưa đăng nhập`;
 		this.toolInfo.license.key.key.innerText = "KHÔNG RÕ";
 
 		for (let item of this.authorList) {
@@ -309,7 +330,41 @@ const core = {
 		//? |-----------------------|
 
 		splash.set({ p: 50, i: "Generating Client UUID" });
-		this.uniqueKeys = await this.generateKey();
+		window.XHR = randString(randBetween(12, 32, true));
+
+		//! ======================================= MAIN KEY GENERATOR =======================================
+
+		let cpu = await this.__getCPUInfo();
+		let ram = await this.__getRAMInfo();
+		let disk = await this.__getDiskInfo();
+		let keyString = "";
+		let diskCap = 0;
+
+		for (let item of disk)
+			if (item.type === "fixed")  {
+				diskCap = item.capacity;
+				break;
+			}
+
+		// Get raw key
+		keyString = [
+			cpu.archName,
+			cpu.features.join("."),
+			cpu.modelName,
+			cpu.numOfProcessors,
+			ram.capacity,
+			diskCap
+		].join(":");
+
+		// encode as UTF-8
+		const msgBuffer = new TextEncoder("utf-8").encode(keyString);                    
+		const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
+		const hashArray = Array.from(new Uint8Array(hashBuffer));            
+		const hashHex = hashArray.map(b => ("00" + b.toString(16)).slice(-2)).join("");
+
+		this[window.XHR] = hashHex;
+
+		//! ======================================= MAIN KEY GENERATOR =======================================
 
 		//? |-----------------------|
 		//? |     LICENSE CHECK     |
@@ -327,9 +382,32 @@ const core = {
 		delete tagsString;
 
 		this.toolInfo.license.container.dataset.triColor = "blue";
-		this.toolInfo.license.licensee.innerText = this.session.keyData.name;
-		this.toolInfo.license.allow.innerText = this.session.keyData.allow.split(";").join(", ");
-		this.toolInfo.license.key.key.innerText = "ĐÃ BỊ ẨN";
+		this.toolInfo.license.name.innerText = this.session.keyData.name;
+		this.toolInfo.license.tags.innerHTML = tagsString;
+		let timerNodes = [];
+
+		for (let item of this.session.keyData.licenses) {
+			let container = document.createElement("div");
+			container.classList.add("license");
+
+			let allow = document.createElement("t");
+			allow.classList.add("allow");
+			allow.innerText = item.allow.split(";").join(", ");
+
+			let timeDesc = document.createElement("t");
+			timeDesc.classList.add("timeDesc");
+			timeDesc.innerText = "Hiệu Lực Còn";
+
+			let timer = document.createElement("timer");
+			timer.innerText = "INITIALIZING";
+
+			container.append(allow, timeDesc, timer);
+			this.toolInfo.license.licenses.appendChild(container);
+			timerNodes.push({ desc: timeDesc, time: timer, expire: item.expire });
+
+			delete container;
+			delete allow;
+		}
 
 		this.toolInfo.license.key.button.addEventListener("mouseup", async e => {
 			let warningNode = document.createElement("t");
@@ -363,20 +441,28 @@ const core = {
 				return;
 			
 			let now = time();
-			let remain = this.session.keyData.expire - now;
 
-			let d = Math.floor(remain / 86400);
-			let t = parseTime(remain % 86400);
+			for (let item of timerNodes) {
+				let remain = item.expire - now;
+				let parsed = parseTime(remain % 86400, { showPlus: true });
 
-			this.toolInfo.license.timer.innerHTML = `<days>${d}</days>${t.str}<ms>${t.ms}</ms>`;
+				if (remain < 0 && item.triggered !== true) {
+					item.desc.innerText = "Đã Hết Hạn";
+					item.time.dataset.color = "red";
+					this.toolInfo.license.container.dataset.triColor = "purple";
+					item.triggered = true;
+				}
+
+				item.time.innerHTML = `<timer><days>${Math.floor(remain / 86400)}</days>${parsed.str}<ms>${parsed.ms}</ms></timer>`;
+
+				delete remain;
+				delete parsed;
+			}
 
 			delete now;
-			delete remain;
-			delete d;
-			delete t;
 		}, 64);
 
-		_gaq.push(["_trackEvent", "auth", this.session.keyData.name]);
+		_gaq.push(["_trackEvent", this.session.keyData.name, "auth"]);
 
 		//? |-----------------------|
 		//? |     TAB COMM CHECK    |
@@ -408,6 +494,13 @@ const core = {
 		chrome.tabs.onUpdated.addListener((t, c) => this.checkPage(t, c));
 		this.tool.reloadBtn.addEventListener("mouseup", e => this.reload({ hard: true }));
 
+		//? |-----------------------|
+		//? |    INIT LOGSVIEWER    |
+		//? |-----------------------|
+
+		splash.set({ p: 95, i: "Inititlizing logsViewer" });
+		this.logsViewer.init();
+
 		// NAVBAR CLOCK
 		setInterval(() => {
 			let date = new Date();
@@ -433,7 +526,7 @@ const core = {
 
 		splash.set({ p: 100, i: "" });
 		clog("OKAY", "Initialized");
-		_gaq.push(["_trackEvent", "pageLoad", "initialized", "core.js Initialized"]);
+		_gaq.push(["_trackEvent", this.session.keyData.name, "initialized", "core.js Initialized"]);
 		
 		if (!(await this.dataLoad("licensed")).licensed) {
 			tutorial.init();
@@ -449,6 +542,43 @@ const core = {
 		splash.change({ description: `Cấp phép cho: <b>${this.session.keyData.name}</b>` });
 		await delayAsync(500);
 		this.changeLayout(3);
+	},
+
+	logsViewer: {
+		clearBtn: $("#scriptRunLogsClear"),
+		title: $("#scriptRunLogsTitle"),
+		log: $("#scriptRunLogsView"),
+		lockLogs: true,
+
+		init() {
+			this.log.addEventListener("scroll", (e) => {
+				if (e.target.scrollTop >= (e.target.scrollHeight - e.target.offsetHeight))
+					this.lockLogs = true;
+				else
+					this.lockLogs = false;
+			});
+
+			this.clearBtn.addEventListener("mouseup", (e) => this.clear());
+		},
+
+		setTitle(title) {
+			this.title.innerHTML = title;
+		},
+
+		write(text) {
+			let logItem = document.createElement("li");
+			logItem.innerHTML = text;
+
+			this.log.appendChild(logItem);
+
+			if (this.lockLogs)
+				this.log.scrollTop = this.log.scrollHeight;
+		},
+
+		clear() {
+			clog("INFO", "Clearing Logs Viewer");
+			emptyNode(this.log);
+		}
 	},
 
 	async checkPage(tabId, changeInfo) {
@@ -733,9 +863,11 @@ const core = {
 		if (this.scriptIniting)
 			return false;
 
-		clog("INFO", "Call to scriptInit ScriptID", id);
-		_gaq.push(["_trackEvent", "runScript", id, `Run Script ID ${id}`]);
 		this.scriptIniting = true;
+		clog("INFO", "Call to scriptInit ScriptID", id);
+		_gaq.push(["_trackEvent", this.session.keyData.name, "runScript", id]);
+
+		this.logsViewer.setTitle(`NHẬT KÍ CHẠY: ${id}`);
 		this.changeLayout(4);
 		sounds.confirm();
 
@@ -764,8 +896,7 @@ const core = {
 		this.scriptIniting = false;
 
 		(async () => {
-			/* javascript-obfuscator:disable */ 
-			var lockLogs = true;
+			/* javascript-obfuscator:disable */
 			var scriptCancelHandler = async () => {};
 			const priceFormat = (num) => num.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
 			const onCancel = (f) => scriptCancelHandler = f;
@@ -817,13 +948,13 @@ const core = {
 								item.value = savedSettings[key];
 
 						if (["text", "textarea", "number", "date", "time"].includes(item.type)) {
-							input = createInput(
-								item.type,
-								`scriptSetting_${key}`,
-								item.label,
-								item.value || "",
-								item.required || false
-							)
+							input = createInput({
+								type: item.type,
+								id: `scriptSetting_${key}`,
+								label: item.label,
+								value: item.value || "",
+								required: item.required || false
+							});
 
 							if (item.height)
 								input.input.style.height = item.height;
@@ -879,7 +1010,11 @@ const core = {
 						}
 						
 						else if (item.type === "checkbox") {
-							input = createSwitch(item.label, item.color || "pink", item.value || false);
+							input = createSwitch({
+								label: item.label,
+								color: item.color || "pink",
+								value: item.value || false
+							});
 							
 							if (typeof item.disabled !== "undefined")
 								input.input.disabled = item.disabled;
@@ -906,7 +1041,12 @@ const core = {
 									}
 								}
 							
-							let _i = createSwitch(item.label, item.color || "blue", item.value || false, "radio");
+							let _i = createSwitch({
+								label: item.label,
+								color: item.color || "blue",
+								value: item.value || false,
+								type: "radio"
+							});
 							_i.input.addEventListener("change", e => settingList[item.name].triggerChange(e));
 							_i.input.name = item.name;
 							_i.input.value = key;
@@ -925,7 +1065,12 @@ const core = {
 							group.appendChild(label);
 
 							for (let _i of item.list) {
-								let btn = createSwitch(_i.name, _i.color || "blue", false, "radio");
+								let btn = createSwitch({
+									label: _i.name,
+									color: _i.color || "blue",
+									value: _i.value,
+									type: "radio"
+								});
 								btn.input.name = `ssr_${key}`;
 								btn.input.value = _i.value;
 								btn.input.required = item.required || false;
@@ -1111,7 +1256,7 @@ const core = {
 				heartbeat();
 				sounds.confirm(1);
 
-				lockLogs = true;
+				this.logsViewer.lockLogs = true;
 				preRunInit();
 			}
 
@@ -1217,25 +1362,13 @@ const core = {
 					seperate: true
 				}, text);
 
-				let logItem = document.createElement("li");
-				logItem.innerHTML = text;
-
-				this.script.logs.appendChild(logItem);
-
-				if (lockLogs)
-					this.script.logs.scrollTop = this.script.logs.scrollHeight;
+				this.logsViewer.write(text);
 			}
 
 			const command = async (command, data = {}) => (await this.sendCommand(command, data)).data;
 
-			// Clear logs and Logs Container Event
-			emptyNode(this.script.logs);
-			this.script.logs.onscroll = (e) => {
-				if (e.target.scrollTop >= (e.target.scrollHeight - e.target.offsetHeight))
-					lockLogs = true;
-				else
-					lockLogs = false;
-			}
+			// Clear logs
+			this.logsViewer.clear();
 
 			// Start executing the script
 			this.script.settings.header.message.innerText = "Đang chờ thông tin phản hồi";
@@ -1322,7 +1455,7 @@ const core = {
 				}
 
 				clog("OKAY", "Created new autorun.script with ScriptID", this.data.id);
-				_gaq.push(["_trackEvent", "runScript", this.data.id, `Run ScriptID ${this.data.id}`]);
+				_gaq.push(["_trackEvent", this.session.keyData.name, "runScript", this.data.id]);
 			}
 
 			async errored(error) {
@@ -1393,13 +1526,13 @@ const core = {
 					let input = null;
 
 					if (["text", "textarea", "number", "date", "time"].includes(item.type)) {
-						input = createInput(
-							item.type,
-							`scriptSetting_${key}`,
-							item.label,
-							item.value || "",
-							item.required || false
-						)
+						input = createInput({
+							type: item.type,
+							id: `scriptSetting_${key}`,
+							label: item.label,
+							value: item.value || "",
+							required: item.required || false
+						});
 
 						if (item.height)
 							input.input.style.height = item.height;
@@ -1455,7 +1588,11 @@ const core = {
 					}
 
 					else if (item.type === "checkbox") {
-						input = createSwitch(item.label, item.color || "pink", item.value || false);
+						input = createSwitch({
+							label: item.label,
+							color: item.color || "pink",
+							value: item.value || false
+						});
 						
 						if (typeof item.disabled !== "undefined")
 							input.input.disabled = item.disabled;
@@ -1471,9 +1608,13 @@ const core = {
 						group.appendChild(label);
 
 						for (let _i of item.list) {
-							let btn = createSwitch(_i.name, _i.color || "blue", false, "radio");
+							let btn = createSwitch({
+								label: _i.name,
+								color: _i.color || "blue",
+								value: _i.value,
+								type: "radio"
+							});
 							btn.input.name = `ssr_${key}`;
-							btn.input.value = _i.value;
 							btn.input.required = item.required || false;
 							btn.input.checked = _i.checked || false;
 							group.appendChild(btn.group);
@@ -1764,38 +1905,6 @@ const core = {
 		return new Promise((resolve, reject) => chrome.system.storage.getInfo((data) => resolve(data)))
 	},
 
-	async generateKey() {
-		let cpu = await this.__getCPUInfo();
-		let ram = await this.__getRAMInfo();
-		let disk = await this.__getDiskInfo();
-		let keyString = "";
-		let diskCap = 0;
-
-		for (let item of disk)
-			if (item.type === "fixed")  {
-				diskCap = item.capacity;
-				break;
-			}
-
-		// Get raw key
-		keyString = [
-			cpu.archName,
-			cpu.features.join("."),
-			cpu.modelName,
-			cpu.numOfProcessors,
-			ram.capacity,
-			diskCap
-		].join(":");
-
-		// encode as UTF-8
-		const msgBuffer = new TextEncoder("utf-8").encode(keyString);                    
-		const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
-		const hashArray = Array.from(new Uint8Array(hashBuffer));            
-		const hashHex = hashArray.map(b => ("00" + b.toString(16)).slice(-2)).join("");
-
-		return hashHex;
-	},
-
 	async auth() {
 		await delayAsync(700);
 
@@ -1803,7 +1912,7 @@ const core = {
 			var response = await myajax({
 				url: SERVER_ADDR + API.auth,
 				method: "POST",
-				form: { key: this.uniqueKeys },
+				form: { key: this[window.XHR] },
 				changeState: false
 			});
 		} catch (e) {
@@ -1859,7 +1968,13 @@ const core = {
 					timeBox.style.fontWeight = "bold";
 					timeBox.style.margin = "auto";
 					timeBox.style.color = oscColor("yellow");
-					liveTime(timeBox, e.data.data.expire, { prefix: "Đã hết hạn ", surfix: " trước" })
+
+					let expired = 0;
+					for (let item of e.data.data.licenses)
+						if (expired < item.expire)
+							expired = item.expire;
+
+					liveTime(timeBox, expired, { prefix: "Đã hết hạn ", surfix: " trước" })
 					
 					var keyBox = document.createElement("pre");
 					keyBox.classList.add("dark", "break", "center");
@@ -1867,8 +1982,7 @@ const core = {
 					keyBox.style.fontSize = "16px";
 					keyBox.style.margin = "4px 0 0 0";
 
-					box.appendChild(timeBox);
-					box.appendChild(keyBox);
+					box.append(timeBox, keyBox);
 
 					splash.change({ description: "Đăng nhập thất bại!" });
 					await popup.show({
@@ -1889,7 +2003,7 @@ const core = {
 					infoBox.classList.add("dark", "break", "center");
 					infoBox.innerText = `[${e.data.code}] ${e.data.status} ${e.data.description}` + (e.data.data.code ? `\nat ${e.data.data.file}:${e.data.data.line}` : "");
 					infoBox.style.fontSize = "15px";
-					infoBox.style.margin = "unset";
+					infoBox.style.margin = "10px 0";
 
 					splash.change({ description: "Lỗi không rõ!" });
 					await popup.show({
@@ -1909,7 +2023,10 @@ const core = {
 		}
 
 		this.session = response.data;
-		clog("OKAY", "Login success");
+		clog("OKAY", "Login success as", this.session.keyData.name);
+		delete this[window.XHR];
+		delete window.XHR;
+
 		return true;
 	},
 }
@@ -2070,7 +2187,7 @@ const errorHandler = async (error, returnable = false) => {
 		}
 	})
 
-	splash.change({ description: `Cấp phép cho: <b>${core.session.keyData.name}</b>` });
+	_gaq.push(["_trackEvent", core.session.keyData.name, "errored", `${e} >>> ${d}`]);
 }
 
 window.addEventListener(
