@@ -7,7 +7,7 @@
 
 const APPNAME = "Deal Hunter Suite";
 const CODENAME = "Nadeshiko";
-const VERSION = "3.0";
+const VERSION = "3.1";
 const STATE = "release";
 
 const AUTHOR = "Team DHS";
@@ -20,7 +20,7 @@ const SERVER_ADDR = {
 
 const API = {
     avatar: "/api/avatar",
-    status: "/api/status",
+    server: "/api/server",
     auth: "/api/auth",
     script: { list: "/api/scripts/list", fetch: "/api/scripts/fetch" },
     updates: { check: "/api/updates/check", latest: "/api/updates/latest", changelog: "/api/updates/changelog" }
@@ -168,7 +168,7 @@ const core = {
         trial: "#eac8ff",
         tester: "#ffc6db",
         pro: "#a0ffe5"
-    },
+	},
 
 	async init() {
 		splash.change({ title: "Deal Hunter Suite", description: loadMsg() });
@@ -264,7 +264,7 @@ const core = {
 		splash.set({ p: 30, i: "Kiểm tra kết nối tới máy chủ" });
 		try {
 			var serverStatus = await myajax({
-				url: SERVER_ADDR + API.status,
+				url: SERVER_ADDR + API.server,
 				method: "GET"
 			})
 		} catch(e) {
@@ -410,10 +410,9 @@ const core = {
 		}
 
 		this.toolInfo.license.key.button.addEventListener("mouseup", async e => {
-			let warningNode = document.createElement("t");
-			warningNode.style.fontFamily = "Open Sans";
-			warningNode.style.color = "#f3e75f";
-			warningNode.innerHTML = `<b>⚠ Lưu ý:</b> Tuyệt đối không chia sẻ key cho người khác! Bạn sẽ bị đăng xuất nếu có máy khác sử dụng key của bạn!`;
+			let warningNode = document.createElement("div");
+			warningNode.classList.add("note", "warning");
+			warningNode.innerHTML = `<div class="inner"><b>Tuyệt đối không chia sẻ key cho người khác!</b><br><br>Nếu chúng tôi phát hiện key của bạn bị rò rỉ ra ngoài, chúng tôi sẽ tiến hành <b>khóa key của bạn vô điều kiện</b> và <b>từ chối mọi trách nhiệm liên quan!<b/></div>`;
 
 			let response = await popup.show({
 				title: "Xác Nhận",
@@ -436,7 +435,7 @@ const core = {
 			delete response;
 		});
 
-		setInterval(() => {
+		this.frame.add(() => {
 			if (this.toolInfo.container.classList.contains("optimize"))
 				return;
 			
@@ -453,14 +452,14 @@ const core = {
 					item.triggered = true;
 				}
 
-				item.time.innerHTML = `<timer><days>${Math.floor(remain / 86400)}</days>${parsed.str}<ms>${parsed.ms}</ms></timer>`;
+				item.time.innerHTML = `<days>${Math.floor(remain / 86400)}</days>${parsed.str}<ms>${parsed.ms}</ms>`;
 
 				delete remain;
 				delete parsed;
 			}
 
 			delete now;
-		}, 64);
+		});
 
 		_gaq.push(["_trackEvent", this.session.keyData.name, "auth"]);
 
@@ -490,7 +489,7 @@ const core = {
 		//? |    ATTACH LISTENER / INTERVAL    |
 		//? |----------------------------------|
 
-		splash.set({ p: 90, i: "Setting up Listeners" });
+		splash.set({ p: 85, i: "Setting up Listeners" });
 		chrome.tabs.onUpdated.addListener((t, c) => this.checkPage(t, c));
 		this.tool.reloadBtn.addEventListener("mouseup", e => this.reload({ hard: true }));
 
@@ -498,11 +497,14 @@ const core = {
 		//? |    INIT LOGSVIEWER    |
 		//? |-----------------------|
 
-		splash.set({ p: 95, i: "Inititlizing logsViewer" });
+		splash.set({ p: 90, i: "Inititlizing logsViewer" });
 		this.logsViewer.init();
 
+		splash.set({ p: 90, i: "Starting frameRenderer" });
+		this.frame.init();
+
 		// NAVBAR CLOCK
-		setInterval(() => {
+		this.frame.add(() => {
 			let date = new Date();
 			let day = ["CN", "Th2", "Th3", "Th4", "Th5", "Th6", "Th7"][date.getDay()];
 			let h = pleft(date.getHours(), 2);
@@ -518,7 +520,7 @@ const core = {
 			delete m;
 			delete s;
 			delete ms;
-		}, 64);
+		});
 
 		//? |-----------------------|
 		//? |       END INIT        |
@@ -542,6 +544,60 @@ const core = {
 		splash.change({ description: `Cấp phép cho: <b>${this.session.keyData.name}</b>` });
 		await delayAsync(500);
 		this.changeLayout(3);
+	},
+
+	frame: {
+		__t: document.title,
+		list: [],
+		tick: 0,
+
+		init() {
+			this.render();
+			setInterval(() => this.updateTPS(), 1000);
+		},
+
+		async render() {
+			for (let i of this.list)
+				await i();
+
+			this.tick++;
+			requestAnimationFrame(() => this.render());
+		},
+
+		add(handler) {
+			if (typeof handler === "function") {
+				this.list.push(handler);
+				return this.list.length - 1;
+			} else
+				throw new Error(`frame.add: expect handler are a function, instead got ${typeof handler}`);
+		},
+
+		remove(id) {
+			if (!this.list[id])
+				throw new Error(`frame.remove: ID not found: ${id}`);
+
+			this.list.splice(id, 1);
+		},
+
+		updateTPS() {
+			document.title = `${this.__t} [${this.tick} TPS]`;
+
+			if (this.tick < 20) {
+				// OPTIMIZE
+				clog("WARN", `Low TPS Detected: ${this.tick}. Optimizing tool...`);
+				core.logsViewer.clear();
+
+				let _a = document.getElementsByClassName("triBg");
+				for (let item of _a) {
+					let box = fcfn(item, "triBgContainer");
+					emptyNode(box);
+
+					delete box;
+				}
+			}
+
+			this.tick = 0;
+		}
 	},
 
 	logsViewer: {
@@ -813,6 +869,11 @@ const core = {
 			})
 
 		this.mainBox.dataset.layout = id;
+		delete pId;
+		delete layoutToOptimize;
+		delete layoutToUnOptimize;
+		delete prevTriContainer;
+		delete triContainer;
 	},
 
 	subScreen: {
@@ -952,8 +1013,9 @@ const core = {
 								type: item.type,
 								id: `scriptSetting_${key}`,
 								label: item.label,
-								value: item.value || "",
-								required: item.required || false
+								value: (typeof item.value !== "undefined") ? item.value : "",
+								required: item.required || false,
+								color: "light"
 							});
 
 							if (item.height)
@@ -1455,7 +1517,7 @@ const core = {
 				}
 
 				clog("OKAY", "Created new autorun.script with ScriptID", this.data.id);
-				_gaq.push(["_trackEvent", this.session.keyData.name, "runScript", this.data.id]);
+				_gaq.push(["_trackEvent", core.session.keyData.name, "runScript", this.data.id]);
 			}
 
 			async errored(error) {
@@ -1531,7 +1593,8 @@ const core = {
 							id: `scriptSetting_${key}`,
 							label: item.label,
 							value: item.value || "",
-							required: item.required || false
+							required: item.required || false,
+							color: "light"
 						});
 
 						if (item.height)
@@ -2161,17 +2224,39 @@ const splash = {
 const errorHandler = async (error, returnable = false) => {
 	clog("ERRR", error);
 
-	let e = error.code ? `[${error.code}]` : error.name || error.data.name || `${error.data.data.file}:${error.data.data.line}`;
-	let d = error.description || error.message || error.data.message || error.data.description || error.description;
+	let e = (error.code && error.data.code)
+		?	`[${error.code} ${error.data.code}]`
+		:	error.code ? `[${error.code}]`
+		:	error.name
+		||	error.data.name
+		||	`${error.data.data.file}:${error.data.data.line}`
+
+	let d = (error.description && error.data.description)
+		?	`${error.description} (${error.data.description}) ${(error.data.data.file) ? `${error.data.data.file}:${error.data.data.line}` : ""}`
+		:	error.message
+		||	error.data.message
+		||	error.data.description
+		||	error.description
+
 	let returnBtn = {}
 
 	if (returnable)
 		returnBtn.back = { text: "Quay lại", color: "green" }
 
+	let errorContainer = document.createElement("div");
+
 	let errorBox = document.createElement("pre");
 	errorBox.classList.add("dark", "break");
 	errorBox.innerText = `${e} >>> ${d}`;
 	errorBox.style.fontSize = "16px";
+	errorContainer.appendChild(errorBox);
+
+	if (error.stack) {
+		let errorStack = document.createElement("ul");
+		errorStack.classList.add("textView");
+		errorStack.innerHTML = error.stack.split("\n").map(line => `<li>${line}</li>`).join("");
+		errorContainer.appendChild(errorStack);
+	}
 
 	splash.change({ description: "Lỗi đã sảy ra!" });
 	await popup.show({
@@ -2180,7 +2265,7 @@ const errorHandler = async (error, returnable = false) => {
 		message: "EXCEPTION OCCURED",
 		description: "Một lỗi không mong muốn đã sảy ra!",
 		level: "error",
-		additionalNode: errorBox,
+		additionalNode: errorContainer,
 		buttonList: {
 			contact: { text: "Báo Lỗi", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
 			...returnBtn

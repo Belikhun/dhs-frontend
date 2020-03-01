@@ -29,64 +29,6 @@ body {
 }
 
 /*? ================= */
-/*?     Component     */
-/*? ================= */
-
-.note {
-    position: relative;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: 12px 20px;
-    width: 100%;
-    box-sizing: border-box;
-    text-align: left;
-}
-
-.note::before {
-    position: relative;
-    display: inline-block;
-    font-family: "Font Awesome 5 Free";
-    font-size: 17px;
-    font-weight: 900;
-    padding-right: 12px;
-    color: black;
-}
-
-.note .inner {
-    position: relative;
-    display: inline-block;
-    flex-grow: 1;
-    font-family: "Open Sans";
-    font-size: 13px;
-    color: #343434;
-}
-
-.note.info {
-    background-color: #e4e4e4;
-}
-
-.note.info::before {
-    content: "\f05a";
-}
-
-.note.warning {
-    background-color: #fff386;
-}
-
-.note.warning::before {
-    content: "\f071";
-}
-
-.note.okay {
-    background-color: #8fff98;
-}
-
-.note.okay::before {
-    content: "\f14a";
-}
-
-/*? ================= */
 /*?   Main Page Rule  */
 /*? ================= */
 
@@ -1312,26 +1254,30 @@ body {
     border-top: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-.main .toolInfo .licenseInfo .left .licenses .license .allow {
+.main .toolInfo .licenseInfo .left .licenses .license > .allow {
     font-weight: bold;
     font-size: 13px;
     color: white;
 }
 
-.main .toolInfo .licenseInfo .left .licenses .license .allow::before {
+.main .toolInfo .licenseInfo .left .licenses .license > .allow::before {
     content: "Cho Phép: ";
     font-size: 12px;
     font-weight: normal;
     text-transform: uppercase;
 }
 
-.main .toolInfo .licenseInfo .left .licenses .license .timeDesc {
+.main .toolInfo .licenseInfo .left .licenses .license > .timeDesc {
     margin-top: 10px;
     font-family: "Open Sans";
     font-size: 10px;
     font-weight: bold;
     text-transform: uppercase;
     color: #efefef;
+}
+
+.main .toolInfo .licenseInfo .left .licenses .license > timer {
+    color: rgb(250, 250, 250);
 }
 
 .main .toolInfo .licenseInfo .left .licenseKey {

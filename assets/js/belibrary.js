@@ -27,6 +27,8 @@ function myajax({
 	reRequest = true,
 	withCredentials = false,
 }, callout = () => {}, error = () => {}) {
+	var argumentsList = arguments;
+
 	return new Promise((resolve, reject) => {
 		if (__connection__.onlineState !== "online" && force === false) {
 			let errorObj = {}
@@ -64,7 +66,7 @@ function myajax({
 					if (changeState === true)
 						__connection__.stateChange("offline");
 
-					let errorObj = { code: 106, description: "Mất kết nối tới máy chủ" };
+					let errorObj = { code: 106, description: "Mất kết nối tới máy chủ" }
 					reject(errorObj);
 					error(errorObj);
 
@@ -104,7 +106,7 @@ function myajax({
 					}
 
 					if (this.status >= 400 || (res.code !== 0 && res.code < 100)) {
-						clog("errr", {
+						clog("ERRR", {
 							color: flatc("magenta"),
 							text: method
 						}, {
@@ -119,8 +121,9 @@ function myajax({
 							// Waiting for :?unratelimited:?
 							await __connection__.stateChange("ratelimited", res);
 
+							clog("debg", "resending request", argumentsList);
 							// Resend previous ajax request
-							let r = await myajax(arguments[0], arguments[1], arguments[2])
+							let r = await myajax(...argumentsList)
 								.catch(d => {
 									reject(d);
 									return;
@@ -373,6 +376,7 @@ function time(date = new Date()) {
 }
 
 function parseTime(t = 0, {
+	forceShowHours = false,
 	msDigit = 3,
 	showPlus = false
 } = {}) {
@@ -395,7 +399,7 @@ function parseTime(t = 0, {
 		ms: ms,
 		str: d + [h, m, s]
 			.map(v => v < 10 ? "0" + v : v)
-			.filter((v, i) => v !== "00" || i > 0)
+			.filter((v, i) => i > 0 || forceShowHours || v !== "00")
 			.join(":")
 	}
 }
@@ -714,7 +718,14 @@ if (typeof $ !== "function")
 	 * @param	{String}	selector	Selector
 	 * @returns	{Element}
 	 */
-	function $ (selector) { return document.querySelector(selector) };
+	function $(query) {
+		let r = document.querySelector(query);
+
+		if (!r)
+			clog("WARN", `Could not find any element with query: ${query}`);
+
+		return r;
+	}
 
 /**
  * Remove all child in a Node
@@ -740,7 +751,8 @@ function createInput({
 	required = false
 } = {}) {
 	let formGroup = document.createElement("div");
-	formGroup.classList.add("formGroup", color);
+	formGroup.classList.add("formGroup");
+	formGroup.dataset.color = color;
 	formGroup.dataset.soundhoversoft = "";
 	formGroup.dataset.soundselectsoft = "";
 
@@ -951,6 +963,8 @@ function clog(level, ...args) {
 
 				if (item.code && item.description)
 					str += `[${item.code}] ${item.description} `;
+				else if (item.name && item.message)
+					str += `${item.name} >>> ${item.message} `;
 				else
 					str += JSON.stringify(item) + " ";
 
@@ -1006,6 +1020,8 @@ const popup = {
 	tree: {},
 	popup: {},
 	popupNode: null,
+	initialized: false,
+	showing: false,
 
 	levelTemplate: {
 		light: {
@@ -1039,6 +1055,8 @@ const popup = {
 
 		if (typeof sounds !== "undefined")
 			sounds.applySound(this.popup.header.top.close);
+
+		this.initialized = true;
 	},
 
 	show({
@@ -1055,6 +1073,11 @@ const popup = {
 		buttonList = {}
 	} = {}) {
 		return new Promise((resolve, reject) => {
+			if (!this.initialized) {
+				reject({ code: -1, description: "popup not initialized. Please initialize it first by using popup.init()" });
+				return;
+			}
+
 			this.popup.dataset.level = level;
 
 			//* THEME
@@ -1077,7 +1100,7 @@ const popup = {
 			this.popup.header.text.innerText = title;
 
 			//* BODY
-			this.popup.body.top.message.innerText = message;
+			this.popup.body.top.message.innerHTML = message;
 			this.popup.body.top.description.innerHTML = description;
 
 			additionalNode.classList.add("customNode");
@@ -1119,6 +1142,7 @@ const popup = {
 			}
 
 			this.popupNode.classList.add("show");
+			this.showing = true;
 
 			if (typeof sounds !== "undefined")
 				sounds.select();
@@ -1127,7 +1151,11 @@ const popup = {
 
 	hide() {
 		this.popupNode.classList.remove("show");
-		this.popup.header.removeChild(fcfn(this.popup.header, "triBgContainer"));
+
+		if (this.showing)
+			this.popup.header.removeChild(fcfn(this.popup.header, "triBgContainer"));
+
+		this.showing = false;
 		emptyNode(this.popup.body.button);
 	}
 }
@@ -1182,7 +1210,7 @@ const __connection__ = {
 
 					clog("lcnt", "Mất kết nối tới máy chủ.");
 					this.checkCount = 0;
-					this.__sbarItem = (typeof sbar !== "undefined") ? sbar.additem("Đang thử kết nối lại...", "spinner", {aligin: "right"}) : null;
+					this.__sbarItem = (typeof sbar !== "undefined") ? sbar.additem("Đang thử kết nối lại...", "spinner", {align: "right"}) : null;
 
 					// Bind check handler
 					this.onDisconnected({ onCount: (f) => checkerHandler = f });
@@ -1228,7 +1256,7 @@ const __connection__ = {
 
 					clog("lcnt", data.description);
 					this.__checkTime = parseInt(data.data.reset);
-					this.__sbarItem = (sbar) ? sbar.additem(`Kết nối lại sau [${this.__checkTime}] giây`, "spinner", {aligin: "right"}) : null;
+					this.__sbarItem = (sbar) ? sbar.additem(`Kết nối lại sau [${this.__checkTime}] giây`, "spinner", {align: "right"}) : null;
 
 					this.onRatelimited({
 						onCount: (f) => counterer = f,

@@ -1,4 +1,4 @@
-/* 
+/*
 ? |-----------------------------------------------------------------------------------------------|
 ? |  /assets/css/default.css                                                                      |
 ? |                                                                                               |
@@ -93,7 +93,7 @@ timer {
     font-weight: bold;
     font-size: 21px;
     letter-spacing: .5px;
-    line-height: 22px;
+    line-height: 21px;
     user-select: none;
 }
 
@@ -105,8 +105,24 @@ body.dark timer[data-color = "red"] {
 	color: rgb(255, 169, 169);
 }
 
+timer[data-color = "green"] {
+	color: rgb(12, 184, 41);
+}
+
+body.dark timer[data-color = "green"] {
+	color: rgb(127, 248, 143);
+}
+
+timer[data-color = "blue"] {
+	color: rgb(35, 146, 236);
+}
+
+body.dark timer[data-color = "blue"] {
+	color: rgb(143, 238, 255);
+}
+
 timer > days {
-    font-size: 23px;
+    font-size: 25px;
 }
 
 timer > ms {
@@ -135,8 +151,8 @@ tag {
 	position: relative;
 	display: inline-block;
 	background-color: rgba(128, 128, 128, 0.2);
-	min-width: 20px;
-	min-height: 20px;
+	min-width: 26px;
+	min-height: 26px;
 	overflow: hidden;
 
 	transition:
@@ -148,7 +164,7 @@ tag {
 	transition: unset;
 }
 
-.lazyload > img {
+.lazyload > :first-child:not(.simple-spinner) {
 	position: relative;
 	display: block;
 	width: 100%;
@@ -177,7 +193,7 @@ tag {
 	background-color: transparent;
 }
 
-.lazyload[data-loaded] > img {
+.lazyload[data-loaded] > :first-child:not(.simple-spinner) {
 	opacity: 1;
 }
 
@@ -208,6 +224,19 @@ body.dark line {
 	background-color: rgba(56, 56, 56, 0.6);
 }
 
+separator {
+	position: relative;
+	display: inline-block;
+	width: 2px;
+	height: 16px;
+	margin: 0 8px;
+	background-color: rgba(56, 56, 56, 0.6);
+}
+
+body.dark separator {
+	background-color: rgba(212, 212, 212, 0.6);
+}
+
 .price::after {
 	content: "đ";
 	font-size: 13px;
@@ -215,6 +244,60 @@ body.dark line {
 	text-transform: lowercase;
 	text-decoration: underline;
 	padding-left: 2px;
+}
+
+.note {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 12px 20px;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+.note::before {
+    position: relative;
+    display: inline-block;
+    font-family: "Font Awesome 5 Free";
+    font-size: 17px;
+    font-weight: 900;
+    padding-right: 12px;
+    color: black;
+}
+
+.note .inner {
+    position: relative;
+    display: inline-block;
+    flex-grow: 1;
+    font-family: "Open Sans";
+    font-size: 13px;
+    color: #343434;
+}
+
+.note.info {
+    background-color: #e4e4e4;
+}
+
+.note.info::before {
+    content: "\f129";
+}
+
+.note.warning {
+    background-color: #fff386;
+}
+
+.note.warning::before {
+    content: "\f071";
+}
+
+.note.okay {
+    background-color: #8fff98;
+}
+
+.note.okay::before {
+    content: "\f00c";
 }
 
 .popupContainer {
@@ -227,7 +310,7 @@ body.dark line {
 	bottom: 0;
 	right: 0;
 
-	z-index: 50;
+	z-index: 999;
     background-color: rgba(16, 16, 16, 0.8);
 }
 
@@ -241,7 +324,7 @@ body.dark line {
 	flex-direction: column;
 
 	width: 100%;
-	max-width: 460px;
+	max-width: 520px;
 	max-height: calc(100% - 40px);
 }
 
@@ -253,7 +336,7 @@ body.dark line {
 	flex-shrink: 0;
 	align-items: center;
 
-	padding: 30px 10px 10px 10px;
+	padding: 30px 10px 10px;
 }
 
 .popupContainer .popupWindow .header .top {
@@ -409,19 +492,21 @@ body.dark line {
 .popupContainer .popupWindow .body .top .message {
 	font-family: "Open Sans";
 	font-weight: bold;
-	font-size: 13px;
+	font-size: 15px;
 	letter-spacing: .2px;
 	text-transform: uppercase;
 	color: rgb(22, 22, 22);
 }
 
+.popupContainer .popupWindow .body .top .description {
+	font-size: 13px;
+}
+
 .popupContainer .popupWindow .body .customNode {
 	position: relative;
-	display: block;
 	flex-shrink: 1;
-    margin: 10px 0;
+	margin: 10px 0;
 	width: 100%;
-	overflow: auto;
 }
 
 .popupContainer .popupWindow .body .buttonGroup {
@@ -432,10 +517,18 @@ body.dark line {
     width: 100%;
 }
 
-.popupContainer .popupWindow .body .buttonGroup .sq-btn {
+.popupContainer .popupWindow .body .buttonGroup > .sq-btn {
     margin: 4px;
 	flex: 1 1 0;
 	min-width: 30%;
+}
+
+.popupContainer .popupWindow .body .buttonGroup > .sq-btn:first-child {
+	margin-left: unset;
+}
+
+.popupContainer .popupWindow .body .buttonGroup > .sq-btn:last-child {
+	margin-right: unset;
 }
 
 .popupContainer .popupWindow .body[theme="dark"] {
@@ -471,8 +564,8 @@ body.dark line {
 	left: 0;
 	top: calc(100% + 200px);
 	border-style: solid;
-	border-width: 0 30px 52.0px 30px;
-	border-color: transparent transparent gray transparent;
+	border-width: 0 30px 52px;
+	border-color: transparent transparent gray;
 	transition:
 		border-bottom-color 0.4s cubic-bezier(0.785, 0.135, 0.15, 0.86);
 
@@ -525,6 +618,10 @@ body.dark line {
 }
 
 /* Dark */
+
+body.dark {
+	color: rgb(214, 214, 214);
+}
 
 body.dark a:not(.light) {
 	color: #19c8a5;
