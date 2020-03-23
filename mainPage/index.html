@@ -9,11 +9,11 @@
     <title>Deal Hunter Suite</title>
     
     <!-- Fonts -->
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/calibri.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/opensans.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/exo.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/consolas.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/fontawesome.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/calibri/calibri.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/opensans/opensans.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/nunito/nunito.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/consolas/consolas.css" />
+    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/fontawesome/fontawesome.css" />
 
     <!-- Library -->
     <link rel="stylesheet" type="text/css" media="screen" href="/assets/css/default.css" />
@@ -40,17 +40,20 @@
 <body class="dark">
     <span id="mainBox" class="main" data-layout="1">
         <div class="splash" data-optimize-target="1">
-            <div id="toolChangelog" class="changelog">
-                <div class="simple-spinner"></div>
-                <div id="toolChangelogContainer" class="container"></div>
-            </div>
             <div class="loadPanel">
                 <img class="icon" src="/assets/img/icon@128x128.png">
+
                 <span class="info">
-                    <t id="splashTitle" class="title">Deal Hunter Suite</t>
-                    <t id="splashDescription" class="description">Đang tải...</t>
-                    <div class="progressBar"><div id="splashProgress" class="bar"></div></div>
-                    <t id="splashProgressInfo" class="progressInfo"></t>
+                    <div class="progressBar">
+                        <div id="splashProgress" class="bar" data-color="blue" data-blink="grow"></div>
+                    </div>
+
+                    <t id="splashDetail" class="detail">Đang tải...</t>
+                </span>
+
+                <span class="footer">
+                    <t>Deal Hunter Suite™</t>
+                    <t>© Team DHS. All right reserved</t>
                 </span>
             </div>
             <div class="navbar">
@@ -156,11 +159,18 @@
             <div class="header">
                 <img class="icon" src="/assets/img/icon@128x128.png">
                 <t id="toolInfoName" class="toolName">appname</t>
-                <span class="toolDetail">
+
+                <div class="toolDetail">
                     <t id="toolInfoVersion" class="version">0.0</t>
                     <t id="toolInfoCodename" class="codename">bruh</t>
-                </span>
+                </div>
+                
                 <t id="toolInfoCopyright" class="copyright">no data</t>
+
+                <div class="button">
+                    <button id="toolInfoTOS" class="sq-btn rainbow sound" data-soundhover data-soundselect>Điều Khoản Sử Dụng</button>
+                    <button id="toolInfoChangelog" class="sq-btn pink sound" data-soundhover data-soundselect>Changelog</button>
+                </div>
             </div>
 
             <t class="title">Bản Quyền</t>
@@ -257,34 +267,7 @@
                     <span class="card" data-button-text="TÔI ĐÃ ĐỌC VÀ ĐỒNG Ý VỚI ĐIỀU KHOẢN SỬ DỤNG!" data-button-color="green">
                         <t class="title">Trước Khi Bắt Đầu</t>
                         <t class="subTitle">Hãy dành một ít thời gian để đọc <b>Điều Khoản Sử Dụng</b> trước khi sử dụng!</t>
-                        <div class="text">
-                            <h2>Điều Khoản và Dịch Vụ</h2>
-                            <t>Vui lòng đọc kỹ các điều khoản dưới đây trước khi đồng ý</t>
-
-                            <h3>Phần 1 - Định Nghĩa</h3>
-
-                            <ul>
-                                <li>a. <b>Chúng Tôi</b> nghĩa là tác giả và người điều hành <i>Công Cụ Này</i>. Tức là <b>Team DHS</b></li>
-                                <li>b. <b>Công Cụ Này</b> nghĩa là công cụ hiện tại bạn đang sử dụng của Chúng Tôi. Tức là <b>Deal Hunter Suite</b></li>
-                                <li>c. <b>Người Dùng</b> nghĩa là cá nhân hoặc thực thể đang sử dụng phần mềm của Chúng Tôi. Tức là <b>Bạn</b></li>
-                                <li>d. <b>Sàn Thương Mại Điện Tử</b> nghĩa là các sàn giao dịch thương mại trực tuyến có liên quan tới Công Cụ Này</li>
-                            </ul>
-
-                            <h3>Phần 2 - Lời Tuyên Bố</h3>
-
-                            <ul>
-                                <li>a. <b>Chúng tôi</b> sẽ không có đảm bảo, lời hứa và/hoặc những tuyên bố, bất kể là nói rõ hay ngầm hiểu, được đưa ra về tính chân thực, chuẩn mực và chính xác hoặc các tính chất khác của các Deal cũng như chức năng của Công Cụ Này trên các Sàn Thương Mại Điện Tử.</li>
-                                <li>b. <b>Chúng tôi</b> không thể và sẽ không đảm bảo rằng người dùng sẽ nhận được deal tốt hoặc chắc chắn mua được deal tốt.</li>
-                                <li>c. <b>Chúng tôi</b> sẽ không chịu trách nhiệm về bất kể mất mát hay thiệt hại nào (trực tiếp, gián tiếp, hệ quả...) có thể xảy ra từ những vấn đề có thể phát sinh trong việc sử dụng Công Cụ Này (nếu có) bao gồm cả trách nhiệm về pháp lý.</li>
-                            </ul>
-
-                            <h3>Phần 3 - Mục đích và Chấm dứt Dịch vụ</h3>
-
-                            <ul>
-                                <li>Toàn bộ nội dung cũng như chức năng của Công Cụ Này tạo ra từ nhu cầu của người sử dụng và phục vụ mục đích của người sử dụng. Nên chúng tôi không chịu trách nhiệm về bất cứ hành động cũng như cách sử dụng của người dùng.</li>
-                                <li>Chúng tôi hoàn toàn có thể chấm dứt dịch vụ nếu có bất cứ khiếu nại (nếu có) liên quan đến dịch vụ mà không cần thông báo trước.</li>
-                            </ul>
-                        </div>
+                        <div id="tutorialPageTOS" class="text"></div>
                     </span>
                     <span class="card" data-button-text="BẮT ĐẦU NÀO!" data-button-color="rainbow">
                         <div class="canvas">
@@ -306,6 +289,7 @@
     <!-- Javascript lib -->
     <script type="text/javascript" src="/assets/js/belibrary.js"></script>
     <script type="text/javascript" src="/assets/js/sounds.js"></script>
+    <script type="text/javascript" src="crypto-js.min.js"></script>
 
     <!-- Main script -->
     <script type="text/javascript" src="core.js"></script>

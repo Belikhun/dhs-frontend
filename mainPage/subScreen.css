@@ -142,7 +142,7 @@
 }
 
 #subScreen[layout="dealHunt"] .container .header .buttonBox .current {
-    font-family: Exo;
+    font-family: Nunito;
     font-size: 12px;
 	font-weight: bold;
     letter-spacing: 1.5px;
@@ -208,7 +208,7 @@
 	position: relative;
     display: block;
     flex-grow: 1;
-	font-family: Exo;
+	font-family: Nunito;
     font-weight: bold;
 	font-size: 13px;
 	text-decoration: none;

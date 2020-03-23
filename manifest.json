@@ -1,6 +1,6 @@
 {
     "name": "Deal Hunter Suite",
-    "version": "3.0",
+    "version": "3.2",
     "description": "Provide all the Tools needed for Deal Hunter!",
     "manifest_version": 2,
     "minimum_chrome_version": "16.0.884",
@@ -12,7 +12,8 @@
         "notifications",
         "system.cpu",
         "system.memory",
-        "system.storage"
+        "system.storage",
+        "cookies"
     ],
     "content_security_policy": "script-src 'self' 'unsafe-eval' https://ssl.google-analytics.com https://dealhunter.000webhostapp.com; object-src 'self'",
     "update_url": "https://dealhunter.000webhostapp.com/api/updates/check",

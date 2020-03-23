@@ -39,6 +39,16 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 				
 				break;
 	
+			case "queryDataset":
+				var _e = document.querySelector(message.data.query);
+	
+				if (_e)
+					response = { code: 0, description: "Success!", data: { data: _e.dataset[message.data.dataset] || null } }
+				else
+					response = { code: -1, description: `Element not found!`, data: { query: message.data.query } }
+				
+				break;
+
 			case "queryExist":
 				var _e = document.querySelector(message.data.query);
 	
@@ -161,7 +171,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 					{ ...message.data },
 					data => sendResponse({ code: 0, description: "Ajax Request Completed", data: data }),
 					data => sendResponse({ code: -1, description: `${data.description} while sending an ajax request`, data: data })
-				);
+				).catch(data => sendResponse({ code: -1, description: `${data.description} while sending an ajax request`, data: data }));
 				return true;
 	
 			case "eval":

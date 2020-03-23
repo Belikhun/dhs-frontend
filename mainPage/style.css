@@ -52,82 +52,17 @@ body {
     z-index: 1;
 }
 
-.main .splash .changelog {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    flex-shrink: 1;
-    overflow: auto;
-}
-
-.main .splash .changelog .simple-spinner {
-    position: absolute;
-    top: calc(50% - 6px);
-    left: calc(50% - 6px);
-
-    opacity: 1;
-    transition: opacity 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
-}
-
-.main .splash .changelog .container {
-    position: relative;
-    display: block;
-    flex-grow: 1;
-    width: calc(100% - 40px);
-    margin: 10px 20px;
-    padding-right: 10px;
-    box-sizing: border-box;
-    font-family: "Open Sans";
-    font-size: 13px;
-    color: #e0e0e0;
-
-    overflow: auto;
-    opacity: 0;
-
-    transition: opacity 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
-}
-
-.main .splash .changelog[data-loaded="true"] .simple-spinner {
-    opacity: 0;
-}
-
-.main .splash .changelog[data-loaded="true"] .container {
-    opacity: 1;
-}
-
-.main .splash .changelog .container h2 {
-    font-family: "Exo";
-    color: white;
-}
-
 .main .splash .loadPanel {
     position: relative;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    flex-grow: 0;
-    flex-shrink: 0;
-    background-color: #1e1e1e;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
+    justify-content: center;
+    flex-grow: 1;
     overflow: hidden;
 
     opacity: 1;
     transition: opacity 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
-}
-
-.main .splash .loadPanel::before {
-    content: "";
-    position: absolute;
-    display: block;
-    width: 30px;
-    height: 6px;
-    background-color: #d6d6d6;
-    top: 8px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-radius: 3px;
 }
 
 .main .splash .loadPanel .icon {
@@ -137,33 +72,46 @@ body {
     flex-shrink: 0;
     width: 78px;
     height: 78px;
-    margin: 30px 10px 20px 20px;
 }
 
 .main .splash .loadPanel .info {
     position: relative;
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
-    margin: 30px 20px 20px 10px;
-}
-
-.main .splash .loadPanel .info .title {
-    font-family: Exo;
-    font-weight: bold;
-    font-size: 20px;
+    align-items: center;
+    flex-grow: 0;
 }
 
 .main .splash .loadPanel .info .progressBar {
-    margin-top: 10px;
+    width: 160px;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
 }
 
-.main .splash .loadPanel .info .progressInfo {
+.main .splash .loadPanel .info .detail {
     font-family: "Open Sans";
-    font-size: 11px;
-    color: #cacaca;
+    font-size: 13px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.6);
     letter-spacing: .2px;
-    margin-top: 4px;
+    margin-top: 6px;
+}
+
+.main .splash .loadPanel .footer {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    color: rgba(202, 202, 202, 0.8);
+}
+
+.main .splash .loadPanel .footer > t:first-child {
+    font-weight: bold;
+    text-transform: uppercase;
 }
 
 .main .splash .navbar {
@@ -228,7 +176,7 @@ body {
 }
 
 .main .splash .navbar .user .name {
-    font-family: Exo;
+    font-family: Nunito;
     font-weight: bold;
     font-size: 15px;
     font-style: italic;
@@ -320,7 +268,6 @@ body {
     z-index: 100;
 }
 
-.main .splash.optimize .changelog,
 .main .splash.optimize .loadPanel {
     display: none;
 }
@@ -370,8 +317,9 @@ body {
 .main .container .scriptContainer .header .left .currentPage {
     position: relative;
     display: block;
-    font-family: "Exo";
-    font-weight: bolder;
+    font-family: "Nunito";
+    font-style: italic;
+    font-weight: 800;
     font-size: 18px;
     letter-spacing: .5px;
     text-transform: uppercase;
@@ -506,11 +454,11 @@ body {
     cursor: pointer;
 }
 
-.main .container .scriptContainer .scriptList .itemList:not(.autorun) .item:not([disabled]):hover {
+.main .container .scriptContainer .scriptList .itemList:not(.autorun):not(.available) .item:not([disabled]):hover {
     background-color: rgba(128, 128, 128, 0.1);
 }
 
-.main .container .scriptContainer .scriptList .itemList:not(.autorun) .item:not([disabled]):active {
+.main .container .scriptContainer .scriptList .itemList:not(.autorun):not(.available) .item:not([disabled]):active {
     transform: scale(0.95);
 }
 
@@ -522,7 +470,7 @@ body {
 }
 
 .main .container .scriptContainer .scriptList .itemList .item .left .name {
-    font-family: "Exo";
+    font-family: "Nunito";
     font-size: 15px;
     font-weight: bold;
     user-select: none;
@@ -882,7 +830,7 @@ body {
 }
 
 .main .container .scriptSettings .itemInfo .title {
-    font-family: Exo;
+    font-family: Nunito;
     font-weight: bold;
     font-size: 16px;
     color: white;
@@ -1046,7 +994,7 @@ body {
 .main .container .scriptRunLogs .header .title {
     flex-grow: 1;
     margin: 10px;
-    font-family: Exo;
+    font-family: Nunito;
     font-weight: bold;
     font-size: 13px;
     letter-spacing: 1px;
@@ -1159,11 +1107,11 @@ body {
 
 .main .toolInfo .header .toolName {
     text-align: center;
-    font-family: Exo;
-    font-weight: bold;
+    font-family: Nunito;
+    font-weight: 900;
     font-size: 20px;
     text-transform: uppercase;
-    letter-spacing: .5px;
+    letter-spacing: .8px;
     color: white;
     margin-top: 10px;
 }
@@ -1207,6 +1155,26 @@ body {
     margin: 5px 0;
 }
 
+.main .toolInfo .header .button {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    margin-top: 10px;
+}
+
+.main .toolInfo .header .button > button {
+    flex-grow: 1;
+    margin: 0 5px;
+}
+
+.main .toolInfo .header .button > button:first-child {
+    margin-left: unset;
+}
+
+.main .toolInfo .header .button > button:last-child {
+    margin-right: unset;
+}
+
 .main .toolInfo .title {
     font-family: "Open Sans";
     font-size: 14px;
@@ -1232,7 +1200,7 @@ body {
 }
 
 .main .toolInfo .licenseInfo .left .name {
-    font-family: Exo;
+    font-family: Nunito;
     font-weight: bold;
     font-size: 20px;
     font-style: italic;
@@ -1370,7 +1338,7 @@ body {
 }
 
 .main .toolInfo .authorList .item .authorName {
-    font-family: Exo;
+    font-family: Nunito;
     font-weight: bold;
     font-size: 16px;
     margin-top: 10px;
@@ -1401,7 +1369,7 @@ body {
     font-weight: 700;
     color: #d2d2d2;
     padding-top: 10px;
-    font-family: Exo;
+    font-family: Nunito;
 }
 
 .main .runStatus .timer {
