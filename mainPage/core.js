@@ -8,16 +8,44 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "3.2";
+	const VERSION = "3.3";
 	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
 	var   CONTACT_ADDR = "https://m.me/DealHunterSuite";
 	
-	const SERVER_ADDR = {
-		release: "https://dealhunter.000webhostapp.com",
-		indev: "http://localhost"
+	const SERVER_LIST = {
+		release: {
+			master: {
+				name: "Máy Chủ Chính (Đông Nam Á)",
+				addr: "https://dealhuntersuite.com"
+			},
+
+			backup: {
+				name: "Máy Chủ Dự Phòng (Bắc Mĩ)",
+				addr: "https://dealhunter.000webhostapp.com"
+			}
+		},
+
+		indev: {
+			master: {
+				name: "Máy Chủ Chính (Đông Nam Á)",
+				addr: "https://dealhuntersuite.com"
+			},
+
+			backup: {
+				name: "Máy Chủ Dự Phòng (Bắc Mĩ)",
+				addr: "https://dealhunter.000webhostapp.com"
+			},
+
+			local: {
+				name: "Máy Chủ Cục Bộ",
+				addr: "http://localhost"
+			}
+		}
 	}[STATE];
+
+	const SERVER_ADDR = () => SERVER_LIST[cookie.get(`server.${STATE}`, "master")].addr
 	
 	const API = {
 		avatar: "/api/avatar",
@@ -93,7 +121,8 @@ try {
 			copyright: $("#toolInfoCopyright"),
 			button: {
 				tos: $("#toolInfoTOS"),
-				log: $("#toolInfoChangelog")
+				log: $("#toolInfoChangelog"),
+				changeServer: $("#toolInfoChangeServer")
 			},
 			license: {
 				container: $("#toolInfoLicense"),
@@ -109,6 +138,7 @@ try {
 			author: $("#toolInfoAuthor")
 		},
 		uniqueKeys: `Cơm nhà ai bát nhà lấy.\nBát vỡ cùng nhau không hay tẹo nào.`,
+		server: (server) => (server) ? cookie.set(`server.${STATE}`, server) : cookie.get(`server.${STATE}`, "master"),
 		generateKey: async () => this.uniqueKeys,
 		scriptIniting: false,
 		prevLayout: 0,
@@ -121,7 +151,7 @@ try {
 	
 		authorList: [{
 				name: "Belikhun",
-				avatar: `${SERVER_ADDR + API["avatar"]}?u=belivipro9x99`,
+				avatar: `${SERVER_ADDR() + API["avatar"]}?u=belivipro9x99`,
 				link: `https://github.com/belivipro9x99`,
 				role: [
 					"Core Developer",
@@ -129,7 +159,7 @@ try {
 				]
 			}, {
 				name: "Toàn Te",
-				avatar: `${SERVER_ADDR + API["avatar"]}?u=kirk2711`,
+				avatar: `${SERVER_ADDR() + API["avatar"]}?u=kirk2711`,
 				link: `https://www.facebook.com/HunterDealNo1`,
 				role: [
 					"Administrator",
@@ -146,7 +176,7 @@ try {
 			tester: "#ffc6db",
 			pro: "#a0ffe5"
 		},
-	
+
 		async init() {
 			__connection__.enabled = false;
 	
@@ -196,12 +226,13 @@ try {
 				popup.show({
 					title: "Changelog",
 					message: `Version ${VERSION}`,
-					description: "Updated at 24/03/2020 03:12:00 GMT+7",
+					description: "",
 					level: "info",
 					additionalNode: logNode
 				})
 			})
 
+			this.toolInfo.button.changeServer.addEventListener("mouseup", () => this.changeServer());
 			this.toolInfo.license.container.dataset.triColor = "red";
 			this.toolInfo.license.name.innerText = `Bạn chưa đăng nhập`;
 			this.toolInfo.license.key.key.innerText = "KHÔNG RÕ";
@@ -263,28 +294,37 @@ try {
 			//? |   SERVER COMM CHECK   |
 			//? |-----------------------|
 	
-			splash.set({ p: 30, i: "Kiểm tra kết nối tới máy chủ" });
-			try {
-				var serverStatus = await myajax({
-					url: SERVER_ADDR + API.server,
-					method: "GET"
-				})
-			} catch(e) {
-				splash.errored();
-				await popup.show({
-					title: "Không thể kết nối tới máy chủ",
-					message: "Xin lỗi! Hiện tool không thể kết nối tới máy chủ",
-					description: "Vui lòng thử lại sau ít phút!",
-					level: "offline",
-					buttonList: {
-						contact: { text: "Báo lỗi", color: "pink", resolve: false, onClick: () => window.open("http:\/\/m.me\/HunterDealJustFun", "_blank") }
-					}
-				});
-	
-				return false;
+			while (true) {
+				splash.set({ p: 30, i: "Kiểm tra kết nối tới máy chủ" });
+				let serverStatus = {}
+
+				try {
+					serverStatus = await myajax({
+						url: SERVER_ADDR() + API.server,
+						method: "GET"
+					})
+				} catch(e) {
+					splash.errored();
+					if (await popup.show({
+						title: "Không thể kết nối tới máy chủ",
+						message: `Máy chủ hiện tại: ${STATE}.${this.server()}`,
+						description: "Xin lỗi! Hiện tool không thể kết nối tới máy chủ. Vui lòng thử lại sau ít phút hoặc chọn máy chủ khác",
+						level: "offline",
+						buttonList: {
+							retry: { text: "Kết nối lại", color: "green" },
+							switchServer: { text: "Đổi Máy Chủ", color: "blue" },
+							contact: { text: "Báo lỗi", color: "pink", full: true, resolve: false, onClick: () => window.open("http:\/\/m.me\/HunterDealJustFun", "_blank") }
+						}
+					}) === "switchServer")
+						await this.changeServer({ reAuth: false })
+
+					continue;
+				}
+
+				this.info = serverStatus.data;
+				break;
 			}
 	
-			this.info = serverStatus.data;
 			CONTACT_ADDR = this.info.contact;
 	
 			if (this.info.EXTENSION_ANNOUNCEMENT.enabled === true) {
@@ -303,7 +343,7 @@ try {
 	
 			splash.set({ p: 40, i: "Fetching TOS" });
 			this.TOSHtml = await myajax({
-				url: SERVER_ADDR + "/tos.php",
+				url: SERVER_ADDR() + "/tos.php",
 				method: "GET",
 				type: "text",
 				force: true,
@@ -314,7 +354,7 @@ try {
 	
 			splash.set({ p: 45, i: "Fetching changelog" });
 			this.CLHtml = await myajax({
-				url: SERVER_ADDR + API.updates.changelog,
+				url: SERVER_ADDR() + API.updates.changelog,
 				method: "GET",
 				type: "text",
 				force: true,
@@ -327,13 +367,16 @@ try {
 	
 				await popup.show({
 					title: "Đã có phiên bản mới!",
-					description: `Hiện đã có phiên bản mới: <b>v${this.info.EXTENSION_VERSION}</b>. Vui lòng cập nhật bằng link dưới hoặc liên hệ Admin để được hỗ trợ!`,
+					message: `Version ${this.info.EXTENSION_VERSION}`,
+					description: `Vui lòng cập nhật bằng link dưới hoặc liên hệ Admin để được hỗ trợ!`,
 					level: "warning",
-					note: `<b>Lưu ý: </b>Tool có thể sẽ không chạy ổn định nếu bạn bỏ qua bản cập nhật này! Bạn sẽ không được hỗ trợ về lỗi có thể sảy ra khi sử dụng phiên bản cũ!`,
+					bgColor: "yellow",
+					headerTheme: "dark",
+					note: `<b>Lưu ý: </b>Tool có thể sẽ chạy không ổn định nếu bạn bỏ qua bản cập nhật này!`,
 					additionalNode: changelogNode,
 					buttonList: {
-						downZip: { text: "Tải về (zip)", color: "green", resolve: false, onClick: () => window.open(SERVER_ADDR + API.updates.latest + "?type=zip", "_blank") },
-						downCrx: { text: "Tải về (crx)", color: "blue", resolve: false, onClick: () => window.open(SERVER_ADDR + API.updates.latest + "?type=crx", "_blank") },
+						downZip: { text: "Tải về (zip)", color: "green", resolve: false, onClick: () => window.open(SERVER_ADDR() + API.updates.latest + "?type=zip", "_blank") },
+						downCrx: { text: "Tải về (crx)", color: "blue", resolve: false, onClick: () => window.open(SERVER_ADDR() + API.updates.latest + "?type=crx", "_blank") },
 						contact: { text: "Hỗ trợ", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
 						continue: { text: "Tiếp tục chạy!", color: "yellow" }
 					}
@@ -386,7 +429,7 @@ try {
 			//? |-----------------------|
 	
 			splash.set({ p: 60, i: "Đang kiểm tra bản quyền" });
-			while (!await this.auth()) { clog("INFO", "Auth failed. Retrying") }
+			while (!await this.auth()) { clog("ERRR", "Auth failed. Retrying") }
 	
 			let tagsString = "";
 			for (let item of this.session.keyData.tags)
@@ -554,7 +597,60 @@ try {
 			
 			this.changeLayout(3);
 		},
-	
+
+		async changeServer({
+			title = "Đổi máy chủ",
+			message = `Máy chủ hiện tại: ${STATE}.${this.server()}`,
+			description = `${SERVER_ADDR()}`,
+			reAuth = true
+		} = {}) {
+			let container = document.createElement("div");
+
+			for (let key of Object.keys(SERVER_LIST)) {
+				let item = SERVER_LIST[key];
+
+				let sw = createSwitch({
+					label: item.name,
+					color: (key === "master") ? "pink" : "blue",
+					value: (this.server() === key),
+					type: "radio"
+				})
+
+				sw.input.name = `serverSelect`;
+				sw.input.required = true;
+				sw.input.value = key;
+				container.appendChild(sw.group);
+			}
+
+			if (await popup.show({
+				windowTitle: "Server Changer",
+				title,
+				message,
+				description,
+				level: "info",
+				icon: "server",
+				bgColor: "blue",
+				headerTheme: "light",
+				additionalNode: container,
+				buttonList: {
+					cancel: { text: "Hủy", color: "red" },
+					confirm: { text: "Xác Nhận", color: "green" }
+				}
+			}) !== "confirm")
+				return;
+
+			let selected = container.querySelector(`input[name="serverSelect"]:checked`).value;
+			clog("INFO", "Server Selected:", { text: selected, color: flatc("red") });
+
+			if (this.server() === selected)
+				return;
+
+			this.server(selected);
+
+			if (reAuth)
+				location.reload();
+		},
+ 	
 		frame: {
 			__t: document.title,
 			list: [],
@@ -751,7 +847,7 @@ try {
 		async fetchScriptList(hard = false) {
 			if (hard || Object.keys(this.scriptList).length === 0) {
 				let res = await myajax({
-					url: SERVER_ADDR + API.script.list,
+					url: SERVER_ADDR() + API.script.list,
 					method: "POST",
 					form: { token: this.session.token }
 				})
@@ -951,7 +1047,7 @@ try {
 	
 			try {
 				response = await myajax({
-					url: SERVER_ADDR + API.script.fetch,
+					url: SERVER_ADDR() + API.script.fetch,
 					method: "POST",
 					form: {
 						id: id,
@@ -972,7 +1068,8 @@ try {
 	
 			(async () => {
 				/* javascript-obfuscator:disable */
-				var scriptCancelHandler = async () => {};
+				var scriptCancelHandler = async () => {}
+				var scriptStopped = false;
 				const priceFormat = (num) => num.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
 				const onCancel = (f) => scriptCancelHandler = f;
 	
@@ -1144,13 +1241,12 @@ try {
 									let btn = createSwitch({
 										label: _i.name,
 										color: _i.color || "blue",
-										value: _i.value,
+										value: _i.checked || false,
 										type: "radio"
 									});
 									btn.input.name = `ssr_${key}`;
 									btn.input.value = _i.value;
 									btn.input.required = item.required || false;
-									btn.input.checked = _i.checked || false;
 									group.appendChild(btn.group);
 								}
 	
@@ -1262,8 +1358,9 @@ try {
 	
 				const rejectSetup = async (reason) => {
 					await scriptCancelHandler(true);
+					scriptStopped = true;
+
 					heartbeat({ color: "red", beat: false });
-	
 					await popup.show({
 						windowTitle: id,
 						title: "Đã dừng phản hồi!",
@@ -1281,14 +1378,17 @@ try {
 	
 				const triggerError = async (error) => {
 					await scriptCancelHandler(true);
+					scriptStopped = true;
+
 					heartbeat({ color: "red", beat: false });
-	
 					await errorHandler(error, true);
 					this.changeLayout(3);
 				}
 	
 				const errored = async (message) => {
 					await scriptCancelHandler(true);
+					scriptStopped = true;
+
 					heartbeat({ color: "red", beat: false });
 					sounds.warning();
 	
@@ -1323,7 +1423,7 @@ try {
 					this.script.cancelButton.innerText = "Hủy";
 					this.script.cancelButton.classList.remove("rainbow");
 					this.script.cancelButton.classList.add("yellow");
-					this.script.cancelButton.onclick = () => { scriptCancelHandler(true); this.changeLayout(3); }
+					this.script.cancelButton.onclick = () => { scriptCancelHandler(true); scriptStopped = true; this.changeLayout(3); }
 					this.changeLayout(6);
 				}
 	
@@ -1358,6 +1458,9 @@ try {
 					itemStatusColor = null,
 					checkDetail = null,
 				} = {}) => {
+					if (scriptStopped)
+						throw { code: 0, description: "Script Stopped" }
+
 					this.script.status.container.dataset.dataType = dataType;
 	
 					if (status !== null)
@@ -1431,6 +1534,9 @@ try {
 				}
 	
 				const writeLog = (text) => {
+					if (scriptStopped)
+						throw { code: 0, description: "Script Stopped" }
+
 					clog("INFO", {
 						text: id,
 						color: flatc("green"),
@@ -1688,12 +1794,12 @@ try {
 								let btn = createSwitch({
 									label: _i.name,
 									color: _i.color || "blue",
-									value: _i.value,
+									value: _i.checked || false,
 									type: "radio"
 								});
 								btn.input.name = `ssr_${key}`;
+								btn.input.value = _i.value;
 								btn.input.required = item.required || false;
-								btn.input.checked = _i.checked || false;
 								group.appendChild(btn.group);
 							}
 	
@@ -1799,7 +1905,7 @@ try {
 			
 					try {
 						response = await myajax({
-							url: SERVER_ADDR + API.script.fetch,
+							url: SERVER_ADDR() + API.script.fetch,
 							method: "POST",
 							form: {
 								id: this.data.id,
@@ -1987,7 +2093,7 @@ try {
 	
 			try {
 				var response = await myajax({
-					url: SERVER_ADDR + API.auth,
+					url: SERVER_ADDR() + API.auth,
 					method: "POST",
 					form: { key: this[window.XHR] },
 					changeState: false
@@ -1995,15 +2101,18 @@ try {
 			} catch (e) {
 				if (e.code === 106) {
 					splash.errored();
-					await popup.show({
+					if (await popup.show({
 						title: "Không thể kết nối tới máy chủ",
-						message: "Xin lỗi! Hiện tool không thể kết nối tới máy chủ",
-						description: "Vui lòng thử lại sau ít phút!",
+						message: `Máy chủ hiện tại: ${STATE}.${this.server()}`,
+						description: "Xin lỗi! Hiện tool không thể kết nối tới máy chủ. Vui lòng thử lại sau ít phút hoặc chọn máy chủ khác",
 						level: "offline",
 						buttonList: {
-							contact: { text: "Báo lỗi", color: "pink", resolve: false, onClick: () => window.open("http:\/\/m.me\/HunterDealNo1", "_blank") }
+							retry: { text: "Kết nối lại", color: "green" },
+							switchServer: { text: "Đổi Máy Chủ", color: "blue" },
+							contact: { text: "Báo lỗi", color: "pink", full: true, resolve: false, onClick: () => window.open("http:\/\/m.me\/HunterDealJustFun", "_blank") }
 						}
-					});
+					}) === "switchServer")
+						await this.changeServer({ reAuth: false })
 	
 					return false;
 				}
@@ -2016,7 +2125,7 @@ try {
 						keyBox.style.fontSize = "16px";
 	
 						splash.errored();
-						await popup.show({
+						if (await popup.show({
 							title: "Chưa đăng kí bản quyền!",
 							message: "Xin Lỗi!",
 							description: "Bản copy này của <b>Deal Hunter Suite</b> chưa được đăng kí trên máy bạn!<br>Vui lòng gửi mã đăng kí phía dưới tới Admin để thực hiện đăng kí sản phẩm!",
@@ -2028,9 +2137,11 @@ try {
 							additionalNode: keyBox,
 							buttonList: {
 								contact: { text: "Liên Hệ Đăng Kí", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
-								reload: { text: "Kiểm Tra Lại", color: "blue" }
+								reload: { text: "Kiểm Tra Lại", color: "green" },
+								switchServer: { text: "Đổi Máy Chủ", color: "blue", full: true }
 							}
-						})
+						}) === "switchServer")
+							await this.changeServer({ reAuth: false });
 		
 						return false;
 				
@@ -2062,7 +2173,7 @@ try {
 						box.append(timeBox, keyBox);
 	
 						splash.errored();
-						await popup.show({
+						if (await popup.show({
 							title: "Bản quyền đã hết hạn!",
 							message: "Xin lỗi!",
 							description: "Bản quyền <b>Deal Hunter Suite</b> của máy bạn đã hết hạn!<br>Vui lòng liên hệ với Admin để gia hạn sản phẩm!",
@@ -2070,9 +2181,12 @@ try {
 							additionalNode: box,
 							buttonList: {
 								contact: { text: "Liên Hệ", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
-								reload: { text: "Kiểm Tra Lại", color: "blue" }
+								reload: { text: "Kiểm Tra Lại", color: "green" },
+								switchServer: { text: "Đổi Máy Chủ", color: "blue", full: true }
 							}
-						})
+						}) === "switchServer")
+							await this.changeServer({ reAuth: false });
+
 						return false;
 	
 					default:
@@ -2082,7 +2196,7 @@ try {
 						infoBox.style.fontSize = "15px";
 	
 						splash.errored();
-						await popup.show({
+						if (await popup.show({
 							title: "Toang Rồi Ông Giáo Ạ!",
 							message: "AUTHORIZE SERVER ERROR",
 							description: "Có lỗi không mong muốn đã sảy ra khi đăng nhập vào máy chủ <b>Deal Hunter Suite</b>!",
@@ -2090,9 +2204,11 @@ try {
 							additionalNode: infoBox,
 							buttonList: {
 								contact: { text: "Liên Hệ", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
-								reload: { text: "Thử Lại", color: "blue" }
+								reload: { text: "Thử Lại", color: "green" },
+								switchServer: { text: "Đổi Máy Chủ", color: "blue", full: true }
 							}
-						})
+						}) === "switchServer")
+							await this.changeServer({ reAuth: false });
 						
 						return false;
 				}
@@ -2212,13 +2328,18 @@ try {
 		},
 	
 		errored() {
+			sounds.warning();
 			this.progress.dataset.color = "red";
 			this.progress.dataset.blink = "fade";
 		}
 	}
 	
 	const errorHandler = async (error, returnable = false) => {
+		if (typeof error.code === "number" && error.code === 0)
+			return;
+
 		clog("ERRR", error);
+		splash.errored();
 	
 		let e = (error.code && error.data && error.data.code)
 			?	`[${error.code} ${error.data.code}]`
