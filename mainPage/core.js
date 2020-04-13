@@ -8,7 +8,7 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "3.3";
+	const VERSION = "3.4";
 	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
@@ -706,6 +706,7 @@ try {
 			title: $("#scriptRunLogsTitle"),
 			log: $("#scriptRunLogsView"),
 			lockLogs: true,
+			limits: 200,
 	
 			init() {
 				this.log.addEventListener("scroll", (e) => {
@@ -727,6 +728,9 @@ try {
 				logItem.innerHTML = text;
 	
 				this.log.appendChild(logItem);
+
+				if (this.log.childElementCount > this.limits)
+					this.log.removeChild(this.log.children[0]);
 	
 				if (this.lockLogs)
 					this.log.scrollTop = this.log.scrollHeight;
@@ -1358,7 +1362,6 @@ try {
 	
 				const rejectSetup = async (reason) => {
 					await scriptCancelHandler(true);
-					scriptStopped = true;
 
 					heartbeat({ color: "red", beat: false });
 					await popup.show({
@@ -1374,20 +1377,20 @@ try {
 					});
 	
 					this.changeLayout(3);
+					scriptStopped = true;
 				}
 	
 				const triggerError = async (error) => {
 					await scriptCancelHandler(true);
-					scriptStopped = true;
-
+					
 					heartbeat({ color: "red", beat: false });
 					await errorHandler(error, true);
 					this.changeLayout(3);
+					scriptStopped = true;
 				}
 	
 				const errored = async (message) => {
 					await scriptCancelHandler(true);
-					scriptStopped = true;
 
 					heartbeat({ color: "red", beat: false });
 					sounds.warning();
@@ -1423,7 +1426,7 @@ try {
 					this.script.cancelButton.innerText = "Hủy";
 					this.script.cancelButton.classList.remove("rainbow");
 					this.script.cancelButton.classList.add("yellow");
-					this.script.cancelButton.onclick = () => { scriptCancelHandler(true); scriptStopped = true; this.changeLayout(3); }
+					this.script.cancelButton.onclick = () => { scriptCancelHandler(true); this.changeLayout(3); scriptStopped = true; }
 					this.changeLayout(6);
 				}
 	
