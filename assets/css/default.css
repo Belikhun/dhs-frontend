@@ -207,8 +207,27 @@ tag {
 	opacity: 1;
 }
 
-.lazyload[data-loaded] > .simple-spinner {
+.lazyload[data-loaded] > .simple-spinner,
+.lazyload[data-errored] > .simple-spinner {
 	display: none;
+}
+
+.lazyload::after {
+	content: "\f071";
+    position: absolute;
+	display: none;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    font-size: 18px;
+	font-style: normal;
+    color: rgb(66, 66, 66);
+}
+
+.lazyload[data-errored]::after {
+	display: block;
 }
 
 dot {
@@ -520,7 +539,7 @@ body.dark separator {
 
 .popupContainer .popupWindow .body .top {
 	position: relative;
-	margin: 0 10px;
+	margin: 0 10px 2px;
 }
 
 .popupContainer .popupWindow .body .top .message {

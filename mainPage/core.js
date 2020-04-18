@@ -8,7 +8,7 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "3.4";
+	const VERSION = "3.5";
 	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
@@ -52,7 +52,8 @@ try {
 		server: "/api/server",
 		auth: "/api/auth",
 		script: { list: "/api/scripts/list", fetch: "/api/scripts/fetch" },
-		updates: { check: "/api/updates/check", latest: "/api/updates/latest", changelog: "/api/updates/changelog" }
+		updates: { check: "/api/updates/check", latest: "/api/updates/latest", changelog: "/api/updates/changelog" },
+		analytics: { order: "/api/analytics/order" }
 	}
 	
 	const core = {
@@ -215,7 +216,7 @@ try {
 					message: "Deal Hunter Suite",
 					description: "Updated at 30/10/2019 22:39:00 GMT",
 					level: "info",
-					additionalNode: tosNode
+					customNode: tosNode
 				})
 			})
 
@@ -228,7 +229,7 @@ try {
 					message: `Version ${VERSION}`,
 					description: "",
 					level: "info",
-					additionalNode: logNode
+					customNode: logNode
 				})
 			})
 
@@ -373,7 +374,7 @@ try {
 					bgColor: "yellow",
 					headerTheme: "dark",
 					note: `<b>Lưu ý: </b>Tool có thể sẽ chạy không ổn định nếu bạn bỏ qua bản cập nhật này!`,
-					additionalNode: changelogNode,
+					customNode: changelogNode,
 					buttonList: {
 						downZip: { text: "Tải về (zip)", color: "green", resolve: false, onClick: () => window.open(SERVER_ADDR() + API.updates.latest + "?type=zip", "_blank") },
 						downCrx: { text: "Tải về (crx)", color: "blue", resolve: false, onClick: () => window.open(SERVER_ADDR() + API.updates.latest + "?type=crx", "_blank") },
@@ -631,7 +632,7 @@ try {
 				icon: "server",
 				bgColor: "blue",
 				headerTheme: "light",
-				additionalNode: container,
+				customNode: container,
 				buttonList: {
 					cancel: { text: "Hủy", color: "red" },
 					confirm: { text: "Xác Nhận", color: "green" }
@@ -689,7 +690,6 @@ try {
 	
 				if (this.tick < 10) {
 					// OPTIMIZE
-					clog("WARN", `Low TPS Detected: ${this.tick}. Optimizing tool...`);
 					core.logsViewer.clear();
 	
 					let _a = document.getElementsByClassName("triBgContainer");
@@ -737,9 +737,49 @@ try {
 			},
 	
 			clear() {
-				clog("INFO", "Clearing Logs Viewer");
 				emptyNode(this.log);
 			}
+		},
+
+		async sendBeacon({
+			script,
+			name,
+			link,
+			price,
+			count,
+			runPrice = null,
+			oldPrice = null,
+			note = null,
+			thumbnail = null
+		}) {
+			if (!script || !name || !link || typeof price !== "number" || typeof count !== "number") {
+				clog("WARN", "Beacon Data Invalid. Refuse To Send Beacon!");
+				return false;
+			}
+
+			try {
+				await myajax({
+					url: SERVER_ADDR() + API.analytics.order,
+					method: "POST",
+					form: {
+						token: this.session.token,
+						script,
+						name,
+						link,
+						price,
+						count,
+						runPrice,
+						oldPrice,
+						note,
+						thumbnail
+					}
+				});
+			} catch(e) {
+				errorHandler(e);
+				return false;
+			}
+
+			return true;
 		},
 	
 		async checkPage(tabId, changeInfo) {
@@ -855,8 +895,8 @@ try {
 					method: "POST",
 					form: { token: this.session.token }
 				})
-					
-					this.scriptList = res.data;
+				
+				this.scriptList = res.data;
 			}
 	
 			clog("DEBG", "Call to fetchScriptList", `hard = ${hard}`);
@@ -1076,6 +1116,7 @@ try {
 				var scriptStopped = false;
 				const priceFormat = (num) => num.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
 				const onCancel = (f) => scriptCancelHandler = f;
+				const SCRIPT = this.scriptList[id];
 	
 				const info = async ({
 					id = null,
@@ -1535,6 +1576,8 @@ try {
 					this.script.cancelButton.classList.add("rainbow");
 					this.script.cancelButton.classList.remove("yellow");
 				}
+
+				const sendBeacon = async (arg) => await this.sendBeacon(arg);
 	
 				const writeLog = (text) => {
 					if (scriptStopped)
@@ -1616,7 +1659,7 @@ try {
 					this.cancelHandler = () => void 0;
 	
 					// Create Status Node
-					let buildTree=[{type:"span",class:"left",name:"left",list:[{type:"t",class:"name",name:"name",text:this.data.name},{type:"t",class:"description",name:"description",text:this.data.description}]},{type:"span",class:"right",name:"right",list:[{type:"t",class:"id",name:"scriptID",text:this.data.id},{type:"t",class:"version",name:"version",text:this.data.version}]},{type:"div",class:"settings",name:"settings"},{type:"ul",class:["textView","light","small","errorLogs"],name:"errorLogs"},{type:"div",class:"runInfo",name:"info",list:[{type:"span",class:"icon",name:"icon"},{type:"t",class:"status",name:"status",text:"Đang khởi chạy"},{type:"t",class:"progress",name:"progress",text:"0%"},{type:"div",class:"progressBar",name:"bar",list:[{type:"div",class:"bar",name:"progress"}]}]}]
+					let buildTree = [{type:"span",class:"left",name:"left",list:[{type:"t",class:"name",name:"name",text:this.data.name},{type:"t",class:"description",name:"description",text:this.data.description}]},{type:"span",class:"right",name:"right",list:[{type:"t",class:"id",name:"scriptID",text:this.data.id},{type:"t",class:"version",name:"version",text:this.data.version}]},{type:"div",class:"settings",name:"settings"},{type:"ul",class:["textView","light","small","errorLogs"],name:"errorLogs"},{type:"div",class:"runInfo",name:"info",list:[{type:"span",class:"icon",name:"icon"},{type:"t",class:"status",name:"status",text:"Đang khởi chạy"},{type:"t",class:"progress",name:"progress",text:"0%"},{type:"div",class:"progressBar",name:"bar",list:[{type:"div",class:"bar",name:"progress"}]}]}]
 					let builtNode = buildElementTree("div", "item", buildTree);
 					this.DOM = builtNode.obj;
 					this.DOM.info.bar.progress.dataset.color = "green";
@@ -1904,7 +1947,7 @@ try {
 	
 					this.status = "loading";
 					this.DOM.info.status.innerText = `Đang tải`;
-					let response = {};
+					let response = {}
 			
 					try {
 						response = await myajax({
@@ -1949,8 +1992,8 @@ try {
 	
 					(async () => {
 						/* javascript-obfuscator:disable */
-	
 						const onCancel = (f) => this.cancelHandler = f;
+						const SCRIPT = this.data;
 	
 						const runInfo = ({
 							status = null,
@@ -2004,6 +2047,8 @@ try {
 							runInfo({ status: "complete", progress: 100, info: msg });
 							await this.stop(false);
 						}
+
+						const sendBeacon = async () => await core.sendBeacon( ...arguments );
 	
 						const writeLog = (text) =>
 							clog("INFO", {
@@ -2137,7 +2182,7 @@ try {
 							bgColor: "pink",
 							headerTheme: "light",
 							bodyTheme: "dark",
-							additionalNode: keyBox,
+							customNode: keyBox,
 							buttonList: {
 								contact: { text: "Liên Hệ Đăng Kí", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
 								reload: { text: "Kiểm Tra Lại", color: "green" },
@@ -2181,7 +2226,7 @@ try {
 							message: "Xin lỗi!",
 							description: "Bản quyền <b>Deal Hunter Suite</b> của máy bạn đã hết hạn!<br>Vui lòng liên hệ với Admin để gia hạn sản phẩm!",
 							level: "warning",
-							additionalNode: box,
+							customNode: box,
 							buttonList: {
 								contact: { text: "Liên Hệ", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
 								reload: { text: "Kiểm Tra Lại", color: "green" },
@@ -2204,7 +2249,7 @@ try {
 							message: "AUTHORIZE SERVER ERROR",
 							description: "Có lỗi không mong muốn đã sảy ra khi đăng nhập vào máy chủ <b>Deal Hunter Suite</b>!",
 							level: "error",
-							additionalNode: infoBox,
+							customNode: infoBox,
 							buttonList: {
 								contact: { text: "Liên Hệ", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
 								reload: { text: "Thử Lại", color: "green" },
@@ -2384,7 +2429,7 @@ try {
 			message: "EXCEPTION OCCURED",
 			description: "Một lỗi không mong muốn đã sảy ra!",
 			level: "error",
-			additionalNode: errorContainer,
+			customNode: errorContainer,
 			buttonList: {
 				contact: { text: "Báo Lỗi", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
 				...returnBtn
