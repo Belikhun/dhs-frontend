@@ -9,7 +9,7 @@ try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
 	const VERSION = "3.5";
-	const STATE = "release";
+	const STATE = "indev";
 	
 	const AUTHOR = "Team DHS";
 	var   CONTACT_ADDR = "https://m.me/DealHunterSuite";
