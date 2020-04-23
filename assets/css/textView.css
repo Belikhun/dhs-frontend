@@ -82,9 +82,9 @@ body.dark .textView:not(.light) > li:hover {
     background-color: rgba(10, 10, 10, 0.2);
 }
 
-body.dark .textView:not(.light) > li::before
+body.dark .textView:not(.light) > li::before,
 body.dark .textView:not(.light) > li > l {
-    color: rgb(104, 104, 104);
+    color: rgba(90, 90, 90, 0.6);
 }
 
 body.dark .textView:not(.light) > li:hover::before,
