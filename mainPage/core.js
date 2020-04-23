@@ -8,8 +8,8 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "3.5";
-	const STATE = "indev";
+	const VERSION = "4.0";
+	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
 	var   CONTACT_ADDR = "https://m.me/DealHunterSuite";
@@ -1087,7 +1087,7 @@ try {
 			sounds.confirm();
 	
 			this.script.settings.header.message.innerText = "Đang khởi chạy";
-			let response = {};
+			let response = {}
 	
 			try {
 				response = await myajax({
@@ -1096,8 +1096,7 @@ try {
 					form: {
 						id: id,
 						token: this.session.token
-					},
-					type: "text"
+					}
 				});
 			} catch(e) {
 				this.scriptIniting = false;
@@ -1105,7 +1104,27 @@ try {
 				this.changeLayout(3);
 				return;
 			}
-	
+
+			// DECRYPT SCRIPT
+			let decryptedScript = "";
+
+			try {
+				let decrypted = CryptoJS.AES.decrypt(
+					{ ciphertext: CryptoJS.enc.Base64.parse(response.data.script) },
+					CryptoJS.HmacSHA256(this.session.token + response.data.iv, this.session.keyData.key),
+					{
+						mode: CryptoJS.mode.CBC,
+						padding: CryptoJS.pad.Pkcs7,
+						iv: CryptoJS.enc.Hex.parse(response.data.iv)
+					}
+				);
+
+				decryptedScript = decrypted.toString(CryptoJS.enc.Utf8);
+			} catch(e) {
+				errorHandler({ code: 69420, description: `Lỗi khi giải mã dữ liệu: ${e.message} 🤔\n🐶: *sniff *sniff`, stack: e.stack });
+				return;
+			}
+
 			// A little cooldown
 			await delayAsync(500);
 			this.scriptIniting = false;
@@ -1603,7 +1622,7 @@ try {
 				clog("INFO", "Script Initializing");
 	
 				try {
-					await eval(response);
+					await eval(decryptedScript);
 				} catch(e) {
 					await scriptCancelHandler(true);
 					await errorHandler(e, true);
@@ -1957,7 +1976,6 @@ try {
 								id: this.data.id,
 								token: core.session.token
 							},
-							type: "text",
 							onDownload: (e) => {
 								if (e.lengthComputable) {
 									let p = (e.loaded / e.total) * 100;
@@ -1972,11 +1990,32 @@ try {
 						await this.errored(e);
 						return false;
 					}
+
+					// DECRYPT SCRIPT
+					let decryptedScript = "";
+
+					try {
+						let decrypted = CryptoJS.AES.decrypt(
+							{ ciphertext: CryptoJS.enc.Base64.parse(response.data.script) },
+							CryptoJS.HmacSHA256(core.session.token + response.data.iv, core.session.keyData.key),
+							{
+								mode: CryptoJS.mode.CBC,
+								padding: CryptoJS.pad.Pkcs7,
+								iv: CryptoJS.enc.Hex.parse(response.data.iv)
+							}
+						);
+
+						decryptedScript = decrypted.toString(CryptoJS.enc.Utf8);
+					} catch(e) {
+						this.scriptLoaded = false;
+						this.errored({ code: 69420, description: `Lỗi khi giải mã dữ liệu: ${e.message} 🤔\n🐶: *sniff *sniff`, stack: e.stack });
+						return false;
+					}
 	
 					this.DOM.info.status.innerText = `Đã tải xong`;
 					this.DOM.info.bar.progress.style.width = `0`;
 					this.DOM.info.progress.innerText = `0`;
-					this.mainScript = response;
+					this.mainScript = decryptedScript;
 					this.scriptLoaded = true;
 					return true;
 				}
@@ -2048,7 +2087,7 @@ try {
 							await this.stop(false);
 						}
 
-						const sendBeacon = async () => await core.sendBeacon( ...arguments );
+						const sendBeacon = async (arg) => await this.sendBeacon(arg);
 	
 						const writeLog = (text) =>
 							clog("INFO", {
@@ -2084,6 +2123,11 @@ try {
 			},
 	
 			async init(data) {
+				if (data.disabled) {
+					clog("DEBG", `Autorun Script ID ${data.id} is DISABLED`);
+					return;
+				}
+
 				if (!this.running[data.id])
 					this.running[data.id] = new this.script(data);
 				else
@@ -2441,7 +2485,12 @@ try {
 	
 	window.addEventListener(
 		"DOMContentLoaded",
-		(e) => core.init().catch(errorHandler)
+		async (e) => {
+			await core.init().catch(errorHandler);
+
+			if (STATE === "indev")
+				window.core = core;
+		}
 	);
 } catch(e) {
 	clog("ERRR", "core.js error:", e);

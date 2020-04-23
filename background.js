@@ -15,17 +15,33 @@ chrome.browserAction.onClicked.addListener(tab => {
 chrome.webRequest.onBeforeSendHeaders.addListener((details) => {
     console.debug(details);
 
+    let purgeExclude = []
+    let onlyFH = false;
     let headers = {}
 
     for (let item of details.requestHeaders) {
+        if (item.name === "FH_Purge-All") {
+            if (item.value == "true")
+                onlyFH = true;
+                
+            continue;
+        }
+
+        if (item.name === "FH_Purge-Exclude" && item.value) {
+            purgeExclude = item.value.split("&");
+            continue;
+        }
+
         let h = /FH_(.+)/gm.exec(item.name);
 
         if (h && h[1]) {
             console.log(`Processing Headers: ${item.name} (${h[1]}) -> ${item.value}`);
-            headers[h[1]] = item.value
-        } else
-            if (!headers[item.name])
-                headers[item.name] = item.value;
+            headers[h[1]] = item.value;
+            continue;
+        }
+
+        if (!headers[item.name] && (!onlyFH || purgeExclude.includes(item.name)))
+            headers[item.name] = item.value;
     }
 
     let headersArray = Object.keys(headers).map(key => ({ name: key, value: headers[key] }));

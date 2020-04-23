@@ -662,6 +662,7 @@ body {
     font-family: "Font Awesome 5 Free";
     font-weight: 700;
     font-size: 21px;
+    color: white;
 }
 
 .main .container .scriptContainer .scriptList .autorun .item .runInfo .icon[data-icon="check"]::before {
