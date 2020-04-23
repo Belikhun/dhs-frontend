@@ -1098,7 +1098,7 @@ try {
 			clog("INFO", "Call to scriptInit ScriptID", id);
 			_gaq.push(["_trackEvent", this.session.keyData.name, "runScript", id]);
 	
-			this.logsViewer.setTitle(`NHẬT KÍ CHẠY: ${id}`);
+			this.logsViewer.setTitle(`NHẬT KÍ CHẠY: <i>${id}</i>`);
 			this.changeLayout(4);
 			sounds.confirm();
 	
