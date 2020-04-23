@@ -8,7 +8,7 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "4.0";
+	const VERSION = "4.1";
 	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
@@ -690,7 +690,7 @@ try {
 	
 				if (this.tick < 10) {
 					// OPTIMIZE
-					core.logsViewer.clear();
+					core.logsViewer.clear(false);
 	
 					let _a = document.getElementsByClassName("triBgContainer");
 					for (let item of _a)
@@ -705,17 +705,22 @@ try {
 			clearBtn: $("#scriptRunLogsClear"),
 			title: $("#scriptRunLogsTitle"),
 			log: $("#scriptRunLogsView"),
+			toBottomBtn: $("#scriptRunLogsBottom"),
 			lockLogs: true,
 			limits: 200,
+			line: 1,
 	
 			init() {
 				this.log.addEventListener("scroll", (e) => {
 					if (e.target.scrollTop >= (e.target.scrollHeight - e.target.offsetHeight))
-						this.lockLogs = true;
-					else
+						this.toBottom();
+					else {
+						this.toBottomBtn.classList.add("show");
 						this.lockLogs = false;
+					}
 				});
-	
+
+				this.toBottomBtn.addEventListener("click", () => this.toBottom());
 				this.clearBtn.addEventListener("mouseup", (e) => this.clear());
 			},
 	
@@ -725,19 +730,30 @@ try {
 	
 			write(text) {
 				let logItem = document.createElement("li");
-				logItem.innerHTML = text;
+				logItem.innerHTML = `<l>${this.line}</l>${text}`;
 	
 				this.log.appendChild(logItem);
-
-				if (this.log.childElementCount > this.limits)
-					this.log.removeChild(this.log.children[0]);
+				this.line++;
 	
 				if (this.lockLogs)
-					this.log.scrollTop = this.log.scrollHeight;
+					this.toBottom();
+			},
+
+			toBottom() {
+				this.toBottomBtn.classList.remove("show");
+				this.lockLogs = true;
+
+				while (this.log.childElementCount > this.limits)
+					this.log.removeChild(this.log.children[0]);
+
+				this.log.scrollTop = this.log.scrollHeight;
 			},
 	
-			clear() {
+			clear(resetLine = true) {
 				emptyNode(this.log);
+
+				if (resetLine)
+					this.line = 1;
 			}
 		},
 
