@@ -8,7 +8,7 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "4.1";
+	const VERSION = "4.2";
 	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
@@ -1149,7 +1149,6 @@ try {
 				/* javascript-obfuscator:disable */
 				var scriptCancelHandler = async () => {}
 				var scriptStopped = false;
-				const priceFormat = (num) => num.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
 				const onCancel = (f) => scriptCancelHandler = f;
 				const SCRIPT = this.scriptList[id];
 	
@@ -1432,7 +1431,7 @@ try {
 					if (beat) {
 						//? Trigger Reflow
 						this.script.status.heartbeat.offsetHeight;
-						this.script.status.heartbeat.style.animation = null; 
+						this.script.status.heartbeat.style.animation = null;
 					}
 				}
 	
@@ -2087,8 +2086,19 @@ try {
 							if (typeof error === "string")
 								this.logError(error);
 							else {
-								let e = error.code ? `[${error.code}]` : error.name || error.data.name || `${error.data.data.file}:${error.data.data.line}`;
-								let d = error.description || error.message || error.data.message || error.data.description || error.description;
+								let e = (error.code && error.data && error.data.code)
+									?	`[${error.code} ${error.data.code}]`
+									:	error.code ? `[${error.code}]`
+									:	error.name
+									||	error.data.name
+									||	`${error.data.data.file}:${error.data.data.line}`
+
+								let d = (error.description && error.data && error.data.description)
+									?	`${error.description} (${error.data.description}) ${(error.data.data.file) ? `${error.data.data.file}:${error.data.data.line}` : ""}`
+									:	error.message
+									||	error.description
+									||	error.data.message
+									||	error.data.description
 							
 								this.logError(`RUNTIME: ${e} >>> ${d}`);
 							}
@@ -2103,7 +2113,7 @@ try {
 							await this.stop(false);
 						}
 
-						const sendBeacon = async (arg) => await this.sendBeacon(arg);
+						const sendBeacon = async (arg) => await core.sendBeacon(arg);
 	
 						const writeLog = (text) =>
 							clog("INFO", {

@@ -510,6 +510,10 @@ function convertSize(bytes) {
 	return `${round(bytes, 2)} ${sizes[i]}`;
 }
 
+function priceFormat(num) {
+	return num.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+}
+
 function round(number, to = 2) {
 	const d = Math.pow(10, to);
 	return Math.round(number * d) / d;
