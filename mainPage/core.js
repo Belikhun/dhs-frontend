@@ -8,7 +8,7 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "4.2";
+	const VERSION = "4.3";
 	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
@@ -138,9 +138,7 @@ try {
 			},
 			author: $("#toolInfoAuthor")
 		},
-		uniqueKeys: `Cơm nhà ai bát nhà lấy.\nBát vỡ cùng nhau không hay tẹo nào.`,
 		server: (server) => (server) ? cookie.set(`server.${STATE}`, server) : cookie.get(`server.${STATE}`, "master"),
-		generateKey: async () => this.uniqueKeys,
 		scriptIniting: false,
 		prevLayout: 0,
 		TOSHtml: "",
@@ -1506,12 +1504,13 @@ try {
 				}
 	
 				const run = () => {
+					preRunInit();
+					
 					runInfo({ status: "Đang chạy" });
 					heartbeat();
 					sounds.confirm(1);
 	
 					this.logsViewer.lockLogs = true;
-					preRunInit();
 				}
 	
 				const order = () => {
@@ -1664,6 +1663,16 @@ try {
 						warning: { icon: "error", bgColor: "yellow", barColor: "yellow" },
 						errored: { icon: "error", bgColor: "red", barColor: "red" },
 						loading: { icon: "spinner", bgColor: "orange", barColor: "blue" }
+					}
+				}
+
+				get core() {
+					return {
+						scriptList: core.scriptList,
+						info: core.info,
+						session: core.session,
+						page: core.page,
+						getCookie: core.getCookie,
 					}
 				}
 	
