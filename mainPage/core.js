@@ -8,7 +8,7 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "4.3";
+	const VERSION = "4.4";
 	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
@@ -1144,7 +1144,6 @@ try {
 			this.scriptIniting = false;
 	
 			(async () => {
-				/* javascript-obfuscator:disable */
 				var scriptCancelHandler = async () => {}
 				var scriptStopped = false;
 				const onCancel = (f) => scriptCancelHandler = f;
@@ -1636,14 +1635,15 @@ try {
 				clog("INFO", "Script Initializing");
 	
 				try {
+					/* javascript-obfuscator:disable */
 					await eval(decryptedScript);
+					/* javascript-obfuscator:enable */
 				} catch(e) {
 					await scriptCancelHandler(true);
 					await errorHandler(e, true);
 					this.changeLayout(3);
 				}
-	
-				/* javascript-obfuscator:enable */
+
 			})().catch(async e => {
 				scriptCancelHandler(true);
 				await errorHandler(e, true);
@@ -2054,7 +2054,6 @@ try {
 					this.DOM.info.status.innerText = `Đang chạy`;
 	
 					(async () => {
-						/* javascript-obfuscator:disable */
 						const onCancel = (f) => this.cancelHandler = f;
 						const SCRIPT = this.data;
 	
@@ -2135,10 +2134,11 @@ try {
 						this.DOM.info.status.innerText = `Đang chờ phản hồi`;
 	
 						try {
+							/* javascript-obfuscator:disable */
 							await eval(this.mainScript);
+							/* javascript-obfuscator:enable */
 						} catch(e) { throw e }
-	
-						/* javascript-obfuscator:enable */
+
 					})().catch(async e => { throw e });
 				}
 	
