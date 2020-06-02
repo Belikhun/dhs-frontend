@@ -1221,7 +1221,7 @@ body {
 
 .main .toolInfo .licenseInfo .left .name {
     font-family: Nunito;
-    font-weight: bold;
+    font-weight: 800;
     font-size: 20px;
     font-style: italic;
     color: white;

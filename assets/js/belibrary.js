@@ -306,7 +306,12 @@ function htmlToElement(html) {
 }
 
 function buildElementTree(type = "div", __class = [], data = new Array(), __keypath = "") {
-	let tree = document.createElement(type);
+	let svgTag = ["svg", "g", "path", "line", "circle", "polyline"]
+
+	let tree = (svgTag.includes(type))
+		? document.createElementNS("http://www.w3.org/2000/svg", type)
+		: document.createElement(type);
+	
 	if (typeof __class == "string")
 		__class = new Array([__class]);
 	tree.classList.add.apply(tree.classList, __class);
@@ -331,7 +336,10 @@ function buildElementTree(type = "div", __class = [], data = new Array(), __keyp
 			Object.assign(objtree[d.name], t.obj);
 		} else {
 			let k = __keypath + (__keypath === "" ? "" : ".") + d.name;
-			let t = document.createElement(d.type);
+			let t = (svgTag.includes(d.type))
+				? document.createElementNS("http://www.w3.org/2000/svg", d.type)
+				: document.createElement(d.type);
+
 			if (typeof d.class == "string")
 				d.class = new Array([d.class]);
 
@@ -502,9 +510,19 @@ function liveTime(element, start = time(new Date()), { type = "full", count = "u
 	}, interval);
 }
 
+function setDateTimeValue(dateNode, timeNode, value = time()) {
+	let date = new Date(value * 1000);
+	dateNode.value = [date.getFullYear(), date.getMonth() + 1, date.getDate()].map(i => pleft(i, 2)).join("-");
+	timeNode.value = [date.getHours(), date.getMinutes(), date.getSeconds()].map(i => pleft(i, 2)).join(":");
+}
+
+function getDateTimeValue(dateNode, timeNode) {
+	return time(new Date(`${dateNode.value}T${timeNode.value}`));
+}
+
 function convertSize(bytes) {
 	let sizes = ["B", "KB", "MB", "GB", "TB"];
-	for (let i = 0; bytes >= 1024 && i < (sizes.length -1 ); i++)
+	for (var i = 0; bytes >= 1024 && i < (sizes.length -1 ); i++)
 		bytes /= 1024;
 
 	return `${round(bytes, 2)} ${sizes[i]}`;
@@ -670,16 +688,21 @@ function currentScript() {
 }
 
 /**
- * Add padding in the left of input if input length is smaller than function length arg.
+ * Add padding to the left of input
+ * 
+ * Example:
+ * 
+ * + 21 with length 3: 021
+ * + "sample" with length 8: "  sample"
  *
- * @param {string} inp Input in String
- * @param {number} inp Input in Number
- * @param {number} length Length
+ * @param	{string/number}		input Input
+ * @param	{number}			length Length
  */
 function pleft(inp, length = 0, right = false) {
-	type = typeof inp;
+	let type = typeof inp;
+	let padd = "";
+
 	inp = (type === "number") ? inp.toString() : inp;
-	padd = "";
 
 	switch (type) {
 		case "number":
@@ -695,14 +718,14 @@ function pleft(inp, length = 0, right = false) {
 			return false;
 	}
 
-	padd = padd.repeat((length - inp.length < 0) ? 0 : length - inp.length);
+	padd = padd.repeat(Math.max(0, length - inp.length));
 	return (right) ? inp + padd : padd + inp;
 }
 
 /**
  * My color template
  * 
- * Return HEX string color code
+ * Return color in HEX string
  *
  * @param	{string}	color
  * @returns	{String}
@@ -727,7 +750,7 @@ function flatc(color) {
 /**
  * Color template from OSC package
  * 
- * Return HEX string color code
+ * Return color in HEX string
  *
  * @param	{string}	color
  * @returns	{String}

@@ -8,7 +8,7 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "4.4";
+	const VERSION = "5.0";
 	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
@@ -17,25 +17,25 @@ try {
 	const SERVER_LIST = {
 		release: {
 			master: {
-				name: "Máy Chủ Chính (Đông Nam Á)",
-				addr: "https://dealhuntersuite.com"
+				name: "Máy Chủ Chính",
+				addr: "https://huntbug.000webhostapp.com"
 			},
 
-			backup: {
-				name: "Máy Chủ Dự Phòng (Bắc Mĩ)",
-				addr: "https://dealhunter.000webhostapp.com"
+			staging: {
+				name: "Máy Chủ Thử Nghiệm",
+				addr: "https://dealhuntersuite.com"
 			}
 		},
 
 		indev: {
 			master: {
-				name: "Máy Chủ Chính (Đông Nam Á)",
+				name: "Máy Chủ Chính",
 				addr: "https://dealhuntersuite.com"
 			},
 
 			backup: {
-				name: "Máy Chủ Dự Phòng (Bắc Mĩ)",
-				addr: "https://dealhunter.000webhostapp.com"
+				name: "Máy Chủ Dự Phòng",
+				addr: "https://huntbug.000webhostapp.com"
 			},
 
 			local: {
@@ -163,7 +163,7 @@ try {
 				role: [
 					"Administrator",
 					"License Manager",
-					"Product Tester"
+					"Product Manager"
 				]
 			}
 		],
@@ -2255,7 +2255,7 @@ try {
 						if (await popup.show({
 							title: "Chưa đăng kí bản quyền!",
 							message: "Xin Lỗi!",
-							description: "Bản copy này của <b>Deal Hunter Suite</b> chưa được đăng kí trên máy bạn!<br>Vui lòng gửi mã đăng kí phía dưới tới Admin để thực hiện đăng kí sản phẩm!",
+							description: `Bản quyền của máy bạn chưa được đăng kí trên <b>${SERVER_LIST[this.server()].name}</b>!<br>Vui lòng gửi mã đăng kí phía dưới tới Admin để thực hiện đăng kí sản phẩm!`,
 							level: "okay",
 							icon: "key",
 							bgColor: "pink",
@@ -2303,7 +2303,7 @@ try {
 						if (await popup.show({
 							title: "Bản quyền đã hết hạn!",
 							message: "Xin lỗi!",
-							description: "Bản quyền <b>Deal Hunter Suite</b> của máy bạn đã hết hạn!<br>Vui lòng liên hệ với Admin để gia hạn sản phẩm!",
+							description: `Bản quyền của máy bạn trên <b>${SERVER_LIST[this.server()].name}</b> đã hết hạn!<br>Vui lòng liên hệ với Admin để gia hạn sản phẩm!`,
 							level: "warning",
 							customNode: box,
 							buttonList: {
@@ -2326,7 +2326,7 @@ try {
 						if (await popup.show({
 							title: "Toang Rồi Ông Giáo Ạ!",
 							message: "AUTHORIZE SERVER ERROR",
-							description: "Có lỗi không mong muốn đã sảy ra khi đăng nhập vào máy chủ <b>Deal Hunter Suite</b>!",
+							description: `Có lỗi không mong muốn đã sảy ra khi đăng nhập vào <b>${SERVER_LIST[this.server()].name}</b>!`,
 							level: "error",
 							customNode: infoBox,
 							buttonList: {

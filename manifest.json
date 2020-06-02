@@ -1,6 +1,6 @@
 {
     "name": "Deal Hunter Suite",
-    "version": "4.4",
+    "version": "5.0",
     "description": "Provide all the Tools needed for Deal Hunter!",
     "manifest_version": 2,
     "minimum_chrome_version": "16.0.884",
@@ -17,10 +17,10 @@
         "system.storage",
         "cookies"
     ],
-    "content_security_policy": "script-src 'self' 'unsafe-eval' https://ssl.google-analytics.com https://dealhunter.000webhostapp.com; object-src 'self'",
-    "update_url": "https://dealhunter.000webhostapp.com/api/updates/check",
+    "content_security_policy": "script-src 'self' 'unsafe-eval' https://ssl.google-analytics.com https://dealhuntersuite.com https://huntbug.000webhostapp.com; object-src 'self'",
+    "update_url": "https://dealhuntersuite.com/api/updates/check",
     "browser_action": {
-        "default_title": "Deal Hunter Suite\n\nDashboard\nBảng Điều Khiển của DHS!",
+        "default_title": "Deal Hunter Suite\nClient",
         "default_icon": {
             "16": "assets/img/favicon@16x16.png",
             "24": "assets/img/favicon@24x24.png",
