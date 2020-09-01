@@ -190,3 +190,8 @@ body.dark .progressBar:not(.light) > .bar[data-color="pink"],
 .progressBar.dark > .bar[data-color="pink"] {
     background-color: #ff9ef8;
 }
+
+body.dark .progressBar:not(.light) > .bar[data-color="orange"],
+.progressBar.dark > .bar[data-color="orange"] {
+    background-color: #ffa502;
+}

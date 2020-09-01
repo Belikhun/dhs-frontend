@@ -114,21 +114,36 @@ body {
     text-transform: uppercase;
 }
 
-.main .splash .navbar {
+.main > .splash > .toolHeader {
     position: absolute;
     display: flex;
-    flex-direction: row;
-    align-items: center;
+    flex-direction: column;
+
     bottom: 0;
+    
     width: 100%;
-    height: 40px;
-    background-color: #282828;
+    height: 100%;
+    overflow: hidden;
 
     opacity: 0;
-    transition: opacity 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
+    transition: opacity 0.4s cubic-bezier(0.785, 0.135, 0.15, 0.86);
 }
 
-.main .splash .navbar .icon {
+.main > .splash > .toolHeader > .navbar {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    flex-grow: 0;
+    flex-shrink: 0;
+    align-items: center;
+
+    width: 100%;
+    height: 40px;
+
+    background-color: #282828;
+}
+
+.main > .splash > .toolHeader > .navbar > .icon {
     position: relative;
     display: inline-block;
     width: 32px;
@@ -137,36 +152,39 @@ body {
     margin: 0 6px 0 10px;
 }
 
-.main .splash .navbar .clock {
+.main > .splash > .toolHeader > .navbar > .clock {
     position: relative;
     display: inline-flex;
     flex-direction: row;
     align-items: flex-end;
+
     font-family: "Open Sans";
     font-size: 15px;
     font-weight: bold;
     letter-spacing: .3px;
+
     margin-right: 10px;
+    
     color: #e2e2e2;
     user-select: none;
 }
 
-.main .splash .navbar .clock sub {
+.main > .splash > .toolHeader > .navbar > .clock > sub {
     font-weight: normal;
     font-size: 10px;
     line-height: 16px;
     margin-right: 2px;
 }
 
-.main .splash .navbar .clock ms {
+.main > .splash > .toolHeader > .navbar > .clock > ms {
     font-size: 13px;
 }
 
-.main .splash .navbar .clock ms::before {
+.main > .splash > .toolHeader > .navbar > .clock > ms::before {
     content: ".";
 }
 
-.main .splash .navbar .user {
+.main > .splash > .toolHeader > .navbar > .user {
     position: relative;
     display: flex;
     flex-direction: row;
@@ -175,7 +193,7 @@ body {
     justify-content: flex-end;
 }
 
-.main .splash .navbar .user .name {
+.main > .splash > .toolHeader > .navbar > .user > .name {
     font-family: Nunito;
     font-weight: 900;
     font-size: 16px;
@@ -184,7 +202,7 @@ body {
     color: white;
 }
 
-.main .splash .navbar .user .tags {
+.main > .splash > .toolHeader > .navbar > .user > .tags {
     position: relative;
     display: inline-flex;
     flex-direction: row;
@@ -192,7 +210,7 @@ body {
     margin-left: 4px;
 }
 
-.main .splash .navbar .hamburger {
+.main > .splash > .toolHeader > .navbar > .hamburger {
     position: relative;
     width: 20px;
     height: 18px;
@@ -203,7 +221,7 @@ body {
     transition: all 1s cubic-bezier(0.06, 0.81, 0, 0.98);
 }
 
-.main .splash .navbar .hamburger span {
+.main > .splash > .toolHeader > .navbar > .hamburger > span {
     position: absolute;
     width: 100%;
     height: 4px;
@@ -221,54 +239,417 @@ body {
             transition-timing-function: ease;
 }
 
-.main .splash .navbar .hamburger span:nth-child(1) {
+.main > .splash > .toolHeader > .navbar > .hamburger > span:nth-child(1) {
     top: 0;
 }
 
-.main .splash .navbar .hamburger span:nth-child(2) {
+.main > .splash > .toolHeader > .navbar > .hamburger > span:nth-child(2) {
     top: 50%;
     -webkit-transform: translateY(-50%);
         -ms-transform: translateY(-50%);
             transform: translateY(-50%);
 }
 
-.main .splash .navbar .hamburger span:nth-child(3) {
+.main > .splash > .toolHeader > .navbar > .hamburger > span:nth-child(3) {
     bottom: 0;
 }
 
-.main .splash .navbar .hamburger.active span:nth-child(1) {
+.main > .splash > .toolHeader > .navbar > .hamburger.active span:nth-child(1) {
     -webkit-transform: translateY(7px) rotate(45deg);
         -ms-transform: translateY(7px) rotate(45deg);
             transform: translateY(7px) rotate(45deg);
 }
 
-.main .splash .navbar .hamburger.active span:nth-child(2) {
+.main > .splash > .toolHeader > .navbar > .hamburger.active span:nth-child(2) {
     opacity: 0;
 }
 
-.main .splash .navbar .hamburger.active span:nth-child(3) {
+.main > .splash > .toolHeader > .navbar > .hamburger.active span:nth-child(3) {
     -webkit-transform: translateY(-7px) rotate(-45deg);
         -ms-transform: translateY(-7px) rotate(-45deg);
             transform: translateY(-7px) rotate(-45deg);
 }
 
-.main:not([data-layout = "1"]) .splash .toolChangelog {
+.main > .splash > .toolHeader > .proxyStatus {
+    position: relative;
+    display: none;
+    flex-direction: column;
+    flex-grow: 1;
+    align-items: center;
+
+    width: 100%;
+
+    background-color: rgba(70, 70, 70, 50%);
+}
+
+.main > .splash.proxyInfo > .toolHeader > .proxyStatus {
+    display: flex;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    width: 100%;
+    height: 40px;
+
+    user-select: none;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header > .bar {
+    position: absolute;
+    display: block;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header > .icon {
+    position: relative;
+    display: inline-block;
+    margin-left: 10px;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header > .icon::before {
+    content: "\f542";
+    font-family: "Font Awesome 5 Free";
+    font-size: 18px;
+    font-weight: 900;
+    font-style: normal;
+    color: white;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header > .icon.simpleSpinner {
+    width: 20px;
+    height: 20px;
+    border-color: white white transparent white;
+    border-width: 4px;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header > .icon.simpleSpinner::before {
+    content: "";
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header > .detail {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+
+    margin: 0 10px;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header > .detail > .detailMain {
+    font-family: "Nunito";
+    font-weight: 900;
+    font-size: 16px;
+    text-transform: uppercase;
+    line-height: 16px;
+    color: white;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header > .detail > .detailSub {
+    color: white;
+    font-family: Calibri;
+    font-size: 13px;
+    line-height: 12px;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header > .progress {
+    margin-right: 10px;
+
+    font-family: "Consolas";
+    font-size: 15px;
+    font-weight: bold;
+    color: white;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header > .sq-btn {
+    width: 50px;
+    height: 100%;
+    padding: unset;
+
+    transition: all 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header > .sq-btn:disabled {
+    width: 0;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header > .sq-btn:focus {
+    text-decoration: none;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header > .sq-btn > i::before {
+    content: "\f111";
+    display: block;
+
+    font-family: "Font Awesome 5 Free";
+    font-size: 18px;
+    font-weight: 900;
+    font-style: normal;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header > .more > i::before {
+    content: "\f0d7";
+    font-size: 26px;
+
+    transform: rotate(0);
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.main > .splash.proxyInfo.proxyDetail > .toolHeader > .proxyStatus > .header > .more > i::before {
+    transform: rotate(180deg);
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .header > .reload > i::before {
+    content: "\f2f1";
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list {
+    position: relative;
+    display: block;
+    flex-grow: 1;
+    flex-shrink: 1;
+
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list:empty::before {
+    content: "Trống";
+    position: absolute;
+    display: block;
+
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    box-sizing: border-box;
+
+    font-size: 14px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+    color: rgba(236, 236, 236, 0.8);
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    width: 100%;
+    padding: 5px 10px;
+
+    box-sizing: border-box;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .info {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-grow: 0;
+    flex-shrink: 0;
+
+    min-width: calc(55% - 5px);
+    margin-right: 5px;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .info > .column {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 0;
+
+    margin-right: 5px;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .info > .column > .address {
+    font-family: Calibri;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 16px;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .info > .column > .interface {
+    font-size: 12px;
+    color: #ffffffa6;
+    line-height: 10px;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .info > .ip {
+    flex-grow: 1;
+
+    font-family: Nunito;
+    font-size: 17px;
+    font-weight: 800;
+    font-style: italic;
+    text-align: center;
+    color: white;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .resource {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .resource > .progressBar {
+    height: 20px;
+    margin-top: unset;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .resource > .progressBar::after {
+    content: "\f111";
+    position: absolute;
+    display: block;
+
+    top: 50%;
+    left: 5px;
+    transform: translateY(-50%);
+
+    font-family: "Font Awesome 5 Free";
+    font-size: 16px;
+    font-weight: 900;
+    font-style: normal;
+    color: white;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .resource > .progressBar.cpu::after {
+    content: "\f1ec"
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .resource > .progressBar.ram::after {
+    content: "\f2db"
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .resource > .progressBar > .right {
+    top: 50%;
+    right: 5px;
+    transform: translateY(-50%);
+
+    line-height: 10px;
+    color: white;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    min-width: 70px;
+    margin-left: 5px;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .ping {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .ping > .bar {
+    position: relative;
+    display: block;
+
+    width: 16px;
+    height: 14px;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .ping > .bar > span {
+    position: absolute;
+    display: block;
+
+    width: 4px;
+    height: 100%;
+
+    right: 0;
+    bottom: 0;
+
+    background-color: #616161;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .ping > .bar > span:nth-child(1) {
+    right: unset;
+    left: 0;
+    height: 33.3%;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .ping > .bar > span:nth-child(2) {
+    height: 66.6%;
+    right: 50%;
+    transform: translateX(50%);
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .ping > .bar::before,
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .ping > .bar::after {
+    content: "";
+    position: absolute;
+    display: none;
+
+    width: calc(100% * 1.414213);
+    height: 2px;
+
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-45deg);
+    z-index: 1;
+
+    background-color: rgb(255, 122, 122);
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .ping > .bar::after {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .ping > .bar[data-value="no"]::before,
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .ping > .bar[data-value="no"]::after {
+    display: block;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .ping > .bar[data-value="3"] > span,
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .ping > .bar[data-value="2"] > span:nth-child(1),
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .ping > .bar[data-value="2"] > span:nth-child(2),
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .ping > .bar[data-value="1"] > span:nth-child(1) {
+    background-color: #70e484;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .ping > .value {
+    margin-right: 5px;
+}
+
+.main > .splash > .toolHeader > .proxyStatus > .list > .item > .status > .state {
+    font-family: "Consolas";
+    font-size: 15px;
+    font-weight: bold;
+    color: white;
+}
+
+.main:not([data-layout = "1"]) > .splash > .loadPanel {
     opacity: 0;
 }
 
-.main:not([data-layout = "1"]) .splash .loadPanel {
-    opacity: 0;
-}
-
-.main:not([data-layout = "1"]) .splash .navbar {
+.main:not([data-layout = "1"]) > .splash > .toolHeader {
     opacity: 1;
 }
 
-.main .splash.optimize {
+.main > .splash.optimize {
     z-index: 100;
 }
 
-.main .splash.optimize .loadPanel {
+.main > .splash.optimize > .loadPanel {
     display: none;
 }
 
@@ -510,19 +891,23 @@ body {
 
 .main .container .scriptContainer .scriptList .itemList .item .right > t::after {
     content: "\f2f1";
+    
+    padding-left: 6px;
+
     font-family: "Font Awesome 5 Free";
     font-weight: 900;
     font-size: 14px;
-    padding-left: 6px;
+    text-align: right;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     font-feature-settings: "liga";
-    user-select: none;
     color: rgb(226, 226, 226);
+
+    user-select: none;
 }
 
 .main .container .scriptContainer .scriptList .itemList .item .right > .id::after {
-    content: "\f577";
+    content: "\f15b";
 }
 
 .main .container .scriptContainer .scriptList .itemList .item .right > .version::after {
@@ -1021,7 +1406,7 @@ body {
     position: relative;
     display: block;
     flex-grow: 1;
-    flex-shirnk: 1;
+    flex-shrink: 1;
     width: 100%;
     overflow-x: hidden;
     overflow-y: auto;
@@ -1029,6 +1414,57 @@ body {
 
 .main .container .scriptRunLogs .view > li {
     overflow-anchor: none;
+}
+
+.main .container .scriptRunLogs .view > li.group {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.main .container .scriptRunLogs .view > li.group > .title {
+    margin: 2px 0;
+    font-family: Calibri;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.main .container .scriptRunLogs .view > li.group > .extend {
+    position: absolute;
+    display: block;
+
+    left: -20px;
+    top: 4px;
+    transform: rotate(-90deg);
+
+    cursor: pointer;
+
+    transition: transform 0.3s ease;
+}
+
+.main .container .scriptRunLogs .view > li.group > .extend::before {
+    content: "\f0d7";
+    position: relative;
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    font-size: 18px;
+    color: rgba(212, 212, 212, 0.6);
+}
+
+.main .container .scriptRunLogs .view > li.group.expand > .extend {
+    transform: rotate(0);
+}
+
+.main .container .scriptRunLogs .view > li.group > .content {
+    display: none;
+}
+
+.main .container .scriptRunLogs .view > li.group.expand > .content {
+    display: block;
+}
+
+.main .container .scriptRunLogs .view > li.group > .content > li {
+    margin-left: 32px;
 }
 
 .main .container .scriptRunLogs .view:empty::before {
@@ -1105,17 +1541,19 @@ body {
     overflow-anchor: auto;
 }
 
-.main .toolInfo {
+.main > .toolInfo {
     position: relative;
     display: block;
+
     width: 100%;
     padding: 0 10px;
+
     box-sizing: border-box;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow-x: hidden!important;
+    overflow-y: auto!important;
 }
 
-.main .toolInfo .header {
+.main > .toolInfo .header {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -1123,7 +1561,7 @@ body {
     margin-bottom: 20px;
 }
 
-.main .toolInfo .header .icon {
+.main > .toolInfo .header .icon {
     position: relative;
     display: block;
     margin-top: 20px;
@@ -1131,7 +1569,7 @@ body {
     height: 92px;
 }
 
-.main .toolInfo .header .toolName {
+.main > .toolInfo .header .toolName {
     text-align: center;
     font-family: Nunito;
     font-weight: 900;
@@ -1142,14 +1580,14 @@ body {
     margin-top: 10px;
 }
 
-.main .toolInfo .header .toolDetail {
+.main > .toolInfo .header .toolDetail {
     position: relative;
     display: flex;
     flex-direction: row;
     align-items: center;
 }
 
-.main .toolInfo .header .toolDetail > t {
+.main > .toolInfo .header .toolDetail > t {
     position: relative;
     flex-grow: 1;
     text-align: center;
@@ -1160,28 +1598,28 @@ body {
     margin: 0 5px;
 }
 
-.main .toolInfo .header .toolDetail > t::before {
+.main > .toolInfo .header .toolDetail > t::before {
     font-weight: normal;
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: .2px;
 }
 
-.main .toolInfo .header .toolDetail > .version::before {
+.main > .toolInfo .header .toolDetail > .version::before {
     content: "Phiên bản: ";
 }
 
-.main .toolInfo .header .toolDetail > .codename::before {
+.main > .toolInfo .header .toolDetail > .codename::before {
     content: "Codename: ";
 }
 
-.main .toolInfo .header .copyright {
+.main > .toolInfo .header .copyright {
     font-family: Calibri;
     font-size: 13px;
     margin: 5px 0;
 }
 
-.main .toolInfo .header .button {
+.main > .toolInfo .header .button {
     position: relative;
     display: flex;
     flex-direction: row;
@@ -1190,12 +1628,12 @@ body {
     margin-top: 10px;
 }
 
-.main .toolInfo .header .button > button {
+.main > .toolInfo .header .button > button {
     flex-grow: 0;
     margin: 5px;
 }
 
-.main .toolInfo .title {
+.main > .toolInfo .title {
     font-family: "Open Sans";
     font-size: 14px;
     font-weight: bolder;
@@ -1203,7 +1641,7 @@ body {
     margin: 10px 0;
 }
 
-.main .toolInfo .licenseInfo {
+.main > .toolInfo .licenseInfo {
     position: relative;
     display: flex;
     flex-direction: row;
@@ -1211,7 +1649,7 @@ body {
     overflow: hidden;
 }
 
-.main .toolInfo .licenseInfo .left {
+.main > .toolInfo .licenseInfo .left {
     position: relative;
     display: inline-block;
     flex-grow: 1;
@@ -1219,7 +1657,7 @@ body {
     margin: 10px 10px 10px 20px;
 }
 
-.main .toolInfo .licenseInfo .left .name {
+.main > .toolInfo .licenseInfo .left .name {
     font-family: Nunito;
     font-weight: 800;
     font-size: 20px;
@@ -1227,14 +1665,14 @@ body {
     color: white;
 }
 
-.main .toolInfo .licenseInfo .left .licenses {
+.main > .toolInfo .licenseInfo .left .licenses {
     position: relative;
     display: flex;
     flex-direction: column;
     margin-top: 10px;
 }
 
-.main .toolInfo .licenseInfo .left .licenses .license {
+.main > .toolInfo .licenseInfo .left .licenses .license {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -1242,20 +1680,20 @@ body {
     border-top: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-.main .toolInfo .licenseInfo .left .licenses .license > .allow {
+.main > .toolInfo .licenseInfo .left .licenses .license > .allow {
     font-weight: bold;
     font-size: 13px;
     color: white;
 }
 
-.main .toolInfo .licenseInfo .left .licenses .license > .allow::before {
+.main > .toolInfo .licenseInfo .left .licenses .license > .allow::before {
     content: "Cho Phép: ";
     font-size: 12px;
     font-weight: normal;
     text-transform: uppercase;
 }
 
-.main .toolInfo .licenseInfo .left .licenses .license > .timeDesc {
+.main > .toolInfo .licenseInfo .left .licenses .license > .timeDesc {
     margin-top: 10px;
     font-family: "Open Sans";
     font-size: 10px;
@@ -1264,18 +1702,18 @@ body {
     color: #efefef;
 }
 
-.main .toolInfo .licenseInfo .left .licenses .license > timer {
+.main > .toolInfo .licenseInfo .left .licenses .license > timer {
     color: rgb(250, 250, 250);
 }
 
-.main .toolInfo .licenseInfo .left .licenseKey {
+.main > .toolInfo .licenseInfo .left .licenseKey {
     position: relative;
     display: block;
     padding-top: 6px;
     border-top: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-.main .toolInfo .licenseInfo .left .licenseKey .keyDesc {
+.main > .toolInfo .licenseInfo .left .licenseKey .keyDesc {
     font-family: "Open Sans";
     font-size: 10px;
     font-weight: bold;
@@ -1283,7 +1721,7 @@ body {
     color: #efefef;
 }
 
-.main .toolInfo .licenseInfo .left .licenseKey .key {
+.main > .toolInfo .licenseInfo .left .licenseKey .key {
     margin-top: 2px;
     max-width: 100%;
     text-align: left;
@@ -1294,13 +1732,13 @@ body {
     word-break: break-all;
 }
 
-.main .toolInfo .licenseInfo .right {
+.main > .toolInfo .licenseInfo .right {
     position: relative;
     flex-grow: 0;
     flex-shrink: 0;
 }
 
-.main .toolInfo .licenseInfo .right .keyBtn {
+.main > .toolInfo .licenseInfo .right .keyBtn {
     position: relative;
     display: flex;
     align-items: center;
@@ -1314,7 +1752,7 @@ body {
     transition: background-color 0.3s ease;
 }
 
-.main .toolInfo .licenseInfo .right .keyBtn::before {
+.main > .toolInfo .licenseInfo .right .keyBtn::before {
     content: "\f084";
     font-family: "Font Awesome 5 Free";
     font-size: 16px;
@@ -1323,15 +1761,15 @@ body {
     transition: color 0.3s ease;
 }
 
-.main .toolInfo .licenseInfo .right .keyBtn:hover {
+.main > .toolInfo .licenseInfo .right .keyBtn:hover {
     background-color: rgba(36, 36, 36, 0.3);
 }
 
-.main .toolInfo .licenseInfo .right .keyBtn:hover::before {
+.main > .toolInfo .licenseInfo .right .keyBtn:hover::before {
     color: white;
 }
 
-.main .toolInfo .authorList {
+.main > .toolInfo .authorList {
     position: relative;
     display: flex;
     flex-direction: row;
@@ -1340,7 +1778,7 @@ body {
     margin-bottom: 10px;
 }
 
-.main .toolInfo .authorList .item {
+.main > .toolInfo .authorList .item {
     position: relative;
     display: flex;
     flex-grow: 1;
@@ -1349,7 +1787,7 @@ body {
     padding: 0 20px;
 }
 
-.main .toolInfo .authorList .item .avatar {
+.main > .toolInfo .authorList .item .avatar {
     position: relative;
     display: block;
     width: 60px;
@@ -1357,7 +1795,7 @@ body {
     border-radius: 50%;
 }
 
-.main .toolInfo .authorList .item .authorName {
+.main > .toolInfo .authorList .item .authorName {
     font-family: Nunito;
     font-weight: bold;
     font-size: 16px;
@@ -1365,16 +1803,16 @@ body {
     letter-spacing: .5px;
 }
 
-.main .toolInfo .authorList .item .authorInfo {
+.main > .toolInfo .authorList .item .authorInfo {
     font-size: 12px;
     color: #cecece;
 }
 
-.main .toolInfo.optimize .license {
+.main > .toolInfo.optimize .license {
     display: none;
 }
 
-.main .runStatus {
+.main > .runStatus {
     position: relative;
     display: block;
     width: 100%;
@@ -1383,7 +1821,7 @@ body {
     overflow: hidden;
 }
 
-.main .runStatus .status {
+.main > .runStatus > .status {
     text-transform: uppercase;
     font-size: 12px;
     font-weight: 700;
@@ -1392,27 +1830,64 @@ body {
     font-family: Nunito;
 }
 
-.main .runStatus .timer {
+.main > .runStatus > .timer {
     font-weight: bold;
     font-size: 26px;
     line-height: 24px;
     color: white;
 }
 
-.main .runStatus .timer ms {
+.main > .runStatus > .timer > ms {
     display: inline-block;
     font-size: 14px;
 }
 
-.main .runStatus .timer ms::before {
+.main > .runStatus > .timer > ms::before {
     content: ".";
 }
 
-.main .runStatus .progressBar {
-    margin-top: 10px;
+.main > .runStatus > .progressBarContainer {
+    margin-top: 5px;
+    height: 15px;
+
+    background-color: transparent;
 }
 
-.main .runStatus .itemPrice {
+.main > .runStatus > .progressBarContainer > .mainBar {
+    margin: unset;
+    height: 100%;
+
+    transition:
+        height 0.4s cubic-bezier(0.785, 0.135, 0.15, 0.86);
+}
+
+.main > .runStatus > .progressBarContainer > .subBar {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+
+    height: 0;
+
+    transition:
+        height 0.4s cubic-bezier(0.785, 0.135, 0.15, 0.86);
+}
+
+.main > .runStatus > .progressBarContainer.showSub > .mainBar {
+    height: 5px;
+}
+
+.main > .runStatus > .progressBarContainer.showSub > .subBar {
+    height: calc(100% - 5px);
+}
+
+.main > .runStatus > .progressBarContainer > .subBar > .progressBar {
+    flex-grow: 1;
+    
+    height: 100%;
+    margin: unset;
+}
+
+.main > .runStatus > .itemPrice {
     position: relative;
     display: flex;
     margin-top: 6px;
@@ -1420,48 +1895,48 @@ body {
     align-items: center;
 }
 
-.main .runStatus .itemPrice .current,
-.main .runStatus .itemPrice .target {
+.main > .runStatus > .itemPrice > .current,
+.main > .runStatus > .itemPrice > .target {
     font-size: 15px;
     font-weight: bold;
     text-transform: uppercase;
 }
 
-.main .runStatus .itemPrice .seperator {
+.main > .runStatus > .itemPrice > .seperator {
     padding: 0 10px;
 }
 
-.main .runStatus .itemPrice .seperator::before {
+.main > .runStatus > .itemPrice > .seperator::before {
     content: "/";
     font-weight: bold;
     font-size: 14px;
     color: #dadada;
 }
 
-.main .runStatus[data-data-type="time"] .itemPrice .seperator::before {
+.main > .runStatus[data-data-type="time"] > .itemPrice > .seperator::before {
     content: ">>>";
     font-weight: normal;
 }
 
-.main .runStatus .itemPrice .saved {
+.main > .runStatus > .itemPrice > .saved {
     margin-left: 10px;
     font-weight: bold;
     font-size: 14px;
 }
 
-.main .runStatus .itemStatus {
+.main > .runStatus > .itemStatus {
     font-weight: bold;
     font-size: 14px;
     transition: color 0.3s ease;
     text-transform: uppercase;
 }
 
-.main .runStatus .checkDetail {
+.main > .runStatus > .checkDetail {
     font-weight: 500;
     font-size: 12px;
 }
 
-.main .runStatus .topRight {
+.main > .runStatus > .topRight {
     position: absolute;
     display: flex;
     flex-direction: row;
@@ -1470,7 +1945,7 @@ body {
     right: 20px;
 }
 
-.main .runStatus .topRight .heartbeat {
+.main > .runStatus > .topRight > .heartbeat {
     position: relative;
     display: block;
     width: 12px;
@@ -1484,15 +1959,15 @@ body {
     animation-fill-mode: forwards;
 }
 
-.main .runStatus .topRight .heartbeat[data-color="blue"] {
+.main > .runStatus > .topRight > .heartbeat[data-color="blue"] {
     background-color: #1fbcf8;
 }
 
-.main .runStatus .topRight .heartbeat[data-color="yellow"] {
+.main > .runStatus > .topRight > .heartbeat[data-color="yellow"] {
     background-color: #e8e216;
 }
 
-.main .runStatus .topRight .heartbeat[data-color="red"] {
+.main > .runStatus > .topRight > .heartbeat[data-color="red"] {
     background-color: #fd6666;
 }
 
@@ -1506,27 +1981,27 @@ body {
     }
 }
 
-.main .runStatus :not(.bar)[data-color] {
+.main > .runStatus :not(.bar)[data-color] {
     transition: color 0.3s ease;
 }
 
-.main .runStatus [data-color="blue"] {
+.main > .runStatus [data-color="blue"] {
     color: #2ce0d9;
 }
 
-.main .runStatus [data-color="pink"] {
+.main > .runStatus [data-color="pink"] {
     color: #ff84bb;
 }
 
-.main .runStatus [data-color="green"] {
+.main > .runStatus [data-color="green"] {
     color: #b0e40f;
 }
 
-.main .runStatus [data-color="yellow"] {
+.main > .runStatus [data-color="yellow"] {
     color: #fee322;
 }
 
-.main .runStatus [data-color="red"] {
+.main > .runStatus [data-color="red"] {
     color: #ff8282;
 }
 
@@ -1534,18 +2009,20 @@ body {
     position: relative;
 }
 
-.main .splash,
-.main .container,
-.main .runStatus,
-.main .popup,
-.main .container .scriptContainer,
-.main .container .scriptSettings,
-.main .container .scriptRunLogs,
-.main .container .scriptSettings .header,
-.main .container .scriptSettings .itemInfo,
-.main .container .scriptSettings .settingsPage,
-.main .toolInfo,
-.main .tutorial {
+.main > .splash,
+.main > .container,
+.main > .runStatus,
+.main > .proxy,
+.main > .container > .scriptContainer,
+.main > .container > .scriptSettings,
+.main > .container > .scriptRunLogs,
+.main > .container > .scriptSettings > .header,
+.main > .container > .scriptSettings > .itemInfo,
+.main > .container > .scriptSettings > .settingsPage,
+.main > .toolInfo,
+.main > .tutorial {
+    overflow: hidden;
+    
     flex-grow: 0;
     height: 0;
     transition:
@@ -1556,13 +2033,13 @@ body {
 
 /*! BEGIN SPECIAL RULES */
 
-.main .container .scriptSettings .itemInfo,
-.main .container .scriptSettings .settingsPage {
+.main > .container > .scriptSettings > .itemInfo,
+.main > .container > .scriptSettings > .settingsPage {
     height: unset;
     max-height: 0;
 }
 
-.main .container .scriptSettings .settingsPage {
+.main > .container > .scriptSettings > .settingsPage {
     flex-grow: 1;
 }
 
@@ -1582,51 +2059,87 @@ body {
     height: 40px;
 }
 
-.main[data-layout = "2"] .popup {
+.main:not([data-layout = "1"]) .splash.proxyInfo {
+    height: 80px;
+}
+
+.main:not([data-layout = "1"]) .splash.proxyInfo.proxyDetail {
+    height: 240px;
+}
+
+.main:not([data-layout = "1"]) .splash.proxyInfo.proxyDetail > .proxyStatus {
+    height: 200px;
+}
+
+.main[data-layout = "2"] > .proxy,
+.main[data-layout = "3"] > .container,
+.main[data-layout = "4"] > .container,
+.main[data-layout = "5"] > .container,
+.main[data-layout = "7"] > .toolInfo,
+.main[data-layout = "8"] > .tutorial {
     height: calc(100% - 40px);
 }
 
-.main[data-layout = "3"] .container,
-.main[data-layout = "4"] .container,
-.main[data-layout = "5"] .container,
-.main[data-layout = "7"] .toolInfo,
-.main[data-layout = "8"] .tutorial {
-    height: calc(100% - 40px);
+.main[data-layout = "2"] > .splash.proxyInfo ~ .proxy,
+.main[data-layout = "3"] > .splash.proxyInfo ~ .container,
+.main[data-layout = "4"] > .splash.proxyInfo ~ .container,
+.main[data-layout = "5"] > .splash.proxyInfo ~ .container,
+.main[data-layout = "7"] > .splash.proxyInfo ~ .toolInfo,
+.main[data-layout = "8"] > .splash.proxyInfo ~ .tutorial {
+    height: calc(100% - 80px);
 }
 
-.main[data-layout = "3"] .container .scriptContainer {
+.main[data-layout = "2"] > .splash.proxyInfo.proxyDetail ~ .proxy,
+.main[data-layout = "3"] > .splash.proxyInfo.proxyDetail ~ .container,
+.main[data-layout = "4"] > .splash.proxyInfo.proxyDetail ~ .container,
+.main[data-layout = "5"] > .splash.proxyInfo.proxyDetail ~ .container,
+.main[data-layout = "7"] > .splash.proxyInfo.proxyDetail ~ .toolInfo,
+.main[data-layout = "8"] > .splash.proxyInfo.proxyDetail ~ .tutorial {
+    height: calc(100% - 240px);
+}
+
+.main[data-layout = "3"] > .container > .scriptContainer {
     height: 100%;
 }
 
-.main[data-layout = "4"] .container .scriptSettings,
-.main[data-layout = "5"] .container .scriptSettings {
+.main[data-layout = "4"] > .container > .scriptSettings,
+.main[data-layout = "5"] > .container > .scriptSettings {
     height: 100%;
 }
 
-.main[data-layout = "4"] .container .scriptSettings .header {
+.main[data-layout = "4"] > .container > .scriptSettings > .header {
     height: 100%;
 }
 
-.main[data-layout = "5"] .container .scriptSettings .itemInfo {
+.main[data-layout = "5"] > .container > .scriptSettings > .itemInfo {
     max-height: 100%;
 }
 
-.main[data-layout = "5"] .container .scriptSettings .settingsPage {
+.main[data-layout = "5"] > .container > .scriptSettings > .settingsPage {
     max-height: 100%;
 }
 
-.main[data-layout = "5"] .container .scriptSettings .itemInfo[data-hide="true"] + .settingsPage {
+.main[data-layout = "5"] > .container > .scriptSettings > .itemInfo[data-hide="true"] + .settingsPage {
     height: 100%;
 }
 
-.main[data-layout = "6"] .container {
+.main[data-layout = "6"] > .container {
     height: calc(100% - 200px);
 }
+
+.main[data-layout = "6"] > .splash.proxyInfo ~ .container {
+    height: calc(100% - 240px);
+}
+
+.main[data-layout = "6"] > .splash.proxyInfo.proxyDetail ~ .container {
+    height: calc(100% - 400px);
+}
+
 .main[data-layout = "6"] .runStatus {
     height: 160px;
 }
 
-.main[data-layout = "6"] .container .scriptRunLogs {
+.main[data-layout = "6"] > .container > .scriptRunLogs {
     height: 100%;
 }
 

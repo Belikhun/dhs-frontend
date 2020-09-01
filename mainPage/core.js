@@ -8,7 +8,7 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "5.0";
+	const VERSION = "6.0";
 	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
@@ -58,6 +58,7 @@ try {
 	
 	const core = {
 		mainBox: $("#mainBox"),
+		splash: $("#splashPanel"),
 		tool: {
 			tracking: {
 				container: $("#scriptPageInfo"),
@@ -74,6 +75,7 @@ try {
 			reloadBtn: $("#scriptReloadInfo"),
 			announcement: $("#announcementBox")
 		},
+
 		script: {
 			autorunList: $("#scriptAutorunList"),
 			thisPageList: $("#scriptThisPageList"),
@@ -96,24 +98,9 @@ try {
 				formList: $("#scriptSettingsFormList"),
 				formCancel: $("#scriptSettingsFormCancel"),
 				formSubmit: $("#scriptSettingsFormSubmit")
-			},
-			status: {
-				container: $("#scriptRunStatus"),
-				status: $("#scriptRunStatusStatus"),
-				timer: $("#scriptRunStatusTimer"),
-				bar: $("#scriptRunStatusBar"),
-				barNow: $("#scriptRunStatusBarNow"),
-				barEnd: $("#scriptRunStatusBarEnd"),
-				price: $("#scriptRunStatusPrice"),
-				current: $("#scriptRunStatusCurrent"),
-				target: $("#scriptRunStatusTarget"),
-				priceSaved: $("#scriptRunStatusPriceSaved"),
-				itemStatus: $("#scriptRunStatusItemStatus"),
-				checkDetail: $("#scriptRunStatusCheckDetail"),
-				heartbeat: $("#scriptRunStatusHeartbeat")
-			},
-			cancelButton: $("#scriptRunCancel")
+			}
 		},
+
 		toolInfo: {
 			container: $("#toolInfo"),
 			name: $("#toolInfoName"),
@@ -138,7 +125,8 @@ try {
 			},
 			author: $("#toolInfoAuthor")
 		},
-		server: (server) => (server) ? cookie.set(`server.${STATE}`, server) : cookie.get(`server.${STATE}`, "master"),
+
+		server: (server) => (server) ? cookie.set(`server.${STATE}`, server, 9999) : cookie.get(`server.${STATE}`, "master"),
 		scriptIniting: false,
 		prevLayout: 0,
 		TOSHtml: "",
@@ -192,7 +180,10 @@ try {
 			//? |-----------------------|
 	
 			splash.set({ p: 10, i: "Preparing infoPopup" });
-			await popup.init();
+			popup.init();
+
+			splash.set({ p: 15, i: "Preparing runStatus" });
+			this.runStatus.init();
 	
 			//? |-----------------------|
 			//? |     TOOLINFO INIT     |
@@ -248,7 +239,7 @@ try {
 				avatar.src = item.avatar;
 	
 				let spinner = document.createElement("div");
-				spinner.classList.add("simple-spinner");
+				spinner.classList.add("simpleSpinner");
 	
 				avatarDiv.append(avatar, spinner);
 	
@@ -548,6 +539,13 @@ try {
 			this.tool.reloadBtn.addEventListener("mouseup", e => this.reload({ hard: true }));
 	
 			//? |-----------------------|
+			//? |       INIT PROXY      |
+			//? |-----------------------|
+	
+			splash.set({ p: 90, i: "Inititlizing proxy" });
+			this.proxy.init();
+
+			//? |-----------------------|
 			//? |    INIT LOGSVIEWER    |
 			//? |-----------------------|
 	
@@ -698,6 +696,369 @@ try {
 				this.tick = 0;
 			}
 		},
+
+		proxy: {
+			bar: $("#proxyHeaderBar"),
+			icon: $("#proxyHeaderIcon"),
+
+			detail: {
+				main: $("#proxyHeaderDetailMain"),
+				sub: $("#proxyHeaderDetailSub"),
+			},
+
+			progress: $("#proxyHeaderProgress"),
+			expand: $("#proxyHeaderExpand"),
+			reload: $("#proxyHeaderReload"),
+
+			listBox: $("#proxyLists"),
+
+			allowed: false,
+			scanning: false,
+			ipPrefix: cookie.get(`proxy.prefix`, `192.168.1`),
+			port: 25685,
+			list: {},
+
+			async init() {
+				for (let item of core.session.keyData.licenses)
+					if ((item.allow === "proxy" || item.allow === "*") && !item.expired)
+						this.allowed = true;
+
+				if (!this.allowed)
+					clog("WARN", "proxy.init(): Module disabled due to lack of permissions!");
+
+				core.splash.classList.add("proxyInfo");
+				triBg(this.bar, { color: "brown", scale: 0.5, speed: 40 })
+				this.expand.addEventListener("click", () => core.splash.classList.toggle("proxyDetail"));
+				this.reload.addEventListener("click", () => this.scan(true));
+
+				await this.scan();
+				this.__update();
+
+				clog("OKAY", "core.proxy(): Initialized");
+			},
+
+			updateStatus({
+				running = null,
+				detail = null,
+				detailSub = null,
+				progress = null,
+				color = null
+			}) {
+				if (running !== null)
+					this.icon.classList[running ? "add" : "remove"]("simpleSpinner");
+
+				if (detail)
+					this.detail.main.innerText = detail;
+
+				if (detailSub)
+					this.detail.sub.innerHTML = detailSub;
+
+				if (progress) {
+					if (progress <= 1)
+						progress *= 100
+
+					if (typeof progress === "number") {
+						this.bar.style.width = `${progress}%`
+						this.progress.innerText = `${progress.toFixed(2)}%`;
+						this.bar.dataset.triColor = "pink";
+					} else {
+						this.progress.innerText = progress;
+						this.bar.dataset.triColor = "blue";
+					}
+				}
+
+				if (color)
+					this.bar.dataset.triColor = color;
+			},
+
+			async __update() {
+				let start = time();
+
+				try {
+					await this.update();
+				} catch(e) {
+					clog("ERRR", e);
+				}
+
+				setTimeout(() => this.__update(), (1 - (time() - start)) * 1000);
+			},
+
+			update(soft = false) {
+				if (!core.splash.classList.contains("proxyDetail") || this.scanning)
+					return;
+
+				let promises = []
+
+				for (let ip of Object.keys(this.list)) {
+					let item = this.list[ip];
+
+					promises.push(new Promise(async (resolve, reject) => {
+						if (!item.node) {
+							let tree = [
+								{ type: "span", class: "info", name: "info", list: [
+									{ type: "div", class: "column", name: "column", list: [
+										{ type: "t", class: "address", name: "address", text: ip },
+										{ type: "t", class: "interface", name: "interface", text: item.interface }
+									] },
+									{ type: "t", class: "ip", name: "ip", text: item.ip || "Không Có" }
+								] },
+	
+								{ type: "span", class: "resource", name: "resource", list: [
+									{ type: "div", class: ["progressBar", "cpu"], name: "cpu", list: [
+										{ type: "div", class: "bar", name: "bar" },
+										{ type: "t", class: "right", name: "value", text: `${item.cpu}%` }
+									] },
+									{ type: "div", class: ["progressBar", "ram"], name: "ram", list: [
+										{ type: "div", class: "bar", name: "bar" },
+										{ type: "t", class: "right", name: "value", text: `${item.ram}%` }
+									] }
+								] },
+	
+								{ type: "span", class: "status", name: "status", list: [
+									{ type: "div", class: "ping", name: "ping", list: [
+										{ type: "t", class: "value", name: "value", text: "?ms" },
+										{ type: "span", class: "bar", name: "bar", list: [
+											{ type: "span", name: "line1" },
+											{ type: "span", name: "line2" },
+											{ type: "span", name: "line3" }
+										] }
+									] },
+	
+									{ type: "t", class: "state", name: "state" }
+								] },
+							]
+	
+							let dom = buildElementTree("div", "item", tree);
+							this.listBox.appendChild(dom.tree);
+	
+							item.node = this.list[ip].node = dom.obj;
+	
+							item.node.resource.cpu.bar.dataset.color = "blue";
+							item.node.resource.cpu.bar.style.width = `${item.cpu}%`;
+							item.node.resource.ram.bar.dataset.color = "pink";
+							item.node.resource.ram.bar.style.width = `${item.ram}%`;
+						}
+
+						if (!soft) {
+							let requestStart = time();
+							let data = {}
+							
+							try {
+								let response = await myajax({ url: `http://${ip}:${this.port}/heartbeat` });
+								data = response.data;
+							} catch(e) {
+								item.node.info.ip.innerText = "👻";
+								item.node.resource.cpu.bar.style.width = 0;
+								item.node.resource.ram.bar.style.width = 0;
+								item.node.resource.cpu.value.innerText = `?%`;
+								item.node.resource.ram.value.innerText = `?%`;
+								item.node.status.ping.value.innerText = "";
+								item.node.status.ping.bar.dataset.value = "no";
+								item.node.status.state.innerText = "LOST";
+	
+								this.list[ip].lost = true;
+								resolve()
+								return;
+							}
+	
+							let ping = (time() - requestStart) * 1000;
+	
+							item.node.info.ip.innerText = data.ip || "📴";
+							item.node.resource.cpu.bar.style.width = `${data.cpu}%`;
+							item.node.resource.ram.bar.style.width = `${data.ram}%`;
+							item.node.resource.cpu.value.innerText = `${data.cpu}%`;
+							item.node.resource.ram.value.innerText = `${data.ram}%`;
+							item.node.status.ping.value.innerText = `${ping.toFixed(0)}ms`;
+							item.node.status.ping.bar.dataset.value = (ping < 1000)
+								? 3
+								: (ping < 5000)
+									? 26
+									: 1
+	
+							this.list[ip] = { ...this.list[ip], ...data }
+							this.list[ip].lost = false;
+						}
+
+						item.node.status.state.innerText = (this.list[ip].count > 0) ? `${this.list[ip].count}REQ` : "READY";
+						resolve();
+					}))
+				}
+
+				return Promise.all(promises);
+			},
+
+			scan(trusted = false) {
+				this.expand.disabled = true;
+				this.reload.disabled = true;
+				core.splash.classList.remove("proxyDetail");
+
+				if (trusted) {
+					sounds.confirm();
+					this.updateStatus({
+						running: true,
+						detail: "Bắt Đầu Quét",
+						detailSub: `Đang quét proxy trong mạng nội bộ`,
+						progress: "INIT",
+						color: "brown"
+					})
+				}
+
+				this.list = {}
+				emptyNode(this.listBox);
+
+				this.scanning = true;
+				let scanned = 0;
+				let noConnection = 0;
+
+				return new Promise(async (resolve, reject) => {
+					for (let i = 0; i < 255; i++) {
+						let ip = `${this.ipPrefix}.${i}`;
+
+						let update = () => {
+							scanned++;
+							let found = Object.keys(this.list).length;
+
+							this.updateStatus({
+								running: true,
+								detail: "Đang Quét",
+								detailSub: `Đã tìm thấy <b>${found}</b> proxy`,
+								progress: (scanned / 255)
+							})
+
+							if (scanned >= 255) {
+								this.updateStatus({
+									running: false,
+									detail: `${found} proxy`,
+									detailSub: `${noConnection} proxy không có mạng`,
+									progress: "IDLE"
+								})
+
+								this.expand.disabled = false;
+								this.reload.disabled = false;
+
+								this.scanning = false;
+								resolve()
+							}
+						}
+
+						myajax({
+							url: `http://${ip}:${this.port}/heartbeat`,
+							method: "GET",
+							force: true,
+							changeState: false,
+							timeout: 5000
+						}).then(data => {
+							clog("OKAY", "Found Proxy:", ip, data);
+							data.data.lost = false;
+							data.data.assigned = 0;
+
+							if (!data.data.ip)
+								noConnection++;
+							
+							this.list[ip] = data.data;
+							update();
+						}).catch(e => update())
+
+						await delayAsync(50);
+					}
+				})
+			},
+
+			assign() {
+				let server = null;
+				let proxyAsnMin = Math.min(...Object.values(this.list)
+					.filter(i => i.ip)
+					.map(i => i.assigned))
+
+				// Select Server
+				for (item of Object.keys(this.list))
+					if (this.list[item].assigned === proxyAsnMin && this.list[item].ip) {
+						this.list[item].assigned++;
+						server = item;
+						break;
+					}
+
+				if (!server)
+					throw { code: 11, description: `Không Tìm Thấy Proxy Phù Hợp!` }
+
+				return server;
+			},
+
+			async request({
+				server,
+				url,
+				method = "GET",
+				query = Array(),
+				form = {},
+				formType = "data",
+				header = Array(),
+				jarID,
+				force = false,
+				changeState = true,
+				reRequest = true,
+				withCredentials = false,
+				timeout = 0
+			}) {
+				if (!server || !this.list[server] || !this.list[server].ip)
+					throw { code: -1, description: `Proxy Server Undefined, Invalid or is not Online!` }
+
+				clog("DEBG", `Sending request with proxy server ${server}`, arguments[0]);
+				this.list[server].count++;
+				this.update(true);
+
+				let response = null;
+				
+				try {
+					response = await myajax({
+						url: `http://${server}:${this.port}/request`,
+						method: "POST",
+						json: {
+							url,
+							method,
+							query,
+							form,
+							type: formType,
+							jar: jarID
+						},
+						type: "json",
+						header,
+						force,
+						changeState,
+						reRequest,
+						withCredentials,
+						timeout
+					});
+				} catch(e) {
+					throw e;
+				} finally {
+					this.list[server].count--;
+				}
+
+				return response;
+			},
+
+			async cookie({
+				server,
+				jarID,
+				url,
+				name
+			}) {
+				if (!server || !this.list[server] || !this.list[server].ip)
+					throw { code: -1, description: `Proxy Server Undefined, Invalid or is not Online!` }
+
+				let response = await myajax({
+					url: `http://${server}:${this.port}/cookie`,
+					method: "POST",
+					json: {
+						jar: jarID,
+						url,
+						name
+					}
+				})
+
+				return response.data
+			}
+		},
 	
 		logsViewer: {
 			clearBtn: $("#scriptRunLogsClear"),
@@ -737,6 +1098,48 @@ try {
 					this.toBottom();
 			},
 
+			group(title) {
+				let container = document.createElement("li");
+				container.classList.add("group");
+
+				let extendBtn = document.createElement("span");
+				extendBtn.classList.add("extend");
+				extendBtn.addEventListener("click", () => container.classList.toggle("expand"));
+
+				let titleBox = document.createElement("t");
+				titleBox.classList.add("title");
+				titleBox.innerHTML = title;
+
+				let content = document.createElement("div");
+				content.classList.add("content", "textView", "small", "customLineNumber");
+
+				container.append(extendBtn, titleBox, content);
+				this.log.appendChild(container);
+
+				return {
+					line: 1,
+
+					write(text) {
+						let logItem = document.createElement("li");
+						logItem.innerHTML = `<l>${this.line}</l>${text}`;
+			
+						content.appendChild(logItem);
+						this.line++;
+
+						if (core.logsViewer.lockLogs)
+							core.logsViewer.toBottom();
+					},
+
+					setTitle(title) {
+						titleBox.innerHTML = title;
+					},
+
+					setColor(color) {
+						titleBox.style.color = color;
+					}
+				}
+			},
+
 			toBottom() {
 				this.toBottomBtn.classList.remove("show");
 				this.lockLogs = true;
@@ -752,6 +1155,204 @@ try {
 
 				if (resetLine)
 					this.line = 1;
+			}
+		},
+
+		runStatus: {
+			container: $("#scriptRunStatus"),
+			status: $("#scriptRunStatusStatus"),
+			timer: $("#scriptRunStatusTimer"),
+			barContainer: $("#scriptRunStatusBarContainer"),
+			bar: $("#scriptRunStatusBar"),
+			barNow: $("#scriptRunStatusBarNow"),
+			barEnd: $("#scriptRunStatusBarEnd"),
+			subBarContainer: $("#scriptRunStatusBarSub"),
+			price: $("#scriptRunStatusPrice"),
+			current: $("#scriptRunStatusCurrent"),
+			target: $("#scriptRunStatusTarget"),
+			priceSaved: $("#scriptRunStatusPriceSaved"),
+			itemStatus: $("#scriptRunStatusItemStatus"),
+			checkDetail: $("#scriptRunStatusCheckDetail"),
+			heartbeatDot: $("#scriptRunStatusHeartbeat"),
+			cancelButton: $("#scriptRunCancel"),
+
+			cancelHandler: () => {},
+
+			init() {
+				this.cancelButton.addEventListener("click", () => this.cancelHandler())
+			},
+
+			async set({
+				status = null,
+				time = null,
+				progress = null,
+				progWarn = true,
+				now = null,
+				end = null,
+				current = null,
+				target = null,
+				dataType = "price",
+				saved = null,
+				itemStatus = null,
+				itemStatusColor = null,
+				checkDetail = null,
+				background = null
+			} = {}) {
+				this.container.dataset.dataType = dataType;
+
+				if (status !== null)
+					this.status.innerText = status;
+
+				if (time !== null) {
+					let _t = parseTime(time);
+					this.timer.innerHTML = `${_t.str}<ms>${_t.ms}</ms>`;
+				}
+
+				if (progress !== null) {
+					progress = Math.min(progress, 100);
+					this.bar.dataset.color = (progress >= 80 && progWarn) ? "red" : "green";
+					this.bar.style.width = `${progress}%`;
+				}
+
+				if (now !== null)
+					this.barNow.innerText = now;
+
+				if (end !== null)
+					this.barEnd.innerText = end;
+
+				if (dataType === "price") {
+					this.current.classList.add("price");
+					this.target.classList.add("price");
+
+					if (current !== null)
+						this.current.innerText = priceFormat(current);
+
+					if (target !== null)
+						this.target.innerText = priceFormat(target);
+				} else {
+					if (dataType !== null) {
+						this.current.classList.remove("price");
+						this.target.classList.remove("price");
+					}
+
+					if (current !== null)
+						this.current.innerText = current;
+
+					if (target !== null)
+						this.target.innerText = target;
+				}
+
+				if (typeof saved === "number") {
+					this.priceSaved.dataset.color = (saved === 0) ? "yellow" : (saved < 0) ? "green" : "red";
+					this.priceSaved.innerText = `${(saved < 0) ? "-" : "+"}${Math.abs(saved).toFixed(2)}%`;
+				}
+
+				if (itemStatus !== null)
+					this.itemStatus.innerText = itemStatus;
+
+				if (itemStatusColor !== null)
+					this.itemStatus.dataset.color = itemStatusColor;
+
+				if (checkDetail !== null)
+					this.checkDetail.innerHTML = checkDetail;
+
+				if (background !== null)
+					this.container.dataset.triColor = background;
+			},
+
+			subBar({ progress = 0, color = null } = {}) {
+				this.barContainer.classList.add("showSub");
+				let container = this.subBarContainer;
+
+				let progressBar = document.createElement("span");
+				progressBar.classList.add("progressBar");
+
+				let bar = document.createElement("div");
+				bar.classList.add("bar");
+				bar.style.width = `${progress}%`;
+
+				if (!color) {
+					let cl = ["blue", "yellow", "pink", "orange"]
+					let ts = container.childElementCount;
+
+					color = cl[ts % cl.length];
+				}
+
+				bar.dataset.color = color;
+				progressBar.appendChild(bar);
+				container.appendChild(progressBar);
+
+				return {
+					set({ progress = null, color = null }) {
+						if (progress && typeof progress === "number")
+							bar.style.width = `${progress}%`;
+
+						if (color)
+							bar.dataset.color = color;
+					},
+
+					remove() {
+						container.removeChild(progressBar);
+
+						delete container;
+						delete progressBar;
+						delete bar;
+					}
+				}
+			},
+
+			clearSubBar() {
+				this.barContainer.classList.remove("showSub");
+				emptyNode(this.subBarContainer);
+			},
+
+			heartbeat({ color = "green", beat = true } = {}) {
+				if (color && typeof color === "string")
+					this.heartbeatDot.dataset.color = color;
+
+				this.heartbeatDot.style.animation = "none";
+				
+				if (beat) {
+					//? Trigger Reflow
+					this.heartbeatDot.offsetHeight;
+					this.heartbeatDot.style.animation = null;
+				}
+			},
+
+			toCloseButton() {
+				this.cancelButton.innerText = "Đóng";
+				this.cancelButton.classList.add("rainbow");
+				this.cancelButton.classList.remove("yellow");
+			},
+
+			onCancel(f) {
+				if (typeof f !== "function")
+					throw { code: -1, description: `core.runStatus.onCancel(): Invalid Handler! (Expected function, Got ${typeof f})` }
+
+				this.cancelHandler = f;
+			},
+
+			reset() {
+				this.container.dataset.triColor = "dark";
+				this.status.innerText = "Đang Chờ";
+				this.timer.innerHTML = "00:00<ms>000</ms>";
+				this.bar.style.width = "0%";
+				this.bar.dataset.color = "green";
+				this.barNow.innerText = "00";
+				this.barEnd.innerText = "??";
+				this.current.innerText = "Không Rõ";
+				this.target.innerText = "Không Rõ";
+				this.priceSaved.innerText = "-0%";
+				this.priceSaved.dataset.color = "yellow";
+				this.itemStatus.innerText = "Không Rõ";
+				this.checkDetail.innerText = "Đang chờ phản hồi từ script...";
+				
+				this.cancelButton.innerText = "Hủy";
+				this.cancelButton.classList.remove("rainbow");
+				this.cancelButton.classList.add("yellow");
+
+				this.clearSubBar();
+				this.cancelHandler = () => {}
 			}
 		},
 
@@ -1419,18 +2020,7 @@ try {
 					});
 				}
 	
-				const heartbeat = ({ color = "green", beat = true } = {}) => {
-					if (color && typeof color === "string")
-						this.script.status.heartbeat.dataset.color = color;
-	
-					this.script.status.heartbeat.style.animation = "none";
-					
-					if (beat) {
-						//? Trigger Reflow
-						this.script.status.heartbeat.offsetHeight;
-						this.script.status.heartbeat.style.animation = null;
-					}
-				}
+				const heartbeat = ({ color = "green", beat = true } = {}) => this.runStatus.heartbeat({ color, beat });
 	
 				const rejectSetup = async (reason) => {
 					await scriptCancelHandler(true);
@@ -1458,6 +2048,7 @@ try {
 					heartbeat({ color: "red", beat: false });
 					await errorHandler(error, true);
 					this.changeLayout(3);
+
 					scriptStopped = true;
 				}
 	
@@ -1467,38 +2058,28 @@ try {
 					heartbeat({ color: "red", beat: false });
 					sounds.warning();
 	
-					this.script.status.container.dataset.triColor = "darkRed";
 					writeLog("============ LỖI! ============");
 					writeLog(message);
+
 					runInfo({
 						status: "Có lỗi đã xảy ra!",
 						progress: 100,
 						itemStatus: message,
 						itemStatusColor: "red",
-						checkDetail: "Mở Console để biết thêm chi tiết"
+						checkDetail: "Mở Console để biết thêm chi tiết",
+						background: "darkRed"
 					});
 				}
 	
 				const preRunInit = async () => {
-					// Reset the info layout
-					this.script.status.container.dataset.triColor = "dark";
-					this.script.status.status.innerText = "Đang Chờ";
-					this.script.status.timer.innerHTML = "00:00<ms>000</ms>";
-					this.script.status.bar.style.width = "0%";
-					this.script.status.bar.dataset.color = "green";
-					this.script.status.barNow.innerText = "00";
-					this.script.status.barEnd.innerText = "??";
-					this.script.status.current.innerText = "Không Rõ";
-					this.script.status.target.innerText = "Không Rõ";
-					this.script.status.priceSaved.innerText = "-0%";
-					this.script.status.priceSaved.dataset.color = "yellow";
-					this.script.status.itemStatus.innerText = "Không Rõ";
-					this.script.status.checkDetail.innerText = "Đang chờ phản hồi từ script...";
-					
-					this.script.cancelButton.innerText = "Hủy";
-					this.script.cancelButton.classList.remove("rainbow");
-					this.script.cancelButton.classList.add("yellow");
-					this.script.cancelButton.onclick = () => { scriptCancelHandler(true); this.changeLayout(3); scriptStopped = true; }
+					this.runStatus.reset();
+
+					this.runStatus.onCancel(() => {
+						scriptCancelHandler(true);
+						this.changeLayout(3);
+						scriptStopped = true;
+					});
+
 					this.changeLayout(6);
 				}
 	
@@ -1513,105 +2094,34 @@ try {
 				}
 	
 				const order = () => {
-					runInfo({ status: "Đang đặt mua" });
+					runInfo({ status: "Đang đặt mua", background: "darkBlue" });
 					heartbeat();
 					sounds.confirm(2);
-					this.script.status.container.dataset.triColor = "darkBlue";
 				}
 	
-				const runInfo = async ({
-					status = null,
-					time = null,
-					progress = null,
-					progWarn = true,
-					now = null,
-					end = null,
-					current = null,
-					target = null,
-					dataType = "price",
-					saved = null,
-					itemStatus = null,
-					itemStatusColor = null,
-					checkDetail = null,
-				} = {}) => {
+				const runInfo = async (data = {}) => {
 					if (scriptStopped)
 						throw { code: 0, description: "Script Stopped" }
 
-					this.script.status.container.dataset.dataType = dataType;
-	
-					if (status !== null)
-						this.script.status.status.innerText = status;
-	
-					if (time !== null) {
-						let _t = parseTime(time);
-						this.script.status.timer.innerHTML = `${_t.str}<ms>${_t.ms}</ms>`;
-					}
-	
-					if (progress !== null) {
-						progress = Math.min(progress, 100);
-						this.script.status.bar.dataset.color = (progress >= 80 && progWarn) ? "red" : "green";
-						this.script.status.bar.style.width = `${progress}%`;
-					}
-	
-					if (now !== null)
-						this.script.status.barNow.innerText = now;
-	
-					if (end !== null)
-						this.script.status.barEnd.innerText = end;
-	
-					if (dataType === "price") {
-						this.script.status.current.classList.add("price");
-						this.script.status.target.classList.add("price");
-	
-						if (current !== null)
-							this.script.status.current.innerText = priceFormat(current);
-	
-						if (target !== null)
-							this.script.status.target.innerText = priceFormat(target);
-					} else {
-						if (dataType !== null) {
-							this.script.status.current.classList.remove("price");
-							this.script.status.target.classList.remove("price");
-						}
-	
-						if (current !== null)
-							this.script.status.current.innerText = current;
-	
-						if (target !== null)
-							this.script.status.target.innerText = target;
-					}
-	
-					if (typeof saved === "number") {
-						this.script.status.priceSaved.dataset.color = (saved === 0) ? "yellow" : (saved < 0) ? "green" : "red";
-						this.script.status.priceSaved.innerText = `${(saved < 0) ? "-" : "+"}${Math.abs(saved).toFixed(2)}%`;
-					}
-	
-					if (itemStatus !== null)
-						this.script.status.itemStatus.innerText = itemStatus;
-	
-					if (itemStatusColor !== null)
-						this.script.status.itemStatus.dataset.color = itemStatusColor;
-	
-					if (checkDetail !== null)
-						this.script.status.checkDetail.innerHTML = checkDetail;
+					this.runStatus.set(data);
 				}
-	
+
+				const subBar = ({ progress = 0, color = null } = {}) => this.runStatus.subBar({ progress, color });
+				const proxy = this.proxy;
+
 				const complete = async () => {
 					await scriptCancelHandler(false);
 					clog("OKAY", "Script", {text: id, color: flatc("blue")}, "completed successfully");
 					heartbeat({ color: "green", beat: false });
 	
 					sounds.confirm(0);
-					runInfo({ status: "Đã chạy xong!", dataType: null })
-					this.script.status.container.dataset.triColor = "purple";
-					this.script.cancelButton.innerText = "Đóng";
-					this.script.cancelButton.classList.add("rainbow");
-					this.script.cancelButton.classList.remove("yellow");
+					runInfo({ status: "Đã chạy xong!", dataType: null, background: "purple" });
+					this.runStatus.toCloseButton();
 				}
 
 				const sendBeacon = async (arg) => await this.sendBeacon(arg);
 	
-				const writeLog = (text) => {
+				const writeLog = (...args) => {
 					if (scriptStopped)
 						throw { code: 0, description: "Script Stopped" }
 
@@ -1620,11 +2130,12 @@ try {
 						color: flatc("green"),
 						padding: 6,
 						seperate: true
-					}, text);
+					}, ...args);
 	
-					this.logsViewer.write(text);
+					this.logsViewer.write(args.filter(i => (typeof i === "string") || i.text).join(" > "));
 				}
-	
+
+				const logGroup = (title) => this.logsViewer.group(title);
 				const command = async (command, data = {}) => (await this.sendCommand(command, data)).data;
 	
 				// Clear logs
@@ -2123,13 +2634,13 @@ try {
 
 						const sendBeacon = async (arg) => await core.sendBeacon(arg);
 	
-						const writeLog = (text) =>
+						const writeLog = (...args) =>
 							clog("INFO", {
 								text: this.data.id,
 								color: flatc("green"),
 								padding: 6,
 								seperate: true
-							}, text);
+							}, ...args);
 	
 						this.DOM.info.status.innerText = `Đang chờ phản hồi`;
 	

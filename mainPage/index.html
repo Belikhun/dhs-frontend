@@ -2,299 +2,327 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
 
-    <title>Deal Hunter Suite</title>
-    
-    <!-- Fonts -->
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/calibri/calibri.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/opensans/opensans.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/nunito/nunito.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/consolas/consolas.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/fontawesome/fontawesome.css" />
+	<title>Deal Hunter Suite</title>
+	
+	<!-- Fonts -->
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/calibri/calibri.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/opensans/opensans.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/nunito/nunito.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/consolas/consolas.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/fonts/fontawesome/fontawesome.css" />
 
-    <!-- Library -->
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/css/default.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/css/scrollBar.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/css/input.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/css/table.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/css/switch.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/css/switch.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/css/progressBar.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/css/spinner.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/css/textView.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="/assets/css/button.css" />
-    <!-- Main Script -->
-    <link rel="stylesheet" type="text/css" media="screen" href="tutorial.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="subScreen.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="settingCustomNode.css" />
-    <link rel="stylesheet" type="text/css" media="screen" href="style.css" />
+	<!-- Library -->
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/default.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/scrollBar.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/input.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/table.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/switch.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/switch.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/progressBar.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/spinner.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/textView.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/button.css" />
+	<!-- Main Script -->
+	<link rel="stylesheet" type="text/css" media="screen" href="tutorial.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="subScreen.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="settingCustomNode.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="style.css" />
 
-    <!-- Analytics Init -->
-    <script type="text/javascript" src="analytics.js"></script>
-    <script type="text/javascript" async src="https://ssl.google-analytics.com/ga.js"></script>
+	<!-- Analytics Init -->
+	<script type="text/javascript" src="analytics.js"></script>
+	<script type="text/javascript" async src="https://ssl.google-analytics.com/ga.js"></script>
 </head>
 
 <body class="dark">
-    <span id="mainBox" class="main" data-layout="1">
-        <div class="splash" data-optimize-target="1">
-            <div class="loadPanel">
-                <img class="icon" src="/assets/img/icon@128x128.png">
+	<span id="mainBox" class="main" data-layout="1">
+		<div id="splashPanel" class="splash sound" data-soundtoggle="proxyDetail" data-optimize-target="1">
+			<div class="loadPanel">
+				<img class="icon" src="/assets/img/icon@128x128.png">
 
-                <span class="info">
-                    <div class="progressBar">
-                        <div id="splashProgress" class="bar" data-color="blue" data-blink="grow"></div>
-                    </div>
+				<span class="info">
+					<div class="progressBar">
+						<div id="splashProgress" class="bar" data-color="blue" data-blink="grow"></div>
+					</div>
 
-                    <t id="splashDetail" class="detail">Đang tải...</t>
-                </span>
+					<t id="splashDetail" class="detail">Đang tải...</t>
+				</span>
 
-                <span class="footer">
-                    <t>Deal Hunter Suite™</t>
-                    <t>© Team DHS. All right reserved</t>
-                </span>
-            </div>
-            <div class="navbar">
-                <img class="icon" src="/assets/img/icon@32x32.png">
-                <span id="navbarClock" class="clock"><sub>Th0</sub> 00:00:00</span>
-                <span class="user">
-                    <t id="navbarUserName" class="name">Sample name</t>
-                    <div id="navbarUserTag" class="tags"></div>
-                </span>
-                <span id="navbarHamburger" class="hamburger sound" data-soundhoversoft data-soundselectsoft>
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </span>
-            </div>
-        </div>
+				<span class="footer">
+					<t>Deal Hunter Suite™</t>
+					<t>© Team DHS. All right reserved</t>
+				</span>
+			</div>
 
-        <div class="container">
-            <div class="scriptContainer">
-                <div class="announcement" id="announcementBox"></div>
+			<div class="toolHeader">
+				<div class="navbar">
+					<img class="icon" src="/assets/img/icon@32x32.png">
+					<span id="navbarClock" class="clock"><sub>Th0</sub> 00:00:00</span>
+					<span class="user">
+						<t id="navbarUserName" class="name">Sample name</t>
+						<div id="navbarUserTag" class="tags"></div>
+					</span>
+					<span id="navbarHamburger" class="hamburger sound" data-soundhoversoft data-soundselectsoft>
+						<span></span>
+						<span></span>
+						<span></span>
+					</span>
+				</div>
+	
+				<div class="proxyStatus">
+					<div class="header">
+						<div id="proxyHeaderBar" class="bar"></div>
+		
+						<span id="proxyHeaderIcon" class="icon simpleSpinner"></span>
+						<span class="detail">
+							<t id="proxyHeaderDetailMain" class="detailMain">Loading</t>
+							<t id="proxyHeaderDetailSub" class="detailSub">Proxy đang khởi chạy...</t>
+						</span>
+						<t id="proxyHeaderProgress" class="progress">INIT</t>
+	
+						<button id="proxyHeaderExpand" class="sq-btn more sound" data-soundhover disabled><i></i></button>
+						<button id="proxyHeaderReload" class="sq-btn green reload sound" data-soundhover disabled><i></i></button>
+					</div>
+	
+					<div id="proxyLists" class="list"></div>
+				</div>
+			</div>
+		</div>
 
-                <div id="scriptPageInfo" class="header" data-tri-layout="3" data-tri-color="gray">
-                    <span class="left">
-                        <t id="scriptCurrentPage" class="currentPage">n/a</t>
-                        <t id="scriptCurrentTitle" class="currentTitle">n/a</t>
-    
-                        <t id="scriptCurrentTabId" class="tabId">n/a</t>
-                    </span>
+		<div class="container">
+			<div class="scriptContainer">
+				<div class="announcement" id="announcementBox"></div>
 
-                    <span class="right">
-                        <div id="scriptReloadInfo" class="reloadBtn sound" data-soundhover data-soundselect></div>
-                    </span>
-                </div>
+				<div id="scriptPageInfo" class="header" data-tri-layout="3" data-tri-color="gray">
+					<span class="left">
+						<t id="scriptCurrentPage" class="currentPage">n/a</t>
+						<t id="scriptCurrentTitle" class="currentTitle">n/a</t>
+	
+						<t id="scriptCurrentTabId" class="tabId">n/a</t>
+					</span>
 
-                <div class="scriptList">
-                    <div id="scriptAutorunList" class="itemList autorun"></div>
-                    <div id="scriptThisPageList" class="itemList thisPage"></div>
-                    <div id="scriptUndependList" class="itemList undepend"></div>
-                    <div id="scriptAvailableList" class="itemList available"></div>
-                </div>
-            </div>
+					<span class="right">
+						<div id="scriptReloadInfo" class="reloadBtn sound" data-soundhover data-soundselect></div>
+					</span>
+				</div>
 
-            <div id="scriptSettings" class="scriptSettings">
-                <div id="scriptSettingsHeader" class="header">
-                    <div class="simple-spinner"></div>
-                    <t id="scriptSettingsHeaderMessage" class="message">Đang tải</t>
-                </div>
+				<div class="scriptList">
+					<div id="scriptAutorunList" class="itemList autorun"></div>
+					<div id="scriptThisPageList" class="itemList thisPage"></div>
+					<div id="scriptUndependList" class="itemList undepend"></div>
+					<div id="scriptAvailableList" class="itemList available"></div>
+				</div>
+			</div>
 
-                <div id="scriptSettingsInfo" class="itemInfo" data-tri-layout="5" data-tri-color="brown">
-                    <t id="scriptSettingsInfoId" class="id"></t>
-                    <t id="scriptSettingsInfoTitle" class="title"></t>
-                    <span id="scriptSettingsInfoPrice" class="price"></span>
-                    <span id="scriptSettingsInfoTags" class="tags"></span>
-                </div>
+			<div id="scriptSettings" class="scriptSettings">
+				<div id="scriptSettingsHeader" class="header">
+					<div class="simpleSpinner"></div>
+					<t id="scriptSettingsHeaderMessage" class="message">Đang tải</t>
+				</div>
 
-                <form id="scriptSettingsForm" class="settingsPage">
-                    <div id="scriptSettingsFormList" class="list"></div>
-                    <span class="buttonBox">
-                        <button type="button" class="sq-btn red" id="scriptSettingsFormCancel" data-soundhover data-soundselect>Hủy</button>
-                        <button type="submit" class="sq-btn green" id="scriptSettingsFormSubmit" data-soundhover data-soundselect>Tiếp</button>
-                    </span>
-                </form>
-            </div>
+				<div id="scriptSettingsInfo" class="itemInfo" data-tri-layout="5" data-tri-color="brown">
+					<t id="scriptSettingsInfoId" class="id"></t>
+					<t id="scriptSettingsInfoTitle" class="title"></t>
+					<span id="scriptSettingsInfoPrice" class="price"></span>
+					<span id="scriptSettingsInfoTags" class="tags"></span>
+				</div>
 
-            <div class="scriptRunLogs">
-                <div class="header">
-                    <t id="scriptRunLogsTitle" class="title">logsViewer</t>
-                    <span id="scriptRunLogsClear" class="clear sound" data-soundhover data-soundselect></span>
-                </div>
-                <ul id="scriptRunLogsView" class="view textView small customLineNumber"></ul>
-                <span id="scriptRunLogsBottom" class="toBottom sound" data-soundhoversoft data-soundselectsoft></span>
-            </div>
-        </div>
+				<form id="scriptSettingsForm" class="settingsPage">
+					<div id="scriptSettingsFormList" class="list"></div>
+					<span class="buttonBox">
+						<button type="button" class="sq-btn red" id="scriptSettingsFormCancel" data-soundhover data-soundselect>Hủy</button>
+						<button type="submit" class="sq-btn green" id="scriptSettingsFormSubmit" data-soundhover data-soundselect>Tiếp</button>
+					</span>
+				</form>
+			</div>
 
-        <div id="scriptRunStatus" class="runStatus" data-tri-layout="6" data-tri-color="dark">
-            <t id="scriptRunStatusStatus" class="status"></t>
-            <t id="scriptRunStatusTimer" class="timer"></t>
-            <div class="progressBar textBottom">
-                <span class="warningZone" style="width: 20%"></span>
-                <div id="scriptRunStatusBar" class="bar"></div>
-                <t id="scriptRunStatusBarNow" class="left"></t>
-                <t id="scriptRunStatusBarEnd" class="right"></t>
-            </div>
+			<div class="scriptRunLogs">
+				<div class="header">
+					<t id="scriptRunLogsTitle" class="title">logsViewer</t>
+					<span id="scriptRunLogsClear" class="clear sound" data-soundhover data-soundselect></span>
+				</div>
+				<ul id="scriptRunLogsView" class="view textView small customLineNumber"></ul>
+				<span id="scriptRunLogsBottom" class="toBottom sound" data-soundhoversoft data-soundselectsoft></span>
+			</div>
+		</div>
 
-            <div id="scriptRunStatusPrice" class="itemPrice">
-                <t id="scriptRunStatusCurrent" title="Giá Hiện Tại" class="current price" data-color="blue"></t>
-                <span class="seperator"></span>
-                <t id="scriptRunStatusTarget" title="Giá Đặt Mua" class="target price" data-color="pink"></t>
-                <t id="scriptRunStatusPriceSaved" title="Tiết Kiệm (So với giá ban đầu)" class="saved" data-color="yellow"></t>
-            </div>
-            <t id="scriptRunStatusItemStatus" class="itemStatus"></t>
-            <t id="scriptRunStatusCheckDetail" class="checkDetail"></t>
+		<div id="scriptRunStatus" class="runStatus" data-tri-layout="6" data-tri-color="dark">
+			<t id="scriptRunStatusStatus" class="status"></t>
+			<t id="scriptRunStatusTimer" class="timer"></t>
 
-            <span class="topRight">
-                <span id="scriptRunStatusHeartbeat" class="heartbeat" title="Heartbeat"></span>
-                <button id="scriptRunCancel" class="sq-btn yellow cancelButton sound" data-soundhover data-soundselect>Hủy</button>
-            </span>
-        </div>
+			<div id="scriptRunStatusBarContainer" class="progressBarContainer progressBar textBottom">
+				<div class="mainBar progressBar textBottom">
+					<span class="warningZone" style="width: 20%"></span>
+					<div id="scriptRunStatusBar" class="bar"></div>
+				</div>
 
-        <!--! UNUSED, WILL MAKE USE OF THIS IN THE FUTURE -->
-        <div id="infoPopup" class="popup"></div>
+				<div id="scriptRunStatusBarSub" class="subBar"></div>
 
-        <div id="toolInfo" class="toolInfo" data-optimize-target="7">
-            <div class="header">
-                <img class="icon" src="/assets/img/icon@128x128.png">
-                <t id="toolInfoName" class="toolName">appname</t>
+				<t id="scriptRunStatusBarNow" class="left"></t>
+				<t id="scriptRunStatusBarEnd" class="right"></t>
+			</div>
 
-                <div class="toolDetail">
-                    <t id="toolInfoVersion" class="version">0.0</t>
-                    <t id="toolInfoCodename" class="codename">bruh</t>
-                </div>
-                
-                <t id="toolInfoCopyright" class="copyright">no data</t>
+			<div id="scriptRunStatusPrice" class="itemPrice">
+				<t id="scriptRunStatusCurrent" title="Giá Hiện Tại" class="current price" data-color="blue"></t>
+				<span class="seperator"></span>
+				<t id="scriptRunStatusTarget" title="Giá Đặt Mua" class="target price" data-color="pink"></t>
+				<t id="scriptRunStatusPriceSaved" title="Tiết Kiệm (So với giá ban đầu)" class="saved" data-color="yellow"></t>
+			</div>
 
-                <div class="button">
-                    <button id="toolInfoTOS" class="sq-btn rainbow sound" data-soundhover>Điều Khoản Sử Dụng</button>
-                    <button id="toolInfoChangelog" class="sq-btn pink sound" data-soundhover>Changelog</button>
-                    <button id="toolInfoChangeServer" class="sq-btn green sound" data-soundhover>Đổi Máy Chủ</button>
-                </div>
-            </div>
+			<t id="scriptRunStatusItemStatus" class="itemStatus"></t>
+			<t id="scriptRunStatusCheckDetail" class="checkDetail"></t>
 
-            <t class="title">Bản Quyền</t>
+			<span class="topRight">
+				<span id="scriptRunStatusHeartbeat" class="heartbeat" title="Heartbeat"></span>
+				<button id="scriptRunCancel" class="sq-btn yellow cancelButton sound" data-soundhover data-soundselect>Hủy</button>
+			</span>
+		</div>
 
-            <div id="toolInfoLicense" class="licenseInfo" data-tri-layout="7" data-tri-color="red">
-                <span class="left">
-                    <t id="toolInfoLicenseName" class="name">Bạn chưa đăng nhập</t>
-                    <t id="toolInfoLicenseTags" class="tags"></t>
+		<!--! UNUSED, WILL MAKE USE OF THIS IN THE FUTURE -->
+		<div id="proxyInfo" class="proxy"></div>
 
-                    <div id="toolInfoLicenses" class="licenses"></div>
+		<div id="toolInfo" class="toolInfo" data-optimize-target="7">
+			<div class="header">
+				<img class="icon" src="/assets/img/icon@128x128.png">
+				<t id="toolInfoName" class="toolName">appname</t>
 
-                    <div id="toolInfoLicenseKey" class="licenseKey">
-                        <t class="keyDesc">Khóa Bản Quyền</t>
-                        <t id="toolInfoLicenseKeyKey" class="key"></t>
-                    </div>
-                </span>
+				<div class="toolDetail">
+					<t id="toolInfoVersion" class="version">0.0</t>
+					<t id="toolInfoCodename" class="codename">bruh</t>
+				</div>
+				
+				<t id="toolInfoCopyright" class="copyright">no data</t>
 
-                <span class="right">
-                    <div id="toolInfoLicenseKeyBtn" class="keyBtn sound" data-soundhoversoft data-soundselectsoft></div>
-                </span>
-            </div>
+				<div class="button">
+					<button id="toolInfoTOS" class="sq-btn rainbow sound" data-soundhover>Điều Khoản Sử Dụng</button>
+					<button id="toolInfoChangelog" class="sq-btn pink sound" data-soundhover>Changelog</button>
+					<button id="toolInfoChangeServer" class="sq-btn green sound" data-soundhover>Đổi Máy Chủ</button>
+				</div>
+			</div>
 
-            <t class="title">The Team</t>
+			<t class="title">Bản Quyền</t>
 
-            <span id="toolInfoAuthor" class="authorList"></span>
-        </div>
+			<div id="toolInfoLicense" class="licenseInfo" data-tri-layout="7" data-tri-color="red">
+				<span class="left">
+					<t id="toolInfoLicenseName" class="name">Bạn chưa đăng nhập</t>
+					<t id="toolInfoLicenseTags" class="tags"></t>
 
-        <div id="tutorialPage" class="tutorial" data-optimize-target="8">
-            <span class="cardContainer">
-                <span id="tutorialPageCardWrapper" class="cardWrapper">
-                    <span class="card">
-                        <div class="canvas">
-                            <img src="/assets/img/icon.png" class="logo"></img>
-                        </div>
-                        <t class="title">Xin Chào!</t>
-                        <t class="subTitle">Chào Mừng Bạn Đến Với <b>Deal Hunter Suite</b>! Hãy cùng nhau khám phá xem có gì nào nhé!</t>
-                    </span>
-                    <span class="card">
-                        <div class="canvas">
-                            <img src="img/browser.png" class="browser"></img>
-                            <span class="iconList">
-                                <img src="img/icon-tiki.png" class="icon"></img>
-                                <img src="img/icon-shopee.png" class="icon"></img>
-                                <img src="img/icon-sendo.png" class="icon"></img>
-                                <img src="img/icon-lazada.png" class="icon"></img>
-                                <img src="img/icon-more.png" class="icon"></img>
-                            </span>
-                        </div>
-                        <t class="title">Hỗ trợ nhiều sàn giao dịch</t>
-                        <t class="subTitle">Tool hiện đã hỗ trợ 4 sàn giao dịch thương mại lớn: <b>Tiki</b>, <b>Shopee</b>, <b>Sendo</b>, <b>Lazada</b>! 😮</t>
-                    </span>
-                    <span class="card">
-                        <div class="canvas">
-                            <img src="img/tiki-layout.png" class="browser"></img>
-                            <span class="ping"></span>
-                            <img src="img/splash.png" class="toolSplash"></img>
-                        </div>
-                        <t class="title">Khởi động 1-click</t>
-                        <t class="subTitle">Khởi động Tool đơn giản bằng cách nhấn vào biểu tượng <i>Cây nỏ</i> trên thanh công cụ 😎</t>
-                    </span>
-                    <span class="card">
-                        <div class="canvas">
-                            <img src="img/select.png" class="toolSelect"></img>
-                            <span class="itemList">
-                                <img src="img/seperate.png" class="seperate"></img>
-                                <img src="img/select-item-tiki.png" class="item tiki"></img>
-                                <img src="img/seperate.png" class="seperate"></img>
-                                <img src="img/select-item.png" class="item"></img>
-                                <img src="img/select-item.png" class="item"></img>
-                            </span>
-                        </div>
-                        <t class="title">Dễ dàng sử dụng</t>
-                        <t class="subTitle">Bạn có thể lựa chọn tool tương ứng với trang bạn đang săn deal! 👾</t>
-                    </span>
-                    <span class="card">
-                        <div class="canvas">
-                            <img src="img/config.png" class="toolConfig"></img>
-                            <img src="img/config-list.png" class="configList"></img>
-                        </div>
-                        <t class="title">Đầy đủ thiết đặt</t>
-                        <t class="subTitle">Dễ dàng thay đổi cách hoạt động của tool theo ý muốn của bạn 🐱‍👤</t>
-                    </span>
-                    <span class="card">
-                        <div class="canvas">
-                            <img src="img/running.png" class="toolRunning"></img>
-                            <span class="logs">
-                                <img src="img/running-logs-pre.png" class="log pre"></img>
-                                <img src="img/running-logs-complete.png" class="log complete"></img>
-                            </span>
-                        </div>
-                        <t class="title">Tốc độ chạy 😇</t>
-                        <t class="subTitle">Với 1-5s bạn có thể làm gì ngoài chớp mắt 🤔🤔🤔<br>Với DHS là vô số deal khủng về túi 🤑🤑🤑</t>
-                    </span>
-                    <span class="card" data-button-text="TÔI ĐÃ ĐỌC VÀ ĐỒNG Ý VỚI ĐIỀU KHOẢN SỬ DỤNG!" data-button-color="green">
-                        <t class="title">Trước Khi Bắt Đầu</t>
-                        <t class="subTitle">Hãy dành một ít thời gian để đọc <b>Điều Khoản Sử Dụng</b> trước khi sử dụng!</t>
-                        <div id="tutorialPageTOS" class="text"></div>
-                    </span>
-                    <span class="card" data-button-text="BẮT ĐẦU NÀO!" data-button-color="rainbow">
-                        <div class="canvas">
-                            <span class="check"></span>
-                        </div>
-                        <t class="title">Mọi Thứ Đã Sẵn Sàng!</t>
-                        <t class="subTitle">Cảm ơn bạn đã tin dùng <b>Deal Hunter Suite</b>!</t>
-                    </span>
-                </span>
-            </span>
+					<div id="toolInfoLicenses" class="licenses"></div>
 
-            <span id="tutorialPageIndicator" class="pageIndicator"></span>
-            <button id="tutorialPageButton" class="sq-btn blue sound" data-soundhover data-soundselect>Tiếp</button>
-        </div>
-    </span>
+					<div id="toolInfoLicenseKey" class="licenseKey">
+						<t class="keyDesc">Khóa Bản Quyền</t>
+						<t id="toolInfoLicenseKeyKey" class="key"></t>
+					</div>
+				</span>
 
-    <span id="subScreen" class="sub"></span>
-    
-    <!-- Javascript lib -->
-    <script type="text/javascript" src="/assets/js/belibrary.js"></script>
-    <script type="text/javascript" src="/assets/js/sounds.js"></script>
-    <script type="text/javascript" src="crypto-js.min.js"></script>
+				<span class="right">
+					<div id="toolInfoLicenseKeyBtn" class="keyBtn sound" data-soundhoversoft data-soundselectsoft></div>
+				</span>
+			</div>
 
-    <!-- Main script -->
-    <script type="text/javascript" src="core.js"></script>
+			<t class="title">The Team</t>
+
+			<span id="toolInfoAuthor" class="authorList"></span>
+		</div>
+
+		<div id="tutorialPage" class="tutorial" data-optimize-target="8">
+			<span class="cardContainer">
+				<span id="tutorialPageCardWrapper" class="cardWrapper">
+					<span class="card">
+						<div class="canvas">
+							<img src="/assets/img/icon.png" class="logo"></img>
+						</div>
+						<t class="title">Xin Chào!</t>
+						<t class="subTitle">Chào Mừng Bạn Đến Với <b>Deal Hunter Suite</b>! Hãy cùng nhau khám phá xem có gì nào nhé!</t>
+					</span>
+					<span class="card">
+						<div class="canvas">
+							<img src="img/browser.png" class="browser"></img>
+							<span class="iconList">
+								<img src="img/icon-tiki.png" class="icon"></img>
+								<img src="img/icon-shopee.png" class="icon"></img>
+								<img src="img/icon-sendo.png" class="icon"></img>
+								<img src="img/icon-lazada.png" class="icon"></img>
+								<img src="img/icon-more.png" class="icon"></img>
+							</span>
+						</div>
+						<t class="title">Hỗ trợ nhiều sàn giao dịch</t>
+						<t class="subTitle">Tool hiện đã hỗ trợ 4 sàn giao dịch thương mại lớn: <b>Tiki</b>, <b>Shopee</b>, <b>Sendo</b>, <b>Lazada</b>! 😮</t>
+					</span>
+					<span class="card">
+						<div class="canvas">
+							<img src="img/tiki-layout.png" class="browser"></img>
+							<span class="ping"></span>
+							<img src="img/splash.png" class="toolSplash"></img>
+						</div>
+						<t class="title">Khởi động 1-click</t>
+						<t class="subTitle">Khởi động Tool đơn giản bằng cách nhấn vào biểu tượng <i>Cây nỏ</i> trên thanh công cụ 😎</t>
+					</span>
+					<span class="card">
+						<div class="canvas">
+							<img src="img/select.png" class="toolSelect"></img>
+							<span class="itemList">
+								<img src="img/seperate.png" class="seperate"></img>
+								<img src="img/select-item-tiki.png" class="item tiki"></img>
+								<img src="img/seperate.png" class="seperate"></img>
+								<img src="img/select-item.png" class="item"></img>
+								<img src="img/select-item.png" class="item"></img>
+							</span>
+						</div>
+						<t class="title">Dễ dàng sử dụng</t>
+						<t class="subTitle">Bạn có thể lựa chọn tool tương ứng với trang bạn đang săn deal! 👾</t>
+					</span>
+					<span class="card">
+						<div class="canvas">
+							<img src="img/config.png" class="toolConfig"></img>
+							<img src="img/config-list.png" class="configList"></img>
+						</div>
+						<t class="title">Đầy đủ thiết đặt</t>
+						<t class="subTitle">Dễ dàng thay đổi cách hoạt động của tool theo ý muốn của bạn 🐱‍👤</t>
+					</span>
+					<span class="card">
+						<div class="canvas">
+							<img src="img/running.png" class="toolRunning"></img>
+							<span class="logs">
+								<img src="img/running-logs-pre.png" class="log pre"></img>
+								<img src="img/running-logs-complete.png" class="log complete"></img>
+							</span>
+						</div>
+						<t class="title">Tốc độ chạy 😇</t>
+						<t class="subTitle">Với 1-5s bạn có thể làm gì ngoài chớp mắt 🤔🤔🤔<br>Với DHS là vô số deal khủng về túi 🤑🤑🤑</t>
+					</span>
+					<span class="card" data-button-text="TÔI ĐÃ ĐỌC VÀ ĐỒNG Ý VỚI ĐIỀU KHOẢN SỬ DỤNG!" data-button-color="green">
+						<t class="title">Trước Khi Bắt Đầu</t>
+						<t class="subTitle">Hãy dành một ít thời gian để đọc <b>Điều Khoản Sử Dụng</b> trước khi sử dụng!</t>
+						<div id="tutorialPageTOS" class="text"></div>
+					</span>
+					<span class="card" data-button-text="BẮT ĐẦU NÀO!" data-button-color="rainbow">
+						<div class="canvas">
+							<span class="check"></span>
+						</div>
+						<t class="title">Mọi Thứ Đã Sẵn Sàng!</t>
+						<t class="subTitle">Cảm ơn bạn đã tin dùng <b>Deal Hunter Suite</b>!</t>
+					</span>
+				</span>
+			</span>
+
+			<span id="tutorialPageIndicator" class="pageIndicator"></span>
+			<button id="tutorialPageButton" class="sq-btn blue sound" data-soundhover data-soundselect>Tiếp</button>
+		</div>
+	</span>
+
+	<span id="subScreen" class="sub"></span>
+	
+	<!-- Javascript lib -->
+	<script type="text/javascript" src="/assets/js/belibrary.js"></script>
+	<script type="text/javascript" src="/assets/js/sounds.js"></script>
+	<script type="text/javascript" src="crypto-js.min.js"></script>
+
+	<!-- Main script -->
+	<script type="text/javascript" src="core.js"></script>
 </body>
 
 </html>

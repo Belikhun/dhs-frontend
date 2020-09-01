@@ -15,11 +15,11 @@
 function myajax({
 	url = "/",
 	method = "GET",
-	query = Array(),
-	form = Array(),
+	query = {},
+	form = {},
 	json = {},
 	raw = null,
-	header = Array(),
+	header = {},
 	type = "json",
 	onUpload = () => {},
 	onDownload = () => {},
@@ -27,12 +27,14 @@ function myajax({
 	changeState = true,
 	reRequest = true,
 	withCredentials = false,
+	timeout = 0
 }, callout = () => {}, error = () => {}) {
 	let argumentsList = arguments;
 
 	return new Promise((resolve, reject) => {
 		if (__connection__.onlineState !== "online" && force === false) {
 			let errorObj = {}
+
 			switch (__connection__.onlineState) {
 				case "offline":
 					errorObj = { code: 106, description: "Mất kết nối tới máy chủ" }
@@ -77,18 +79,18 @@ function myajax({
 				}
 
 				if ((this.responseText === "" || !this.responseText) && this.status >= 400) {
-					clog("errr", {
-						color: flatc("red"),
-						text: `HTTP ${this.status}:`
-					}, this.statusText, {
+					clog("ERRR", {
 						color: flatc("magenta"),
 						text: method
 					}, {
 						color: flatc("pink"),
 						text: url
-					});
+					}, {
+						color: flatc("red"),
+						text: `HTTP ${this.status}:`
+					}, this.statusText);
 
-					let errorObj = { code: 1, description: `HTTP ${this.status}: ${this.statusText}` }
+					let errorObj = { code: 1, description: `HTTP ${this.status}: ${this.statusText} (${method} ${url})`, data: { method, url } }
 					error(errorObj);
 					reject(errorObj);
 
@@ -101,7 +103,7 @@ function myajax({
 					try {
 						response = JSON.parse(this.responseText);
 					} catch (data) {
-						clog("errr", "Lỗi phân tích JSON");
+						clog("ERRR", "Lỗi phân tích JSON");
 
 						let errorObj = { code: 2, description: `Lỗi phân tích JSON`, data: data }
 						error(errorObj);
@@ -119,26 +121,30 @@ function myajax({
 							text: url
 						}, {
 							color: flatc("red"),
-							text: "HTTP " + this.status
+							text: `HTTP ${this.status}:`
 						}, this.statusText, ` >>> ${response.description}`);
 
 						if (this.status === 429 && response.code === 32 && reRequest === true) {
-							// Waiting for :?unratelimited:?
+							// Wait for :?unratelimited:?
 							await __connection__.stateChange("ratelimited", response);
-
-							clog("debg", "resending request", argumentsList);
+							
 							// Resend previous ajax request
-							let r = await myajax(...argumentsList)
-								.catch(d => {
-									reject(d);
-									return;
-								})
+							clog("DEBG", "Resending Request", argumentsList);
+							let r = null;
+
+							try {
+								r = await myajax(...argumentsList);
+							} catch(e) {
+								reject(e);
+								return;
+							}
+
 							// Resolve promise
 							resolve(r);
 
 							return;
 						} else {
-							let errorObj = { code: 3, description: `HTTP ${this.status}: ${this.statusText}`, data: response }
+							let errorObj = { code: 3, description: `HTTP ${this.status}: ${this.statusText} (${method} ${url})`, data: response }
 							error(errorObj);
 							reject(errorObj);
 
@@ -152,7 +158,7 @@ function myajax({
 
 					if (this.status >= 400) {
 						let code = `HTTP ${this.status}`;
-						let text = (this.statusText === "") ? "!Unknown statusText" : this.statusText;
+						let text = (this.statusText === "") ? "?Unknown statusText" : this.statusText;
 						let resData = response;
 
 						let header = this.getResponseHeader("output-json");
@@ -167,18 +173,18 @@ function myajax({
 							text = headerJSON.description;
 						}
 
-						clog("errr", {
-							color: flatc("red"),
-							text: code
-						}, text, {
+						clog("ERRR", {
 							color: flatc("magenta"),
 							text: method
 						}, {
 							color: flatc("pink"),
 							text: url
-						});
+						}, {
+							color: flatc("red"),
+							text: `${code}:`
+						}, text, ` >>> ${response.description}`);
 
-						let errorObj = { code: 3, description: `${code}: ${text}`, data: resData }
+						let errorObj = { code: 3, description: `${code}: ${text} (${method} ${url})`, data: resData }
 						error(errorObj);
 						reject(errorObj);
 
@@ -195,6 +201,7 @@ function myajax({
 
 		xhr.open(method, url);
 		xhr.withCredentials = withCredentials;
+		xhr.timeout = timeout;
 
 		let sendData = (raw !== null) ? raw : formData;
 
@@ -299,10 +306,10 @@ function fcfn(node, className) {
  * @return	{Element}
  */
 function htmlToElement(html) {
-    let template = document.createElement("template");
+	let template = document.createElement("template");
 	template.innerHTML = html.trim();
 	
-    return template.content.firstChild;
+	return template.content.firstChild;
 }
 
 function buildElementTree(type = "div", __class = [], data = new Array(), __keypath = "") {
@@ -458,8 +465,6 @@ function liveTime(element, start = time(new Date()), { type = "full", count = "u
 		if (!document.body.contains(element)) {
 			clog("DEBG", "Live Time Element does not exist in document. Clearing...");
 			clearInterval(updateInterval);
-			delete element;
-			delete updateInterval;
 		}
 
 		let t = 0;
@@ -530,6 +535,10 @@ function convertSize(bytes) {
 
 function priceFormat(num) {
 	return num.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
+}
+
+function numberFormat(num) {
+	return new Intl.NumberFormat().format(num);
 }
 
 function round(number, to = 2) {
@@ -637,7 +646,156 @@ class pager {
 			if (listData[i])
 				this.renderItemHandler(listData[i], this.container);
 			else
-				clog("DEBG", `pager.render: listData does not contain data in index`, { text: i, color: flatc("red") });
+				clog("DEBG", `pager.render: listData does not contain data at index`, { text: i, color: flatc("red") });
+	}
+}
+
+class lazyload {
+	constructor({
+		container = null,
+		source = null,
+		classes = null
+	}) {
+		if (container && container.classList)
+			this.container = container;
+		else
+			this.container = document.createElement("div");
+
+		let _src = null;
+
+		switch (typeof source) {
+			case "string":
+				// Assume as Image Src
+				this.sourceNode = document.createElement("img");
+				_src = source;
+				break;
+		
+			case "object":
+				if (source.classList)
+					// Source is a Node. We just need to append it in container
+					this.sourceNode = source;
+				else if (source.type && source.src) {
+					switch (source.type) {
+						case "image":
+						case "iframe":
+							this.sourceNode = document.createElement(source.type);
+							_src = source.src;
+							break;
+
+						case "document":
+							this.sourceNode = document.createElement("embed");
+							_src = source.src;
+							break;
+
+						default:
+							throw { code: -1, description: `lazyload: source.type >>> ${source.type} is not a valid type` }
+					}
+				} else
+					throw { code: -1, description: `lazyload: source is not a valid node/object` }
+				break;
+
+			default:
+				throw { code: -1, description: `lazyload: source is not a valid string/node/object, got ${typeof source}` }
+		}
+
+		if (!this.sourceNode || !_src)
+			throw { code: -1, description: `lazyload: an unexpected error occured while creating lazyload object` }
+
+		this.isLoaded = false;
+		this.isErrored = false;
+		this.onLoadedHandler = null;
+		this.onErroredHandler = null;
+
+		container.classList.add("lazyload");
+
+		if (classes)
+			switch (typeof classes) {
+				case "object":
+					if (!Array.isArray(classes))
+						throw { code: -1, description: `lazyload: classes is not a valid array` }
+
+					container.classList.add(...classes);
+					break;
+				case "string":
+					container.classList.add(classes);
+					break;
+			}
+
+		this.sourceNode.addEventListener("load", () => this.loaded = true);
+		this.sourceNode.addEventListener("error", () => this.errored = true);
+
+		this.spinner = document.createElement("div");
+		this.spinner.classList.add("simpleSpinner");
+
+		this.container.append(this.sourceNode, this.spinner);
+		this.src = _src;
+	}
+
+	/**
+	 * @param {String} src
+	 */
+	set src(src) {
+		this.loaded = false;
+		this.errored = false;
+		this.sourceNode.src = src;
+	}
+
+	/**
+	 * @param {Boolean} val
+	 */
+	set loaded(val) {
+		if (typeof val !== "boolean")
+			throw { code: -1, description: `lazyload.loaded: not a valid boolean` }
+
+		this.isLoaded = val;
+		this.container.removeAttribute("data-errored");
+
+		this.isLoaded
+			? this.container.dataset.loaded = true
+			: this.container.removeAttribute("data-loaded");
+	}
+
+	get loaded() {
+		return this.isLoaded;
+	}
+
+	/**
+	 * @param {Boolean} val
+	 */
+	set errored(val) {
+		if (typeof val !== "boolean")
+			throw { code: -1, description: `lazyload.errored: not a valid boolean` }
+
+		this.isErrored = val;
+		this.container.removeAttribute("data-loaded");
+
+		this.isErrored
+			? this.container.dataset.errored = true
+			: this.container.removeAttribute("data-errored");
+	}
+
+	get errored() {
+		return this.isErrored;
+	}
+
+	/**
+	 * @param {Function}	f	Handler
+	 */
+	onLoaded(f) {
+		if (typeof f !== "function")
+			throw { code: -1, description: `pager.onLoaded: not a valid function` }
+
+		this.onLoadedHandler = f;
+	}
+
+	/**
+	 * @param {Function}	f	Handler
+	 */
+	onErrored(f) {
+		if (typeof f !== "function")
+			throw { code: -1, description: `lazyload.onErrored: not a valid function` }
+
+		this.onErroredHandler = f;
 	}
 }
 
@@ -757,13 +915,21 @@ function flatc(color) {
  */
 function oscColor(color) {
 	const clist = {
-		pink: "#ff66aa",
-		green: "#88b400",
-		blue: "#44aadd",
-		yellow: "#f6c21c",
-		brown: "#231B22",
-		gray: "#485e74",
-		dark: "#042430"
+		pink:			"#ff66aa",
+		green:			"#88b400",
+		blue:			"#44aadd",
+		yellow:			"#f6c21c",
+		orange:			"#ffa502",
+		red:			"#dd2d44",
+		brown:			"#3f313d",
+		gray:			"#485e74",
+		dark:			"#1E1E1E",
+		purple:			"#593790",
+		darkGreen:		"#0c4207",
+		darkBlue:		"#053242",
+		darkYellow:		"#444304",
+		darkRed:		"#440505",
+		navyBlue:		"#333D79",
 	}
 
 	return (clist[color]) ? clist[color] : clist.dark;
@@ -784,10 +950,9 @@ function triBg(element, {
 	triangleCount = 38
 } = {}) {
 	let current = element.querySelector(".triBgContainer");
+
 	if (current)
 		element.removeChild(current);
-
-	delete current;
 
 	element.classList.add("triBg");
 	element.dataset.triColor = color;
@@ -1093,13 +1258,13 @@ function clog(level, ...args) {
 			out[n] = `font-size: ${size}px; font-family: ${font}; color: ${flatc("black")}`;
 			n += 1;
 		} else if (typeof item === "object") {
-			if (typeof item.text === "undefined") {
+			if (item === null || item === undefined || typeof item.text === "undefined") {
 				out[n] = item;
 				n += 1;
 
-				if (item.code && item.description)
+				if (item && item.code && item.description)
 					str += `[${item.code}] ${item.description} `;
-				else if (item.name && item.message)
+				else if (item && item.name && item.message)
 					str += `${item.name} >>> ${item.message} `;
 				else
 					str += JSON.stringify(item) + " ";
@@ -1186,6 +1351,7 @@ const popup = {
 		this.popup = this.tree.obj.popup;
 		document.body.insertBefore(this.popupNode, document.body.childNodes[0]);
 
+		this.popup.header.top.close.title = "Đóng";
 		this.popup.header.top.close.dataset.soundhover = "";
 		this.popup.header.top.close.dataset.soundselect = "";
 		this.popup.body.note.style.display = "none";
@@ -1231,8 +1397,6 @@ const popup = {
 			this.popup.header.icon.dataset.icon = (typeof icon === "string") ? icon : template.icon;
 			this.popup.header.setAttribute("theme", (typeof headerTheme === "string") ? headerTheme : template.h);
 			this.popup.body.setAttribute("theme", (typeof bodyTheme === "string") ? bodyTheme : template.b);
-
-			delete template;
 
 			//* HEADER
 			this.popup.header.top.windowTitle.innerText = windowTitle;
@@ -1286,7 +1450,7 @@ const popup = {
 							this.hide();
 						});
 
-						this.popup.body.button.appendChild(button);
+					this.popup.body.button.appendChild(button);
 				}
 			}
 
@@ -1424,7 +1588,7 @@ const __connection__ = {
 							resolve();
 						}
 					}, 1000);
-				break;
+					break;
 			}
 		});
 	},

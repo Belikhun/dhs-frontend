@@ -1,6 +1,6 @@
 {
     "name": "Deal Hunter Suite",
-    "version": "5.0",
+    "version": "6.0",
     "description": "Provide all the Tools needed for Deal Hunter!",
     "manifest_version": 2,
     "minimum_chrome_version": "16.0.884",
@@ -57,7 +57,7 @@
         {
             "matches": ["<all_urls>"],
             "js": ["/assets/js/belibrary.js", "/content.js"],
-            "css": ["/assets/css/default.css", "/assets/css/button.css"]
+            "css": ["/assets/css/button.css"]
         }
     ]
 }
