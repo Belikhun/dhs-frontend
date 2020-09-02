@@ -8,7 +8,7 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "6.0";
+	const VERSION = "6.1";
 	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
@@ -351,7 +351,7 @@ try {
 				reRequest: false
 			})
 	
-			if (this.info.EXTENSION_VERSION !== VERSION) {
+			if (parseFloat(this.info.EXTENSION_VERSION) > parseFloat(VERSION)) {
 				let changelogNode = document.createElement("div");
 				changelogNode.innerHTML = this.CLHtml;
 	
@@ -783,11 +783,12 @@ try {
 				setTimeout(() => this.__update(), (1 - (time() - start)) * 1000);
 			},
 
-			update(soft = false) {
+			async update(soft = false) {
 				if (!core.splash.classList.contains("proxyDetail") || this.scanning)
 					return;
 
 				let promises = []
+				let noConnection = 0;
 
 				for (let ip of Object.keys(this.list)) {
 					let item = this.list[ip];
@@ -857,6 +858,8 @@ try {
 								item.node.status.state.innerText = "LOST";
 	
 								this.list[ip].lost = true;
+								noConnection++;
+
 								resolve()
 								return;
 							}
@@ -884,7 +887,10 @@ try {
 					}))
 				}
 
-				return Promise.all(promises);
+				await Promise.all(promises);
+
+				if (!soft)
+					this.updateStatus({ detailSub: `${noConnection} proxy không có mạng` })
 			},
 
 			scan(trusted = false) {
