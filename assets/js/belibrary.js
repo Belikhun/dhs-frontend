@@ -112,44 +112,46 @@ function myajax({
 						return;
 					}
 
-					if (this.status >= 400 && (response.code !== 0 && response.code < 100)) {
-						clog("ERRR", {
-							color: flatc("magenta"),
-							text: method
-						}, {
-							color: flatc("pink"),
-							text: url
-						}, {
-							color: flatc("red"),
-							text: `HTTP ${this.status}:`
-						}, this.statusText, ` >>> ${response.description}`);
-
-						if (this.status === 429 && response.code === 32 && reRequest === true) {
-							// Wait for :?unratelimited:?
-							await __connection__.stateChange("ratelimited", response);
-							
-							// Resend previous ajax request
-							clog("DEBG", "Resending Request", argumentsList);
-							let r = null;
-
-							try {
-								r = await myajax(...argumentsList);
-							} catch(e) {
-								reject(e);
+					if (this.status >= 400) {
+						if (typeof response.code === "number" && response.code !== 0 && response.code < 100) {
+							clog("ERRR", {
+								color: flatc("magenta"),
+								text: method
+							}, {
+								color: flatc("pink"),
+								text: url
+							}, {
+								color: flatc("red"),
+								text: `HTTP ${this.status}:`
+							}, this.statusText, ` >>> ${response.description}`);
+	
+							if (this.status === 429 && response.code === 32 && reRequest === true) {
+								// Wait for :?unratelimited:?
+								await __connection__.stateChange("ratelimited", response);
+								
+								// Resend previous ajax request
+								clog("DEBG", "Resending Request", argumentsList);
+								let r = null;
+	
+								try {
+									r = await myajax(...argumentsList);
+								} catch(e) {
+									reject(e);
+									return;
+								}
+	
+								// Resolve promise
+								resolve(r);
+	
 								return;
 							}
-
-							// Resolve promise
-							resolve(r);
-
-							return;
-						} else {
-							let errorObj = { code: 3, description: `HTTP ${this.status}: ${this.statusText} (${method} ${url})`, data: response }
-							error(errorObj);
-							reject(errorObj);
-
-							return;
 						}
+						
+						let errorObj = { code: 3, description: `HTTP ${this.status}: ${this.statusText} (${method} ${url})`, data: response }
+						error(errorObj);
+						reject(errorObj);
+
+						return;
 					}
 
 					data = response;
@@ -706,7 +708,7 @@ class lazyload {
 		this.onLoadedHandler = null;
 		this.onErroredHandler = null;
 
-		container.classList.add("lazyload");
+		this.container.classList.add("lazyload");
 
 		if (classes)
 			switch (typeof classes) {
@@ -714,10 +716,11 @@ class lazyload {
 					if (!Array.isArray(classes))
 						throw { code: -1, description: `lazyload: classes is not a valid array` }
 
-					container.classList.add(...classes);
+					this.container.classList.add(...classes);
 					break;
+					
 				case "string":
-					container.classList.add(classes);
+					this.container.classList.add(classes);
 					break;
 			}
 
@@ -960,6 +963,11 @@ function triBg(element, {
 	let container = document.createElement("div");
 	container.classList.add("triBgContainer");
 	container.dataset.count = triangleCount;
+	container.dataset.anim = (scale > 5)
+		? "big"
+		: (scale > 1)
+			? "normal"
+			: "small";
 
 	for (let i = 0; i < triangleCount; i++) {
 		let randScale = randBetween(0.4, 2.0, false);
@@ -981,6 +989,12 @@ function triBg(element, {
 	}
 
 	element.insertBefore(container, element.firstChild);
+
+	return {
+		setColor(color) {
+			element.dataset.triColor = color;
+		}
+	}
 }
 
 /**
@@ -994,6 +1008,195 @@ function randBetween(min, max, toInt = true) {
 	return toInt
 		? Math.floor(Math.random() * (max - min + 1) + min)
 		: (Math.random() * (max - min) + min)
+}
+
+const Easing = {
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	Linear: t => t,
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	InSine: t => 1 - Math.cos((t * Math.PI) / 2),
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	OutSine: t => Math.sin((t * Math.PI) / 2),
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	InOutSine: t => -(Math.cos(Math.PI * t) - 1) / 2,
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	InQuad: t => t*t,
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	OutQuad: t => t*(2-t),
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	InOutQuad: t => (t < .5) ? 2*t*t : -1+(4-2*t)*t,
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	InCubic: t => t*t*t,
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	OutCubic: t => (--t)*t*t+1,
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	InOutCubic: t => (t < .5) ? 4*t*t*t : (t-1)*(2*t-2)*(2*t-2)+1,
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	InExpo: t => t === 0 ? 0 : Math.pow(2, 10 * t - 10),
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	OutExpo: t => t === 1 ? 1 : 1 - Math.pow(2, -10 * t),
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	InOutExpo: t => t === 0
+				? 0
+				: t === 1
+					? 1
+					: t < 0.5
+						? Math.pow(2, 20 * t - 10) / 2
+						: (2 - Math.pow(2, -20 * t + 10)) / 2,
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	InQuart: t => t*t*t*t,
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	OutQuart: t => 1-(--t)*t*t*t,
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	InOutQuart: t => (t < .5) ? 8*t*t*t*t : 1-8*(--t)*t*t*t,
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	InQuint: t => t*t*t*t*t,
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	OutQuint: t => 1 - Math.pow(1 - t, 5),
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	InOutQuint: t => (t < 0.5) ? 16 * t * t * t * t * t : 1 - Math.pow(-2 * t + 2, 5) / 2,
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	InElastic: t => {
+		const c4 = (2 * Math.PI) / 3;
+		
+		return t === 0
+			? 0
+			: t === 1
+				? 1
+				: -Math.pow(2, 10 * t - 10) * Math.sin((t * 10 - 10.75) * c4);
+	},
+
+	/**
+	 * @param	{Number}	t	Point [0, 1]
+	 * @return	{Number}		Point [0, 1]
+	 */
+	OutElastic: t => {
+		const c4 = (2 * Math.PI) / 3;
+
+		return t === 0
+			? 0
+			: t === 1
+				? 1
+				: Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
+	}
+}
+
+/**
+ * Animate a value
+ * @param {Number}		duration 			Animation Duration
+ * @param {Function}	timingFunction 		Animation Timing Function
+ * @param {Function}	animate 			Function To Animate
+ */
+function Animator(duration, timingFunction, animate) {
+	let completeHandlers = []
+	let start = time();
+	let rAID = null;
+
+	let update = () => {
+		let tPoint = (time() - start) / duration;
+		animate(Math.min(timingFunction(tPoint), 1));
+
+		if (tPoint <= 1)
+			rAID = requestAnimationFrame(update);
+		else {
+			animate(1);
+			completeHandlers.forEach(f => f());
+		}
+	}
+
+	rAID = requestAnimationFrame(() => update());
+
+	return {
+		cancel() {
+			cancelAnimationFrame(rAID);
+		},
+
+		onComplete(f) {
+			if (!f || typeof f !== "function")
+				throw { code: -1, description: "Animator().onComplete(): not a valid function" }
+
+			completeHandlers.push(f);
+		}
+	}
 }
 
 /**
@@ -1037,6 +1240,13 @@ if (typeof $ !== "function")
 function emptyNode(node) {
 	while (node.firstChild)
 		node.firstChild.remove();
+}
+
+function sanitizeHTML(html) {
+	let decoder = document.createElement("div");
+	decoder.innerHTML = html;
+	
+	return decoder.textContent;
 }
 
 /**
@@ -1109,7 +1319,8 @@ function createSwitch({
 	title.innerHTML = label;
 
 	let switchLabel = document.createElement("label");
-	switchLabel.classList.add("sq-checkbox", color);
+	switchLabel.classList.add("sq-checkbox");
+	switchLabel.dataset.color = color;
 
 	let input = document.createElement("input");
 	input.type = type;
@@ -1127,7 +1338,89 @@ function createSwitch({
 	container.appendChild(title);
 	container.appendChild(switchLabel);
 
-	return { group: container, input: input }
+	return {
+		group: container,
+		input,
+		title,
+		label: switchLabel
+	}
+}
+
+function createSlider({
+	color = "pink",
+	value = 0,
+	min = 0,
+	max = 10,
+	step = 1
+} = {}) {
+	let container = buildElementTree("div", "osc-slider", [
+		{ type: "input", name: "input" },
+		{ type: "span", class: "leftTrack", name: "left" },
+		{ type: "span", class: "thumb", name: "thumb" },
+		{ type: "span", class: "rightTrack", name: "right" }
+	]);
+
+	let o = container.obj;
+	o.dataset.color = color;
+	o.dataset.soundhover = true;
+
+	if (sounds)
+		sounds.applySound(o);
+
+	o.input.type = "range";
+	o.input.min = min;
+	o.input.max = max;
+	o.input.step = step;
+	o.input.value = value;
+
+	const update = (e) => {
+		let valP = (e.target.value - min) / (max - min);
+
+		o.thumb.style.left = `calc(20px + (100% - 40px) * ${valP})`;
+		o.left.style.width = `calc((100% - 40px) * ${valP})`;
+		o.right.style.width = `calc(100% - (100% - 40px) * ${valP} - 40px)`;
+
+		if (e.isTrusted && sounds)
+			if (valP === 0)
+				sounds.slider(2);
+			else if (valP === 1)
+				sounds.slider(1);
+			else
+				sounds.slider(0);
+	}
+
+	requestAnimationFrame(() => update({ target: o.input }));
+
+	let inputHandlers = []
+	let changeHandlers = []
+
+	o.input.addEventListener("input", (e) => {
+		inputHandlers.forEach(f => f(parseFloat(e.target.value), e));
+		update(e);
+	});
+
+	o.input.addEventListener("change", (e) => changeHandlers.forEach(f => f(parseFloat(e.target.value), e)));
+
+	return {
+		group: container.tree,
+		input: o.input,
+
+		onInput(f) {
+			if (!f || typeof f !== "function")
+				throw { code: -1, description: "createSlider().onInput(): not a valid function" }
+
+			inputHandlers.push(f);
+			f(parseFloat(o.input.value));
+		},
+
+		onChange(f) {
+			if (!f || typeof f !== "function")
+				throw { code: -1, description: "createSlider().onChange(): not a valid function" }
+
+			changeHandlers.push(f);
+			f(parseFloat(o.input.value));
+		}
+	}
 }
 
 /**
@@ -1138,9 +1431,10 @@ function createSwitch({
  */
 function createBtn(text, color = "blue") {
 	let btn = document.createElement("button");
+	btn.classList.add("sq-btn");
 	btn.type = "button";
 	btn.innerText = text;
-	btn.classList.add("sq-btn", color);
+	btn.dataset.color = color;
 	btn.dataset.soundhover = "";
 	btn.dataset.soundselect = "";
 
@@ -1215,27 +1509,27 @@ function clog(level, ...args) {
 		CRIT: "gray",
 	}[level])
 
-	text = [
+	let text = [
 		{
 			color: flatc("aqua"),
 			text: `${pleft(date.getHours(), 2)}:${pleft(date.getMinutes(), 2)}:${pleft(date.getSeconds(), 2)}`,
 			padding: 8,
-			seperate: true
+			separate: true
 		}, {
 			color: flatc("blue"),
 			text: rtime,
 			padding: 8,
-			seperate: true
+			separate: true
 		}, {
 			color: flatc("red"),
 			text: window.location.pathname,
 			padding: 16,
-			seperate: true
+			separate: true
 		}, {
 			color: lc,
 			text: level,
 			padding: 6,
-			seperate: true
+			separate: true
 		}
 	]
 
@@ -1278,7 +1572,7 @@ function clog(level, ...args) {
 
 			out[0] += `%c${t}`;
 
-			if (item.seperate) {
+			if (item.separate) {
 				out[0] += "%c| ";
 				out[n] = `font-size: ${size}px; color: ${item.color};`;
 				out[n+1] = `font-size: ${size}px; color: ${item.color}; font-weight: bold;`;
@@ -1344,7 +1638,7 @@ const popup = {
 	},
 
 	init() {
-		const tree=[{type:"div",class:"popupWindow",name:"popup",list:[{type:"div",class:"header",name:"header",list:[{type:"span",class:"top",name:"top",list:[{type:"t",class:["windowTitle","text-overflow"],name:"windowTitle"},{type:"span",class:"close",name:"close"}]},{type:"span",class:"icon",name:"icon"},{type:"t",class:"text",name:"text"}]},{type:"div",class:"body",name:"body",list:[{type:"div",class:"top",name:"top",list:[{type:"t",class:"message",name:"message"},{type:"t",class:"description",name:"description"}]},{type:"div",class:"note",name:"note",list:[{type:"span",class:"inner",name:"inner"}]},{type:"div",class:"customNode",name:"customNode"},{type:"div",class:"buttonGroup",name:"button"}]}]}];
+		const tree = [{type:"div",class:"popupWindow",name:"popup",list:[{type:"div",class:"header",name:"header",list:[{type:"span",class:"top",name:"top",list:[{type:"t",class:["windowTitle","text-overflow"],name:"windowTitle"},{type:"span",class:"close",name:"close"}]},{type:"span",class:"icon",name:"icon"},{type:"t",class:"text",name:"text"}]},{type:"div",class:"body",name:"body",list:[{type:"div",class:"top",name:"top",list:[{type:"t",class:"message",name:"message"},{type:"t",class:"description",name:"description"}]},{type:"div",class:"note",name:"note",list:[{type:"span",class:"inner",name:"inner"}]},{type:"div",class:"customNode",name:"customNode"},{type:"div",class:"buttonGroup",name:"button"}]}]}];
 
 		this.tree = buildElementTree("div", "popupContainer", tree);
 		this.popupNode = this.tree.tree;
