@@ -9,7 +9,7 @@ try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
 	const VERSION = "6.2";
-	const STATE = "release";
+	const STATE = "indev";
 	
 	const AUTHOR = "Team DHS";
 	var   CONTACT_ADDR = "https://m.me/DealHunterSuite";
@@ -866,7 +866,7 @@ try {
 	
 							let ping = (time() - requestStart) * 1000;
 	
-							item.node.info.ip.innerText = data.ip || "📴";
+							item.node.info.ip.innerText = data.ip || "NO DATA";
 							item.node.resource.cpu.bar.style.width = `${data.cpu}%`;
 							item.node.resource.ram.bar.style.width = `${data.ram}%`;
 							item.node.resource.cpu.value.innerText = `${data.cpu}%`;
@@ -875,14 +875,14 @@ try {
 							item.node.status.ping.bar.dataset.value = (ping < 1000)
 								? 3
 								: (ping < 5000)
-									? 26
+									? 2
 									: 1
 	
 							this.list[ip] = { ...this.list[ip], ...data }
 							this.list[ip].lost = false;
 						}
 
-						item.node.status.state.innerText = (this.list[ip].count > 0) ? `${this.list[ip].count}REQ` : "READY";
+						item.node.status.state.innerText = (this.list[ip].count > 0) ? `${this.list[ip].count}REQ` : (this.list[ip].ip ? "READY" : "NOCONN");
 						resolve();
 					}))
 				}
