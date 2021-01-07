@@ -8,7 +8,7 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "6.2";
+	const VERSION = "7.0";
 	const STATE = "indev";
 	
 	const AUTHOR = "Team DHS";
@@ -77,6 +77,7 @@ try {
 		},
 
 		script: {
+			container: $("#scriptListContainer"),
 			autorunList: $("#scriptAutorunList"),
 			thisPageList: $("#scriptThisPageList"),
 			undependList: $("#scriptUndependList"),
@@ -99,31 +100,6 @@ try {
 				formCancel: $("#scriptSettingsFormCancel"),
 				formSubmit: $("#scriptSettingsFormSubmit")
 			}
-		},
-
-		toolInfo: {
-			container: $("#toolInfo"),
-			name: $("#toolInfoName"),
-			version: $("#toolInfoVersion"),
-			codename: $("#toolInfoCodename"),
-			copyright: $("#toolInfoCopyright"),
-			button: {
-				tos: $("#toolInfoTOS"),
-				log: $("#toolInfoChangelog"),
-				changeServer: $("#toolInfoChangeServer")
-			},
-			license: {
-				container: $("#toolInfoLicense"),
-				name: $("#toolInfoLicenseName"),
-				tags: $("#toolInfoLicenseTags"),
-				licenses: $("#toolInfoLicenses"),
-				key: {
-					button: $("#toolInfoLicenseKeyBtn"),
-					container: $("#toolInfoLicenseKey"),
-					key: $("#toolInfoLicenseKeyKey")
-				},
-			},
-			author: $("#toolInfoAuthor")
 		},
 
 		server: (server) => (server) ? cookie.set(`server.${STATE}`, server, 9999) : cookie.get(`server.${STATE}`, "master"),
@@ -172,7 +148,6 @@ try {
 			//? |-----------------------|
 	
 			splash.set({ p: 0, i: "Loading all the sounds thingy" });
-			cookie.set("__s_m", true);
 			await sounds.init();
 	
 			//? |-----------------------|
@@ -184,101 +159,6 @@ try {
 
 			splash.set({ p: 15, i: "Preparing runStatus" });
 			this.runStatus.init();
-	
-			//? |-----------------------|
-			//? |     TOOLINFO INIT     |
-			//? |-----------------------|
-	
-			splash.set({ p: 20, i: "Preparing Tool Info Panel" });
-			
-			this.toolInfo.name.innerText = APPNAME;
-			this.toolInfo.version.innerText = VERSION;
-			this.toolInfo.codename.innerText = CODENAME;
-			this.toolInfo.copyright.innerHTML = `Copyright © 2019-2020 ${AUTHOR}. All right reserved`;
-	
-			this.toolInfo.button.tos.addEventListener("mouseup", () => {
-				let tosNode = document.createElement("div");
-				tosNode.innerHTML = this.TOSHtml;
-
-				popup.show({
-					title: "Điều Khoản Sử Dụng",
-					message: "Deal Hunter Suite",
-					description: "Updated at 30/10/2019 22:39:00 GMT",
-					level: "info",
-					customNode: tosNode
-				})
-			})
-
-			this.toolInfo.button.log.addEventListener("mouseup", () => {
-				let logNode = document.createElement("div");
-				logNode.innerHTML = this.CLHtml;
-
-				popup.show({
-					title: "Changelog",
-					message: `Version ${VERSION}`,
-					description: "",
-					level: "info",
-					customNode: logNode
-				})
-			})
-
-			this.toolInfo.button.changeServer.addEventListener("mouseup", () => this.changeServer());
-			this.toolInfo.license.container.dataset.triColor = "red";
-			this.toolInfo.license.name.innerText = `Bạn chưa đăng nhập`;
-			this.toolInfo.license.key.key.innerText = "KHÔNG RÕ";
-	
-			for (let item of this.authorList) {
-				let container = document.createElement("span");
-				container.classList.add("item");
-	
-				let avatarDiv = document.createElement("div");
-				avatarDiv.classList.add("lazyload", "avatar");
-	
-				let avatar = document.createElement("img");
-				avatar.onload = e => e.target.parentNode.dataset.loaded = 1;
-				avatar.src = item.avatar;
-	
-				let spinner = document.createElement("div");
-				spinner.classList.add("simpleSpinner");
-	
-				avatarDiv.append(avatar, spinner);
-	
-				let link = document.createElement("a");
-				link.classList.add("authorName");
-				link.href = item.link;
-				link.target = "_blank";
-				link.innerText = item.name;
-	
-				container.append(avatarDiv, link);
-	
-				for (let role of item.role) {
-					let text = document.createElement("t");
-					text.classList.add("authorInfo");
-					text.innerText = role;
-					container.append(text);
-	
-					delete text;
-				}
-	
-				this.toolInfo.author.append(container);
-	
-				delete container;
-				delete avatarDiv;
-				delete spinner;
-				delete link;
-			}
-	
-			this.tool.navbar.hamburger.addEventListener("mouseup", e => {
-				let l = this.mainBox.dataset.layout;
-	
-				if (l == 7) {
-					this.tool.navbar.hamburger.classList.remove("active");
-					this.changeLayout("back");
-				} else {
-					this.tool.navbar.hamburger.classList.add("active");
-					this.changeLayout(7);
-				}
-			})
 	
 			//? |-----------------------|
 			//? |   SERVER COMM CHECK   |
@@ -314,8 +194,8 @@ try {
 				this.info = serverStatus.data;
 				break;
 			}
-	
-			CONTACT_ADDR = this.info.contact;
+			
+			CONTACT_ADDR = this.info.CONTACT;
 	
 			if (this.info.EXTENSION_ANNOUNCEMENT.enabled === true) {
 				let a = this.info.EXTENSION_ANNOUNCEMENT;
@@ -338,9 +218,9 @@ try {
 				type: "text",
 				force: true,
 				reRequest: false
-			})
+			});
+
 			$("#tutorialPageTOS").innerHTML = this.TOSHtml;
-	
 	
 			splash.set({ p: 45, i: "Fetching changelog" });
 			this.CLHtml = await myajax({
@@ -370,7 +250,7 @@ try {
 						contact: { text: "Hỗ trợ", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
 						continue: { text: "Tiếp tục chạy!", color: "yellow" }
 					}
-				})
+				});
 			}
 	
 			//? |-----------------------|
@@ -421,91 +301,6 @@ try {
 			splash.set({ p: 60, i: "Đang kiểm tra bản quyền" });
 			while (!await this.auth()) { clog("ERRR", "Auth failed. Retrying") }
 	
-			let tagsString = "";
-			for (let item of this.session.keyData.tags)
-				tagsString += `<tag ${(typeof this.tagsColor[item.toLowerCase()] === "string") ? `style="background-color: ${this.tagsColor[item.toLowerCase()]}"` : ""}>${item}</tag>`;
-			
-			this.tool.navbar.userName.innerText = this.session.keyData.name;
-			this.tool.navbar.userTag.innerHTML = tagsString;
-			delete tagsString;
-	
-			this.toolInfo.license.container.dataset.triColor = "blue";
-			this.toolInfo.license.name.innerText = this.session.keyData.name;
-			this.toolInfo.license.tags.innerHTML = tagsString;
-			let timerNodes = [];
-	
-			for (let item of this.session.keyData.licenses) {
-				let container = document.createElement("div");
-				container.classList.add("license");
-	
-				let allow = document.createElement("t");
-				allow.classList.add("allow");
-				allow.innerText = item.allow.split(";").join(", ");
-	
-				let timeDesc = document.createElement("t");
-				timeDesc.classList.add("timeDesc");
-				timeDesc.innerText = "Hiệu Lực Còn";
-	
-				let timer = document.createElement("timer");
-				timer.innerText = "INITIALIZING";
-	
-				container.append(allow, timeDesc, timer);
-				this.toolInfo.license.licenses.appendChild(container);
-				timerNodes.push({ desc: timeDesc, time: timer, expire: item.expire });
-	
-				delete container;
-				delete allow;
-			}
-	
-			this.toolInfo.license.key.button.addEventListener("mouseup", async e => {
-				let response = await popup.show({
-					title: "Xác Nhận",
-					message: "Hiển Thị License Key",
-					description: `Bạn có chắc muốn hiển thị key bản quyền của bạn không?`,
-					note: `<b>Tuyệt đối không chia sẻ key cho người khác!</b><br><br>Nếu chúng tôi phát hiện key của bạn bị rò rỉ ra ngoài, chúng tôi sẽ tiến hành <b>khóa key của bạn vô điều kiện</b> và <b>từ chối mọi trách nhiệm liên quan!<b/>`,
-					noteLevel: "warning",
-					level: "confirm",
-					buttonList: {
-						confirm: { text: "Xác Nhận", color: "pink" },
-						close: { text: "Đóng", color: "blue" }
-					}
-				});
-	
-				if (response === "confirm") {
-					this.toolInfo.license.key.key.innerText = this.session.keyData.key;
-					this.toolInfo.license.container.dataset.triColor = "red";
-				}
-	
-				delete warningNode;
-				delete response;
-			});
-	
-			this.frame.add(() => {
-				if (this.toolInfo.container.classList.contains("optimize"))
-					return;
-				
-				let now = time();
-	
-				for (let item of timerNodes) {
-					let remain = item.expire - now;
-					let parsed = parseTime(remain % 86400, { showPlus: true });
-	
-					if (remain < 0 && item.triggered !== true) {
-						item.desc.innerText = "Đã Hết Hạn";
-						item.time.dataset.color = "red";
-						this.toolInfo.license.container.dataset.triColor = "purple";
-						item.triggered = true;
-					}
-	
-					item.time.innerHTML = `<days>${Math.floor(remain / 86400)}</days>${parsed.str}<ms>${parsed.ms}</ms>`;
-	
-					delete remain;
-					delete parsed;
-				}
-	
-				delete now;
-			});
-	
 			_gaq.push(["_trackEvent", this.session.keyData.name, "auth"]);
 	
 			//? |-----------------------|
@@ -522,12 +317,20 @@ try {
 			} finally {
 				clog("DEBG", "Page communication check result:", commCheck);
 			}
+
+			//? |-----------------------|
+			//? |      USERSETTINGS     |
+			//? |-----------------------|
+	
+			splash.set({ p: 75, i: "Drawing Settings Panel" });
+			this.userSettings.init();
 	
 			//? |-----------------------|
 			//? |   FETCH SCRIPT LIST   |
 			//? |-----------------------|
 	
 			splash.set({ p: 80, i: "Lấy thông tin danh sách script" });
+			new Scrollable(this.script.container);
 			await this.fetchScriptList();
 	
 			//? |----------------------------------|
@@ -536,7 +339,7 @@ try {
 	
 			splash.set({ p: 85, i: "Setting up Listeners" });
 			chrome.tabs.onUpdated.addListener((t, c) => this.checkPage(t, c));
-			this.tool.reloadBtn.addEventListener("mouseup", e => this.reload({ hard: true }));
+			this.tool.reloadBtn.addEventListener("mouseup", () => this.reload({ hard: true }));
 	
 			//? |-----------------------|
 			//? |       INIT PROXY      |
@@ -549,7 +352,7 @@ try {
 			//? |    INIT LOGSVIEWER    |
 			//? |-----------------------|
 	
-			splash.set({ p: 90, i: "Inititlizing logsViewer" });
+			splash.set({ p: 93, i: "Inititlizing logsViewer" });
 			this.logsViewer.init();
 	
 			splash.set({ p: 95, i: "Starting frameRenderer" });
@@ -564,6 +367,7 @@ try {
 				let s = pleft(date.getSeconds(), 2);
 				let ms = pleft(date.getMilliseconds(), 3);
 	
+				emptyNode(this.tool.navbar.clock);
 				this.tool.navbar.clock.innerHTML = `<sub>${day}</sub>${h}:${m}:${s}<ms>${ms}</ms>`;
 	
 				delete date;
@@ -578,21 +382,393 @@ try {
 			//? |       END INIT        |
 			//? |-----------------------|
 	
+			new Scrollable(this.script.settings.formList);
 			splash.set({ p: 100, i: "Initialized" });
 			clog("OKAY", "Initialized");
 			_gaq.push(["_trackEvent", this.session.keyData.name, "initialized", "core.js Initialized"]);
 			
-			if (!(await this.dataLoad("licensed")).licensed) {
+			if (!(await this.dataLoad("licensed"))) {
 				tutorial.init();
 				sounds.confirm(0);
 				await tutorial.play();
 				clog("INFO", "Tutorial Ended");
 	
 				await this.dataSave({ licensed: true });
-				await delayAsync(600);
 			}
 			
 			this.changeLayout(3);
+		},
+
+		userSettings: {
+			priority: 2,
+	
+			/**
+			 * Initialize User Settings Module
+			 * @param {Function}	set		Report Progress to Initializer
+			 */
+			init() {
+				smenu.init($("#userSettings"), {
+					title: "cài đặt",
+					description: "thay đổi cách tool hoạt động"
+				});
+
+				smenu.setToggler(core.tool.navbar.hamburger);
+
+				this.license.init();
+				this.settings.init();
+				this.scripts.init();
+				this.projectInfo.init();
+			},
+
+			license: {
+				group: smenu.Group.prototype,
+
+				init() {
+					this.group = new smenu.Group({ icon: "key", label: "bản quyền" });
+
+					let node = buildElementTree("div", "licenseInfo", [
+						{ type: "span", class: "left", name: "left", list: [
+							{ type: "t", class: "name", name: "licenseName" },
+							{ type: "t", class: "tags", name: "tags" },
+							{ type: "div", class: "licenses", name: "licenses" },
+							{ type: "div", class: "licenseKey", name: "key", list: [
+								{ type: "t", class: "keyDesc", name: "desc", text: "Khóa Bản Quyền" },
+								{ type: "t", class: "key", name: "value", text: "[REDACTED]" }
+							]}
+						]},
+
+						{ type: "span", class: "right", name: "right", list: [
+							{ type: "div", class: "keyBtn", name: "keyBtn" }
+						]}
+					]);
+
+					let tagsString = "";
+					for (let item of core.session.keyData.tags)
+						tagsString += `<tag ${(typeof core.tagsColor[item.toLowerCase()] === "string") ? `style="background-color: ${core.tagsColor[item.toLowerCase()]}"` : ""}>${item}</tag>`;
+					
+					core.tool.navbar.userName.innerText = core.session.keyData.name;
+					core.tool.navbar.userTag.innerHTML = tagsString;
+
+					triBg(node.tree, { color: "blue" });
+					node.obj.left.licenseName.innerText = core.session.keyData.name;
+					node.obj.left.tags.innerHTML = tagsString;
+					let timerNodes = [];
+			
+					for (let item of core.session.keyData.licenses) {
+						let container = document.createElement("div");
+						container.classList.add("license");
+			
+						let allow = document.createElement("t");
+						allow.classList.add("allow");
+						allow.innerText = item.allow.split(";").join(", ");
+			
+						let timeDesc = document.createElement("t");
+						timeDesc.classList.add("timeDesc");
+						timeDesc.innerText = "Hiệu Lực Còn";
+			
+						let timer = document.createElement("timer");
+						timer.innerText = "INITIALIZING";
+			
+						container.append(allow, timeDesc, timer);
+						node.obj.left.licenses.appendChild(container);
+						timerNodes.push({ desc: timeDesc, time: timer, expire: item.expire });
+			
+						delete container;
+						delete allow;
+					}
+			
+					node.obj.right.keyBtn.addEventListener("mouseup", async e => {
+						let response = await popup.show({
+							title: "Xác Nhận",
+							message: "Hiển Thị License Key",
+							description: `Bạn có chắc muốn hiển thị key bản quyền của bạn không?`,
+							note: `<b>Tuyệt đối không chia sẻ key cho người khác!</b><br><br>Nếu chúng tôi phát hiện key của bạn bị rò rỉ ra ngoài, chúng tôi sẽ tiến hành <b>khóa key của bạn vô điều kiện</b> và <b>từ chối mọi trách nhiệm liên quan!<b/>`,
+							noteLevel: "warning",
+							level: "confirm",
+							buttonList: {
+								confirm: { text: "Xác Nhận", color: "pink" },
+								close: { text: "Đóng", color: "blue" }
+							}
+						});
+			
+						if (response === "confirm") {
+							node.obj.left.key.value.innerText = core.session.keyData.key;
+							node.tree.dataset.triColor = "red";
+						}
+			
+						delete warningNode;
+						delete response;
+					});
+			
+					core.frame.add(() => {
+						if (smenu.hiding)
+							return;
+						
+						let now = time();
+			
+						for (let item of timerNodes) {
+							let remain = item.expire - now;
+							let parsed = parseTime(remain % 86400, { showPlus: true });
+			
+							if (remain < 0 && item.triggered !== true) {
+								item.desc.innerText = "Đã Hết Hạn";
+								item.time.dataset.color = "red";
+								node.tree.dataset.triColor = "purple";
+								item.triggered = true;
+							}
+			
+							emptyNode(item.time);
+							item.time.innerHTML = `<days>${Math.floor(remain / 86400)}</days>${parsed.str}<ms>${parsed.ms}</ms>`;
+			
+							delete remain;
+							delete parsed;
+						}
+			
+						delete now;
+					});
+
+					this.group.skipFilter = true;
+					this.group.insert({ container: node.tree });
+				}
+			},
+
+			settings: {
+				group: smenu.Group.prototype,
+	
+				init() {
+					this.group = new smenu.Group({ label: "cài đặt", icon: "tools" });
+	
+					this.server();
+					this.display();
+					this.sounds();
+				},
+
+				server() {
+					let server = new smenu.Child({ label: "Máy Chủ" }, this.group);
+
+					new smenu.components.Text({
+						content: `Máy chủ hiện tại: <b>${STATE}.${core.server()}</b><br><a>${SERVER_ADDR()}</a>`
+					}, server);
+
+					new smenu.components.Button({
+						label: "Đổi Máy Chủ",
+						icon: "server",
+						complex: true,
+						onClick: async () => await core.changeServer()
+					}, server);
+				},
+	
+				display() {
+					let display = new smenu.Child({ label: "Hiển Thị" }, this.group);
+	
+					new smenu.components.Checkbox({
+						label: "Hoạt ảnh",
+						color: "blue",
+						save: "display.transition",
+						defaultValue: true,
+						onChange: (v) => document.body.classList[v ? "remove" : "add"]("disableTransition")
+					}, display);
+	
+					new smenu.components.Checkbox({
+						label: "Thông báo",
+						color: "pink",
+						save: "display.notification",
+						defaultValue: true
+					}, display);
+				},
+	
+				sounds() {
+					let soundsChild = new smenu.Child({ label: "Âm Thanh" }, this.group);
+	
+					let mouseOver = new smenu.components.Checkbox({
+						label: "Mouse Over",
+						color: "blue",
+						save: "sounds.mouseOver",
+						defaultValue: true,
+						onChange: (v) => sounds.enable.mouseOver = v
+					}, soundsChild);
+	
+					let btnClick = new smenu.components.Checkbox({
+						label: "Button Click/Toggle",
+						color: "blue",
+						save: "sounds.btnClick",
+						defaultValue: true,
+						onChange: (v) => sounds.enable.btnClick = v
+					}, soundsChild);
+	
+					let panelToggle = new smenu.components.Checkbox({
+						label: "Panel Show/Hide",
+						color: "blue",
+						save: "sounds.panelToggle",
+						defaultValue: true,
+						onChange: (v) => sounds.enable.panelToggle = v
+					}, soundsChild);
+	
+					let others = new smenu.components.Checkbox({
+						label: "Others",
+						color: "blue",
+						save: "sounds.others",
+						defaultValue: true,
+						onChange: (v) => sounds.enable.others = v
+					}, soundsChild);
+	
+					let notification = new smenu.components.Checkbox({
+						label: "Notification",
+						color: "blue",
+						save: "sounds.notification",
+						defaultValue: true,
+						onChange: (v) => sounds.enable.notification = v
+					}, soundsChild);
+	
+					let master = new smenu.components.Checkbox({
+						label: "Bật âm thanh",
+						color: "pink",
+						save: "sounds.master",
+						defaultValue: true,
+						onChange: (v) => {
+							sounds.enable.master = v;
+							mouseOver.set({ disabled: !v });
+							btnClick.set({ disabled: !v });
+							panelToggle.set({ disabled: !v });
+							others.set({ disabled: !v });
+							notification.set({ disabled: !v });
+							sounds.soundToggle(sounds.sounds.checkOn);
+						}
+					});
+	
+					soundsChild.insert(master, -1);
+				}
+			},
+
+			scripts: {
+				group: smenu.Group.prototype,
+
+				async init() {
+					this.group = new smenu.Group({ label: "script", icon: "scroll" });
+
+					let proxy = new smenu.Child({ label: "Proxy" }, this.group);
+
+					new smenu.components.Textbox({
+						label: "IP Prefix",
+						type: "text",
+						defaultValue: "192.168.1",
+						save: "proxy.prefix",
+						onInput: (value) => core.proxy.ipPrefix = value
+					}, proxy);
+
+					new smenu.components.Textbox({
+						label: "Port",
+						type: "number",
+						defaultValue: 25685,
+						save: "proxy.port",
+						onInput: (value) => core.proxy.port = value
+					}, proxy);
+				}
+			},
+
+			projectInfo: {
+				group: smenu.Group.prototype,
+				licensePanel: smenu.Panel.prototype,
+	
+				async init() {
+					this.group = new smenu.Group({ label: "thông tin", icon: "info" });
+
+					let about = new smenu.Child({ label: "About" }, this.group);
+
+					new smenu.components.Button({
+						label: "Điều Khoản Sử Dụng",
+						color: "green",
+						icon: "user",
+						complex: true,
+						onClick: () => {
+							let tosNode = document.createElement("div");
+							tosNode.innerHTML = core.TOSHtml;
+
+							popup.show({
+								title: "Điều Khoản Sử Dụng",
+								message: "Deal Hunter Suite",
+								description: "Updated at 30/10/2019 22:39:00 GMT",
+								level: "info",
+								customNode: tosNode
+							});
+						}
+					}, about);
+
+					new smenu.components.Button({
+						label: "Changelog",
+						color: "blue",
+						icon: "pencil",
+						complex: true,
+						onClick: () => {
+							let logNode = document.createElement("div");
+							logNode.innerHTML = core.CLHtml;
+
+							popup.show({
+								title: "Changelog",
+								message: `Version ${VERSION}`,
+								description: "",
+								level: "info",
+								customNode: logNode
+							});
+						}
+					}, about);
+
+					let links = new smenu.Child({ label: "Liên Kết Ngoài" }, this.group);
+	
+					new smenu.components.Button({
+						label: "Báo Lỗi",
+						color: "pink",
+						icon: "externalLink",
+						complex: true,
+						onClick: () => window.open(CONTACT_ADDR, "_blank")
+					}, links);
+
+					let teams = new smenu.Child({ label: "teams" }, this.group);
+
+					let authorList = document.createElement("span");
+					authorList.classList.add("authorList");
+					teams.insert({ container: authorList });
+
+					for (let item of core.authorList) {
+						let container = document.createElement("span");
+						container.classList.add("item");
+
+						let avatar = new lazyload({
+							source: item.avatar,
+							classes: "avatar"
+						});
+
+						let link = document.createElement("a");
+						link.classList.add("authorName");
+						link.href = item.link;
+						link.target = "_blank";
+						link.innerText = item.name;
+
+						container.append(avatar.container, link);
+
+						for (let role of item.role) {
+							let text = document.createElement("t");
+							text.classList.add("authorInfo");
+							text.innerText = role;
+							container.append(text);
+
+							delete text;
+						}
+
+						authorList.append(container);
+	
+						delete container;
+						delete spinner;
+						delete link;
+					}
+	
+					new smenu.components.Footer({
+						icon: "/assets/img/icon@64x64.png",
+						appName: APPNAME,
+						version: VERSION
+					}, teams);
+				}
+			}
 		},
 
 		async changeServer({
@@ -606,7 +782,7 @@ try {
 			for (let key of Object.keys(SERVER_LIST)) {
 				let item = SERVER_LIST[key];
 
-				let sw = createSwitch({
+				let sw = createCheckbox({
 					label: item.name,
 					color: (key === "master") ? "pink" : "blue",
 					value: (this.server() === key),
@@ -686,8 +862,6 @@ try {
 	
 				if (this.tick < 10) {
 					// OPTIMIZE
-					core.logsViewer.clear(false);
-	
 					let _a = document.getElementsByClassName("triBgContainer");
 					for (let item of _a)
 						emptyNode(item);
@@ -723,11 +897,14 @@ try {
 					if ((item.allow === "proxy" || item.allow === "*") && !item.expired)
 						this.allowed = true;
 
-				if (!this.allowed)
+				if (!this.allowed) {
 					clog("WARN", "proxy.init(): Module disabled due to lack of permissions!");
+					return false;
+				}
 
 				core.splash.classList.add("proxyInfo");
-				triBg(this.bar, { color: "brown", scale: 0.5, speed: 40 })
+				smenu.container.classList.add("navHaveProxy");
+				triBg(this.bar, { color: "brown", scale: 1, speed: 10 })
 				this.expand.addEventListener("click", () => core.splash.classList.toggle("proxyDetail"));
 				this.reload.addEventListener("click", () => this.scan(true));
 
@@ -780,11 +957,11 @@ try {
 					clog("ERRR", e);
 				}
 
-				setTimeout(() => this.__update(), (1 - (time() - start)) * 1000);
+				setTimeout(() => this.__update(), ((core.splash.classList.contains("proxyDetail") ? 1 : 5) - (time() - start)) * 1000);
 			},
 
 			async update(soft = false) {
-				if (!core.splash.classList.contains("proxyDetail") || this.scanning)
+				if (this.scanning)
 					return;
 
 				let promises = []
@@ -884,7 +1061,7 @@ try {
 
 						item.node.status.state.innerText = (this.list[ip].count > 0) ? `${this.list[ip].count}REQ` : (this.list[ip].ip ? "READY" : "NOCONN");
 						resolve();
-					}))
+					}));
 				}
 
 				await Promise.all(promises);
@@ -957,6 +1134,7 @@ try {
 							clog("OKAY", "Found Proxy:", ip, data);
 							data.data.lost = false;
 							data.data.assigned = 0;
+							data.data.address = ip;
 
 							if (!data.data.ip)
 								noConnection++;
@@ -974,12 +1152,13 @@ try {
 				let server = null;
 				let proxyAsnMin = Math.min(...Object.values(this.list)
 					.filter(i => i.ip)
+					.filter(i => !i.lost)
 					.map(i => i.assigned))
 
 				// Select Server
 				for (item of Object.keys(this.list))
-					if (this.list[item].assigned === proxyAsnMin && this.list[item].ip) {
-						this.list[item].assigned++;
+					if (this.list[item].assigned <= proxyAsnMin && this.list[item].ip && !this.list[item].lost) {
+						this.list[item].assigned = proxyAsnMin + 1;
 						server = item;
 						break;
 					}
@@ -988,6 +1167,12 @@ try {
 					throw { code: 11, description: `Không Tìm Thấy Proxy Phù Hợp!` }
 
 				return server;
+			},
+
+			readyList() {
+				return Object.values(this.list)
+					.filter(i => i.ip)
+					.filter(i => !i.lost);
 			},
 
 			async request({
@@ -1005,7 +1190,7 @@ try {
 				withCredentials = false,
 				timeout = 0
 			}) {
-				if (!server || !this.list[server] || !this.list[server].ip)
+				if (!server || !this.list[server] || !this.list[server].ip || this.list[server].lost)
 					throw { code: -1, description: `Proxy Server Undefined, Invalid or is not Online!` }
 
 				clog("DEBG", `Sending request with proxy server ${server}`, arguments[0]);
@@ -1049,7 +1234,7 @@ try {
 				url,
 				name
 			}) {
-				if (!server || !this.list[server] || !this.list[server].ip)
+				if (!server || !this.list[server] || !this.list[server].ip || this.list[server].lost)
 					throw { code: -1, description: `Proxy Server Undefined, Invalid or is not Online!` }
 
 				let response = await myajax({
@@ -1076,8 +1261,10 @@ try {
 			line: 1,
 	
 			init() {
+				new Scrollable(this.log);
+
 				this.log.addEventListener("scroll", (e) => {
-					if (e.target.scrollTop >= (e.target.scrollHeight - e.target.offsetHeight))
+					if (e.target.scrollTop >= (e.target.scrollHeight - e.target.offsetHeight) - 10)
 						this.toBottom();
 					else {
 						this.toBottomBtn.classList.add("show");
@@ -1086,16 +1273,25 @@ try {
 				});
 
 				this.toBottomBtn.addEventListener("click", () => this.toBottom());
-				this.clearBtn.addEventListener("mouseup", (e) => this.clear());
+				this.clearBtn.addEventListener("mouseup", () => this.clear());
 			},
 	
 			setTitle(title) {
 				this.title.innerHTML = title;
 			},
 	
-			write(text) {
+			write(text, overwrite = false) {
+				if (overwrite)
+					this.log.removeChild(this.log.lastChild);
+
 				let logItem = document.createElement("li");
-				logItem.innerHTML = `<l>${this.line}</l>${text}`;
+
+				if (typeof text !== "object" && !text.className)
+					logItem.innerHTML = `<l>${this.line}</l>${text}`;
+				else {
+					logItem.innerHTML = `<l>${this.line}</l>`;
+					logItem.appendChild(text);
+				}
 	
 				this.log.appendChild(logItem);
 				this.line++;
@@ -1106,11 +1302,16 @@ try {
 
 			group(title) {
 				let container = document.createElement("li");
-				container.classList.add("group");
+				container.classList.add("group", "expand");
 
 				let extendBtn = document.createElement("span");
 				extendBtn.classList.add("extend");
-				extendBtn.addEventListener("click", () => container.classList.toggle("expand"));
+				extendBtn.addEventListener("click", () => {
+					container.classList.toggle("expand");
+					
+					if (this.lockLogs)
+						this.toBottom();
+				});
 
 				let titleBox = document.createElement("t");
 				titleBox.classList.add("title");
@@ -1127,7 +1328,13 @@ try {
 
 					write(text) {
 						let logItem = document.createElement("li");
-						logItem.innerHTML = `<l>${this.line}</l>${text}`;
+
+						if (typeof text !== "object" && !text.className)
+							logItem.innerHTML = `<l>${this.line}</l>${text}`;
+						else {
+							logItem.innerHTML = `<l>${this.line}</l>`;
+							logItem.appendChild(text);
+						}
 			
 						content.appendChild(logItem);
 						this.line++;
@@ -1418,7 +1625,7 @@ try {
 			clog("DEBG", {
 				text: `tabID ${tabId}`,
 				padding: 10,
-				seperate: true,
+				separate: true,
 				color: flatc("gray")
 			}, `scriptReload = ${doScriptListReload}`, changeInfo);
 		},
@@ -1552,9 +1759,10 @@ try {
 				itemBox.classList.add("item");
 	
 				if (!item.allow)
-					itemBox.setAttribute("disabled", "");
-	
-				itemBox.innerHTML = `
+					itemBox.setAttribute("disabled", true);
+
+				itemBox.innerHTML += `
+					<img class="icon" src="${SERVER_ADDR()}/api/scripts/icon?id=${item.id}">
 					<span class="left">
 						<t class="name">${item.name}</t>
 						<t class="description">${item.description}</t>
@@ -1641,7 +1849,7 @@ try {
 				triBg(item, {
 					color: item.dataset.triColor || "gray",
 					triangleCount: item.dataset.triCount || 16
-				})
+				});
 	
 			this.mainBox.dataset.layout = id;
 			delete pId;
@@ -1658,14 +1866,16 @@ try {
 				emptyNode(this.container);
 				this.container.setAttribute("layout", layout);
 				this.container.append(...node.childNodes);
-				window.resizeTo(1340, window.outerHeight);
+				window.resizeTo(1355, window.outerHeight);
 				this.container.classList.add("show");
+				smenu.container.classList.add("fixed");
 			},
 	
 			hide() {
 				this.container.classList.remove("show");
 				emptyNode(this.container);
 				window.resizeTo(420, window.outerHeight);
+				smenu.container.classList.remove("fixed");
 			}
 		},
 	
@@ -1682,7 +1892,11 @@ try {
 			return new Promise((resolve, reject) => {
 				chrome.storage.local.get(key, (res) => {
 					clog("INFO", "Fetch data from chrome storage success", res);
-					resolve(res);
+
+					if (key.length === 1)
+						resolve(res[key[0]] || null);
+					else
+						resolve(res);
 				});
 			})
 		},
@@ -1781,12 +1995,12 @@ try {
 				const setup = async (settingList, { confirm = "Bắt đầu", cancel = "Hủy", enableSave = true, saveKey = null } = {}) => {
 					return new Promise(async (resolve, reject) => {
 						emptyNode(this.script.settings.formList);
-						const dataSaveKey = `settings.${id}${(typeof saveKey === "string" ? `.${saveKey}` : ``)}`
+						const dataSaveKey = `settings.${id}${(typeof saveKey === "string" ? `.${saveKey}` : ``)}`;
 						let savedSettings = {}
 	
 						// Load saved settings
 						if (enableSave)
-							savedSettings = (await this.dataLoad(dataSaveKey))[dataSaveKey] || {};
+							savedSettings = (await this.dataLoad(dataSaveKey)) || {};
 	
 						for (let key of Object.keys(settingList)) {
 							let item = settingList[key];
@@ -1849,15 +2063,12 @@ try {
 							}
 	
 							else if (item.type === "note") {
-								let group = document.createElement("div");
-								group.classList.add("note", item.level || "info");
-								
-								let inner = document.createElement("div");
-								inner.classList.add("inner");
-								inner.innerHTML = item.text;
-	
-								group.appendChild(inner);
-								input = { group: group }
+								let note = createNote({
+									level: item.level || "info",
+									message: item.text
+								});
+
+								input = { group: note.group }
 							}
 	
 							else if (item.type === "customNode") {
@@ -1866,13 +2077,13 @@ try {
 							}
 							
 							else if (item.type === "checkbox") {
-								input = createSwitch({
+								input = createCheckbox({
 									label: item.label,
 									color: item.color || "pink",
 									value: item.value || false
 								});
 								
-								if (typeof item.disabled !== "undefined")
+								if (typeof item.disabled === "boolean")
 									input.input.disabled = item.disabled;
 							}
 	
@@ -1897,12 +2108,13 @@ try {
 										}
 									}
 								
-								let _i = createSwitch({
+								let _i = createCheckbox({
 									label: item.label,
 									color: item.color || "blue",
 									value: item.value || false,
 									type: "radio"
 								});
+
 								_i.input.addEventListener("change", e => settingList[item.name].triggerChange(e));
 								_i.input.name = item.name;
 								_i.input.value = key;
@@ -1921,7 +2133,7 @@ try {
 								group.appendChild(label);
 	
 								for (let _i of item.list) {
-									let btn = createSwitch({
+									let btn = createCheckbox({
 										label: _i.name,
 										color: _i.color || "blue",
 										value: _i.checked || false,
@@ -1981,7 +2193,7 @@ try {
 	
 						this.script.settings.formSubmit.innerText = confirm;
 						this.script.settings.formCancel.innerText = cancel;
-						this.script.settings.formCancel.onmouseup = e => { scriptCancelHandler(true); this.changeLayout(3) }
+						this.script.settings.formCancel.onmouseup = () => { scriptCancelHandler(true); this.changeLayout(3) }
 						this.changeLayout(5);
 	
 						// Form submit action
@@ -2105,7 +2317,7 @@ try {
 					sounds.confirm(2);
 				}
 	
-				const runInfo = async (data = {}) => {
+				const runInfo = (data = {}) => {
 					if (scriptStopped)
 						throw { code: 0, description: "Script Stopped" }
 
@@ -2126,8 +2338,8 @@ try {
 				}
 
 				const sendBeacon = async (arg) => await this.sendBeacon(arg);
-	
-				const writeLog = (...args) => {
+
+				const writeLog = (text, overwrite = false) => {
 					if (scriptStopped)
 						throw { code: 0, description: "Script Stopped" }
 
@@ -2135,10 +2347,10 @@ try {
 						text: id,
 						color: flatc("green"),
 						padding: 6,
-						seperate: true
-					}, ...args);
+						separate: true
+					}, sanitizeHTML(text));
 	
-					this.logsViewer.write(args.filter(i => (typeof i === "string") || i.text).join(" > "));
+					this.logsViewer.write(text, overwrite);
 				}
 
 				const logGroup = (title) => this.logsViewer.group(title);
@@ -2274,7 +2486,7 @@ try {
 					this.settingsTemplate = settings;
 					
 					//* LOAD SAVED SETTINGS
-					let savedSettings = (await core.dataLoad(this.settingsSaveKey))[this.settingsSaveKey] || {};
+					let savedSettings = (await core.dataLoad(this.settingsSaveKey)) || {};
 					this.settings = savedSettings;
 	
 					for (let key of Object.keys(this.settingsTemplate)) {
@@ -2377,7 +2589,7 @@ try {
 						}
 	
 						else if (item.type === "checkbox") {
-							input = createSwitch({
+							input = createCheckbox({
 								label: item.label,
 								color: item.color || "pink",
 								value: item.value || false
@@ -2397,7 +2609,7 @@ try {
 							group.appendChild(label);
 	
 							for (let _i of item.list) {
-								let btn = createSwitch({
+								let btn = createCheckbox({
 									label: _i.name,
 									color: _i.color || "blue",
 									value: _i.checked || false,
@@ -2587,7 +2799,7 @@ try {
 									text: this.data.id,
 									color: flatc("green"),
 									padding: 6,
-									seperate: true
+									separate: true
 								}, info);
 	
 								this.DOM.info.status.innerText = info;
@@ -2645,7 +2857,7 @@ try {
 								text: this.data.id,
 								color: flatc("green"),
 								padding: 6,
-								seperate: true
+								separate: true
 							}, ...args);
 	
 						this.DOM.info.status.innerText = `Đang chờ phản hồi`;
@@ -2978,66 +3190,9 @@ try {
 		}
 	}
 	
-	const errorHandler = async (error, returnable = false) => {
-		if (typeof error.code === "number" && error.code === 0)
-			return;
-
-		clog("ERRR", error);
-		splash.errored();
-	
-		let e = (error.code && error.data && error.data.code)
-			?	`[${error.code} ${error.data.code}]`
-			:	error.code ? `[${error.code}]`
-			:	error.name
-			||	error.data.name
-			||	`${error.data.data.file}:${error.data.data.line}`
-	
-		let d = (error.description && error.data && error.data.description)
-			?	`${error.description} (${error.data.description}) ${(error.data.data.file) ? `${error.data.data.file}:${error.data.data.line}` : ""}`
-			:	error.message
-			||	error.description
-			||	error.data.message
-			||	error.data.description
-	
-		let returnBtn = {}
-	
-		if (returnable)
-			returnBtn.back = { text: "Quay lại", color: "green" }
-	
-		let errorContainer = document.createElement("div");
-	
-		let errorBox = document.createElement("pre");
-		errorBox.classList.add("dark", "break");
-		errorBox.innerText = `${e} >>> ${d}`;
-		errorBox.style.fontSize = "16px";
-		errorContainer.appendChild(errorBox);
-	
-		if (error.stack) {
-			let errorStack = document.createElement("ul");
-			errorStack.classList.add("textView");
-			errorStack.innerHTML = error.stack.split("\n").map(line => `<li>${line}</li>`).join("");
-			errorContainer.appendChild(errorStack);
-		}
-	
-		await popup.show({
-			windowTitle: "Error Handler",
-			title: "Toang Rồi Ông Giáo Ạ!",
-			message: "EXCEPTION OCCURED",
-			description: "Một lỗi không mong muốn đã sảy ra!",
-			level: "error",
-			customNode: errorContainer,
-			buttonList: {
-				contact: { text: "Báo Lỗi", color: "pink", resolve: false, onClick: () => window.open(CONTACT_ADDR, "_blank") },
-				...returnBtn
-			}
-		})
-	
-		_gaq.push(["_trackEvent", core.session.keyData.name, "errored", `${e} >>> ${d}`]);
-	}
-	
 	window.addEventListener(
 		"DOMContentLoaded",
-		async (e) => {
+		async () => {
 			await core.init().catch(errorHandler);
 
 			if (STATE === "indev")

@@ -21,11 +21,12 @@
 	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/input.css" />
 	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/table.css" />
 	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/switch.css" />
-	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/switch.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/button.css" />
 	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/progressBar.css" />
 	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/spinner.css" />
 	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/textView.css" />
-	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/button.css" />
+	<link rel="stylesheet" type="text/css" media="screen" href="/assets/css/smenu.css" />
+
 	<!-- Main Script -->
 	<link rel="stylesheet" type="text/css" media="screen" href="tutorial.css" />
 	<link rel="stylesheet" type="text/css" media="screen" href="subScreen.css" />
@@ -93,7 +94,9 @@
 		</div>
 
 		<div class="container">
-			<div class="scriptContainer">
+			<div id="userSettings"></div>
+
+			<div class="panel scriptContainer">
 				<div class="announcement" id="announcementBox"></div>
 
 				<div id="scriptPageInfo" class="header" data-tri-layout="3" data-tri-color="gray">
@@ -109,7 +112,7 @@
 					</span>
 				</div>
 
-				<div class="scriptList">
+				<div id="scriptListContainer" class="scriptList">
 					<div id="scriptAutorunList" class="itemList autorun"></div>
 					<div id="scriptThisPageList" class="itemList thisPage"></div>
 					<div id="scriptUndependList" class="itemList undepend"></div>
@@ -117,7 +120,7 @@
 				</div>
 			</div>
 
-			<div id="scriptSettings" class="scriptSettings">
+			<div id="scriptSettings" class="panel scriptSettings">
 				<div id="scriptSettingsHeader" class="header">
 					<div class="simpleSpinner"></div>
 					<t id="scriptSettingsHeaderMessage" class="message">Đang tải</t>
@@ -139,7 +142,7 @@
 				</form>
 			</div>
 
-			<div class="scriptRunLogs">
+			<div class="panel scriptRunLogs">
 				<div class="header">
 					<t id="scriptRunLogsTitle" class="title">logsViewer</t>
 					<span id="scriptRunLogsClear" class="clear sound" data-soundhover data-soundselect></span>
@@ -183,50 +186,7 @@
 
 		<!--! UNUSED, WILL MAKE USE OF THIS IN THE FUTURE -->
 		<div id="proxyInfo" class="proxy"></div>
-
-		<div id="toolInfo" class="toolInfo" data-optimize-target="7">
-			<div class="header">
-				<img class="icon" src="/assets/img/icon@128x128.png">
-				<t id="toolInfoName" class="toolName">appname</t>
-
-				<div class="toolDetail">
-					<t id="toolInfoVersion" class="version">0.0</t>
-					<t id="toolInfoCodename" class="codename">bruh</t>
-				</div>
-				
-				<t id="toolInfoCopyright" class="copyright">no data</t>
-
-				<div class="button">
-					<button id="toolInfoTOS" class="sq-btn rainbow sound" data-soundhover>Điều Khoản Sử Dụng</button>
-					<button id="toolInfoChangelog" class="sq-btn pink sound" data-soundhover>Changelog</button>
-					<button id="toolInfoChangeServer" class="sq-btn green sound" data-soundhover>Đổi Máy Chủ</button>
-				</div>
-			</div>
-
-			<t class="title">Bản Quyền</t>
-
-			<div id="toolInfoLicense" class="licenseInfo" data-tri-layout="7" data-tri-color="red">
-				<span class="left">
-					<t id="toolInfoLicenseName" class="name">Bạn chưa đăng nhập</t>
-					<t id="toolInfoLicenseTags" class="tags"></t>
-
-					<div id="toolInfoLicenses" class="licenses"></div>
-
-					<div id="toolInfoLicenseKey" class="licenseKey">
-						<t class="keyDesc">Khóa Bản Quyền</t>
-						<t id="toolInfoLicenseKeyKey" class="key"></t>
-					</div>
-				</span>
-
-				<span class="right">
-					<div id="toolInfoLicenseKeyBtn" class="keyBtn sound" data-soundhoversoft data-soundselectsoft></div>
-				</span>
-			</div>
-
-			<t class="title">The Team</t>
-
-			<span id="toolInfoAuthor" class="authorList"></span>
-		</div>
+		<div id="toolInfo" class="toolInfo" data-optimize-target="7"></div>
 
 		<div id="tutorialPage" class="tutorial" data-optimize-target="8">
 			<span class="cardContainer">
@@ -318,8 +278,12 @@
 	
 	<!-- Javascript lib -->
 	<script type="text/javascript" src="/assets/js/belibrary.js"></script>
+	<script type="text/javascript" src="/assets/js/errorHandler.js"></script>
+	<script type="text/javascript" src="/assets/js/scrollable.js"></script>
+	<script type="text/javascript" src="/assets/js/smenu.js"></script>
 	<script type="text/javascript" src="/assets/js/sounds.js"></script>
 	<script type="text/javascript" src="crypto-js.min.js"></script>
+	<script type="text/javascript" src="xls-export.js"></script>
 
 	<!-- Main script -->
 	<script type="text/javascript" src="core.js"></script>

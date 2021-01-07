@@ -370,3 +370,98 @@
     left: unset;
     margin-left: 20px;
 }
+
+/** accountsRegister LAYOUT */
+
+#subScreen[layout="accountsRegister"] > .header {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    margin: 10px 20px;
+}
+
+#subScreen[layout="accountsRegister"] > .header > .left {
+    flex-grow: 1;
+
+    font-family: Nunito;
+    font-size: 24px;
+    font-weight: 800;
+}
+
+#subScreen[layout="accountsRegister"] > table {
+    position: relative;
+
+    width: calc(100% - 40px);
+	margin: 0 20px;
+	box-sizing: border-box;
+	border-spacing: 0;
+
+    font-family: "Calibri";
+    font-size: 16px;
+}
+
+#subScreen[layout="accountsRegister"] > table > tr:not(:first-child) {
+    counter-increment: accountsRegisterNth;
+}
+
+#subScreen[layout="accountsRegister"] > table > tr > th {
+    padding: 5px 10px;
+    padding-bottom: 10px;
+    
+    font-family: Nunito;
+    font-size: 11px;
+    font-weight: 900;
+    text-align: right;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    color: #b4b4b4;
+}
+
+#subScreen[layout="accountsRegister"] > table > tr > th:nth-child(1) {
+    padding-left: 15px;
+}
+
+#subScreen[layout="accountsRegister"] > table > tr > td {
+    padding: 5px 10px;
+    font-family: Calibri;
+    font-weight: bold;
+    text-align: right;
+}
+
+#subScreen[layout="accountsRegister"] > table > tr:nth-child(even) > td {
+    background-color: #252525;
+}
+
+#subScreen[layout="accountsRegister"] > table > tr:nth-child(even) > td:first-child {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+#subScreen[layout="accountsRegister"] > table > tr:nth-child(even) > td:last-child {
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+#subScreen[layout="accountsRegister"] > table > tr > td:first-child::before {
+    content: counter(accountsRegisterNth);
+}
+
+#subScreen[layout="accountsRegister"] > table > tr > td:last-child > font {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
+    width: 80px;
+    font-family: Consolas;
+
+    white-space: pre-wrap;
+    padding-left: 20px;
+}
+
+#subScreen[layout="accountsRegister"] > table > tr > td:last-child > font > span {
+    display: inline-block;
+    width: 16px;
+    text-align: center;
+}

@@ -51,10 +51,14 @@ function myajax({
 		}
 
 		let xhr = new XMLHttpRequest();
-		let formData = new FormData();
+		let formData = null;
 
-		for (let key of Object.keys(form))
-			formData.append(key, form[key]);
+		if (method.toUpperCase() === "POST") {
+			formData = new FormData();
+			
+			for (let key of Object.keys(form))
+				formData.append(key, form[key]);
+		}
 
 		let queryKey = Object.keys(query);
 		for (let key of queryKey)
@@ -90,7 +94,7 @@ function myajax({
 						text: `HTTP ${this.status}:`
 					}, this.statusText);
 
-					let errorObj = { code: 1, description: `HTTP ${this.status}: ${this.statusText} (${method} ${url})`, data: { method, url } }
+					let errorObj = { code: 1, description: `HTTP ${this.status}: ${this.statusText} (${method} ${url})`, data: { status: this.status, method, url } }
 					error(errorObj);
 					reject(errorObj);
 
@@ -111,6 +115,9 @@ function myajax({
 
 						return;
 					}
+
+					if (!response.status)
+						response.status = this.status;
 
 					if (this.status >= 400) {
 						if (typeof response.code === "number" && response.code !== 0 && response.code < 100) {
@@ -146,7 +153,7 @@ function myajax({
 								return;
 							}
 						}
-						
+
 						let errorObj = { code: 3, description: `HTTP ${this.status}: ${this.statusText} (${method} ${url})`, data: response }
 						error(errorObj);
 						reject(errorObj);
@@ -217,7 +224,7 @@ function myajax({
 
 		xhr.setRequestHeader("Accept", `${type === "json" ? "application/json" : "text/plain"};charset=UTF-8`);
 		xhr.send(sendData);
-	})
+	});
 }
 
 function delayAsync(time) {
@@ -314,6 +321,13 @@ function htmlToElement(html) {
 	return template.content.firstChild;
 }
 
+/**
+ * Deprecated
+ * @param {*} type 
+ * @param {*} __class 
+ * @param {*} data 
+ * @param {*} __keypath 
+ */
 function buildElementTree(type = "div", __class = [], data = new Array(), __keypath = "") {
 	let svgTag = ["svg", "g", "path", "line", "circle", "polyline"]
 
@@ -328,9 +342,9 @@ function buildElementTree(type = "div", __class = [], data = new Array(), __keyp
 
 	for (let i = 0; i < data.length; i++) {
 		let d = data[i];
+		let k = __keypath + (__keypath === "" ? "" : ".") + d.name;
 
-		if (typeof d.list == "object") {
-			let k = __keypath + (__keypath === "" ? "" : ".") + d.name;
+		if (typeof d.list === "object") {
 			let t = buildElementTree(d.type, d.class, d.list, k);
 
 			t.tree.dataset.name = d.name;
@@ -338,13 +352,33 @@ function buildElementTree(type = "div", __class = [], data = new Array(), __keyp
 			(d.id) ? t.tree.id = d.id : 0;
 			(d.for) ? t.tree.htmlFor = d.for : 0;
 			(d.inpType) ? t.tree.type = d.inpType : 0;
+			(d.html) ? t.tree.innerHTML = d.html : 0;
 			(d.text) ? t.tree.innerText = d.text : 0;
+
+			if (typeof d.data === "object")
+				for (let key of Object.keys(d.data))
+					t.tree.dataset[key] = d.data[key];
+			
 			tree.appendChild(t.tree);
 
 			objtree[d.name] = t.tree;
-			Object.assign(objtree[d.name], t.obj);
-		} else {
-			let k = __keypath + (__keypath === "" ? "" : ".") + d.name;
+		} else if (typeof d === "object") {
+			if (typeof d.node === "object") {
+				let node = (d.node.group && d.node.group.classList)
+					? d.node.group
+					: (d.node.container && d.node.container.classList)
+						? d.node.container
+						: d.node;
+
+				node.dataset.name = d.name;
+				node.dataset.path = k;
+
+				tree.appendChild(node);
+				objtree[d.name] = d.node;
+
+				continue;
+			}
+
 			let t = (svgTag.includes(d.type))
 				? document.createElementNS("http://www.w3.org/2000/svg", d.type)
 				: document.createElement(d.type);
@@ -358,7 +392,12 @@ function buildElementTree(type = "div", __class = [], data = new Array(), __keyp
 			(d.id) ? t.id = d.id : 0;
 			(d.for) ? t.htmlFor = d.for : 0;
 			(d.inpType) ? t.type = d.inpType : 0;
+			(d.html) ? t.innerHTML = d.html : 0;
 			(d.text) ? t.innerText = d.text : 0;
+
+			if (typeof d.data === "object")
+				for (let key of Object.keys(d.data))
+					t.dataset[key] = d.data[key];
 
 			tree.appendChild(t);
 			objtree[d.name] = t;
@@ -369,6 +408,10 @@ function buildElementTree(type = "div", __class = [], data = new Array(), __keyp
 		obj: objtree,
 		tree: tree
 	}
+}
+
+function buildNodeTree() {
+
 }
 
 function checkServer(ip, callback = () => {}) {
@@ -535,6 +578,41 @@ function convertSize(bytes) {
 	return `${round(bytes, 2)} ${sizes[i]}`;
 }
 
+/**
+ * Compare Version
+ * @param	{String}			localVersion
+ * @param	{String}			remoteVersion
+ * @returns {String}	"major", "minor", "patch", "latest"
+ */
+function versionCompare(localVersion, remoteVersion, {
+	ignoreTest = false
+} = {}) {
+	const regex = /^(?:v|)(\d)\.(\d)\.(\d)\-(.+)$/gm;
+	let testTags = ["beta", "indev", "debug", "test"]
+	let value = "latest";
+
+	let localRe = regex.exec(localVersion); regex.lastIndex = 0;
+	let remoteRe = regex.exec(remoteVersion);
+
+	if (!localRe || !remoteRe)
+		throw { code: -1, description: `versionCompare(${localVersion}, ${remoteVersion}): Invalid version string` }
+
+	let local = { major: parseInt(localRe[1]), minor: parseInt(localRe[2]), patch: parseInt(localRe[3]), tag: localRe[4] }
+	let remote = { major: parseInt(remoteRe[1]), minor: parseInt(remoteRe[2]), patch: parseInt(remoteRe[3]), tag: remoteRe[4] }
+
+	for (let key of ["major", "minor", "patch"])
+		if (remote[key] > local[key]) {
+			value = key;
+			break;
+		} else if (local[key] > remote[key])
+			break;
+
+	if (!ignoreTest && testTags.includes(remote.tag))
+		return "latest";
+
+	return value;
+}
+
 function priceFormat(num) {
 	return num.toFixed(2).replace(/(\d)(?=(\d{3})+(?!\d))/g, "$1,");
 }
@@ -562,10 +640,10 @@ class stopClock {
 	}
 }
 
-class pager {
+class Pager {
 	constructor(container, showCount = 20) {
 		if (!container.classList)
-			throw { code: -1, description: `pager: container is not a valid node` }
+			throw { code: -1, description: `Pager: container is not a valid node` }
 
 		this.container = container;
 		this.listData = []
@@ -573,6 +651,8 @@ class pager {
 		this.updateHandler = () => {}
 		this.filterHandler = null;
 		this.showCount = showCount;
+		this.apiEndpoint = null;
+		this.apiToken = null;
 		this.__currentPage = 1;
 		this.__maxPage = 1;
 	}
@@ -582,94 +662,157 @@ class pager {
 	 */
 	set list(list) {
 		if (typeof list !== "object" || typeof list.length !== "number")
-			throw { code: -1, description: `(set) pager.list: not a valid array` }
+			throw { code: -1, description: `(set) Pager.list: not a valid array` }
 
 		this.listData = list;
 		this.render();
 	}
 
+	/**
+	 * @param {String|Object} api
+	 */
+	set api(api) {
+		if ((typeof api !== "string" && typeof api !== "object") || !api.url || !api.token || api === null)
+			throw { code: -1, description: `(set) Pager.api: not a valid string|data` }
+
+		this.apiEndpoint = api.url || api;
+		if (api.token)
+			this.apiToken = api.token;
+	}
+
 	renderItem(f) {
 		if (typeof f !== "function")
-			throw { code: -1, description: `pager.renderItem: not a valid function` }
+			throw { code: -1, description: `Pager.renderItem(): not a valid function` }
 
 		this.renderItemHandler = f;
 	}
 
 	onUpdate(f) {
 		if (typeof f !== "function")
-			throw { code: -1, description: `pager.onUpdate: not a valid function` }
+			throw { code: -1, description: `Pager.onUpdate(): not a valid function` }
 
 		this.updateHandler = f;
 	}
 
 	setFilter(f) {
 		if (typeof f !== "function")
-			throw { code: -1, description: `pager.setFilter: not a valid function` }
+			throw { code: -1, description: `Pager.setFilter(): not a valid function` }
 
 		this.filterHandler = f;
 	}
 
-	next() {
+	async next() {
 		this.__currentPage++;
-		this.render();
+		await this.render();
 	}
 
-	back() {
+	async back() {
 		this.__currentPage--;
-		this.render();
+		await this.render();
 	}
 
-	setPage(page) {
+	async setPage(page) {
 		if (typeof page !== "number" && !["first", "last"].includes(page))
-			throw { code: -1, description: `pager.setPage: ${page} is not a valid number/command` }
+			throw { code: -1, description: `Pager.setPage(${page}): not a valid number/command` }
 
 		this.__currentPage = page;
-		this.render();
+		await this.render();
 	}
 
-	render() {
+	async render() {
 		if (this.__currentPage < 1 || this.__currentPage === "first")
 			this.__currentPage = 1;
 
-		let listData = (typeof this.filterHandler === "function") ? this.listData.filter(this.filterHandler) : this.listData;
-		let total = Math.max(listData.length, 1);
-		let maxPage = parseInt(Math.floor(total / this.showCount) + ((total % this.showCount === 0) ? 0 : 1));
+		if (this.apiEndpoint) {
+			if (this.__currentPage > this.__maxPage || this.__currentPage === "last")
+				this.__currentPage = this.__maxPage;
 
-		if (this.__currentPage > maxPage || this.__currentPage === "last")
-			this.__currentPage = maxPage;
+			let response = {}
+			try {
+				response = await myajax({
+					url: this.apiEndpoint,
+					method: "POST",
+					form: {
+						action: "getData",
+						token: this.apiToken,
+						show: this.showCount,
+						page: this.__currentPage
+					}
+				});
+			} catch(e) {
+				if (e.data.code === 6) {
+					clog("WARN", `Không tồn tại trang ${this.currentPage} của nhật ký hệ thống.`, e.data.data);
+					this.__currentPage = 1;
+					this.__maxPage = e.data.data.maxPage;
+					await this.render();
 
-		let from = (this.__currentPage - 1) * this.showCount;
-		let to = Math.min(this.__currentPage * this.showCount - 1, total - 1);
+					return;
+				}
 
-		this.updateHandler({ total, maxPage, currentPage: this.__currentPage, from, to });
-		emptyNode(this.container);
+				throw e;
+			}
 
-		for (let i = from; i <= to; i++)
-			if (listData[i])
-				this.renderItemHandler(listData[i], this.container);
-			else
-				clog("DEBG", `pager.render: listData does not contain data at index`, { text: i, color: flatc("red") });
+			this.__maxPage = response.data.maxPage
+			this.updateHandler({
+				total: response.data.total,
+				maxPage: this.__maxPage,
+				currentPage: this.__currentPage,
+				from: response.data.from,
+				to: response.data.to
+			});
+
+			emptyNode(this.container);
+	
+			for (let i = 0; i <= response.data.lists.length; i++)
+				if (response.data.lists[i])
+					this.renderItemHandler(response.data.lists[i], this.container);
+				else
+					clog("DEBG", `Pager.render(): listData does not contain data at index`, { text: i, color: flatc("red") });
+		} else {
+			let listData = (typeof this.filterHandler === "function") ? this.listData.filter(this.filterHandler) : this.listData;
+			let total = Math.max(listData.length, 1);
+			let maxPage = parseInt(Math.floor(total / this.showCount) + ((total % this.showCount === 0) ? 0 : 1));
+	
+			if (this.__currentPage > maxPage || this.__currentPage === "last")
+				this.__currentPage = maxPage;
+	
+			let from = (this.__currentPage - 1) * this.showCount;
+			let to = Math.min(this.__currentPage * this.showCount - 1, total - 1);
+	
+			this.updateHandler({ total, maxPage, currentPage: this.__currentPage, from, to });
+			emptyNode(this.container);
+	
+			for (let i = from; i <= to; i++)
+				if (listData[i])
+					this.renderItemHandler(listData[i], this.container);
+				else
+					clog("DEBG", `Pager.render(): listData does not contain data at index`, { text: i, color: flatc("red") });
+		}
 	}
 }
 
 class lazyload {
 	constructor({
-		container = null,
-		source = null,
-		classes = null
-	}) {
+		container = undefined,
+		source = undefined,
+		classes = undefined,
+		doLoad = true
+	} = {}) {
 		if (container && container.classList)
 			this.container = container;
 		else
 			this.container = document.createElement("div");
 
-		let _src = null;
+		/**
+		 * @type	{String}	Source
+		 */
+		this._src = null;
 
 		switch (typeof source) {
 			case "string":
 				// Assume as Image Src
 				this.sourceNode = document.createElement("img");
-				_src = source;
+				this._src = source;
 				break;
 		
 			case "object":
@@ -681,12 +824,12 @@ class lazyload {
 						case "image":
 						case "iframe":
 							this.sourceNode = document.createElement(source.type);
-							_src = source.src;
+							this._src = source.src;
 							break;
 
 						case "document":
 							this.sourceNode = document.createElement("embed");
-							_src = source.src;
+							this._src = source.src;
 							break;
 
 						default:
@@ -700,12 +843,12 @@ class lazyload {
 				throw { code: -1, description: `lazyload: source is not a valid string/node/object, got ${typeof source}` }
 		}
 
-		if (!this.sourceNode || !_src)
+		if (!this.sourceNode || !this._src)
 			throw { code: -1, description: `lazyload: an unexpected error occured while creating lazyload object` }
 
 		this.isLoaded = false;
 		this.isErrored = false;
-		this.onLoadedHandler = null;
+		this.onLoadedHandler = [];
 		this.onErroredHandler = null;
 
 		this.container.classList.add("lazyload");
@@ -731,7 +874,16 @@ class lazyload {
 		this.spinner.classList.add("simpleSpinner");
 
 		this.container.append(this.sourceNode, this.spinner);
-		this.src = _src;
+
+		if (doLoad)
+			this.load();
+	}
+
+	load(src) {
+		if (src)
+			this._src = src;
+
+		this.src = this._src;
 	}
 
 	/**
@@ -741,6 +893,13 @@ class lazyload {
 		this.loaded = false;
 		this.errored = false;
 		this.sourceNode.src = src;
+	}
+
+	/**
+	 * @returns {String}
+	 */
+	get src() {
+		return this.sourceNode.src;
 	}
 
 	/**
@@ -756,6 +915,9 @@ class lazyload {
 		this.isLoaded
 			? this.container.dataset.loaded = true
 			: this.container.removeAttribute("data-loaded");
+
+		for (let f of this.onLoadedHandler)
+			f();
 	}
 
 	get loaded() {
@@ -788,7 +950,18 @@ class lazyload {
 		if (typeof f !== "function")
 			throw { code: -1, description: `pager.onLoaded: not a valid function` }
 
-		this.onLoadedHandler = f;
+		this.onLoadedHandler.push(f);
+	}
+
+	wait() {
+		return new Promise((resolve, reject) => {
+			if (this.loaded) {
+				resolve();
+				return;
+			}
+
+			this.onLoaded(() => resolve());
+		});
 	}
 
 	/**
@@ -947,11 +1120,12 @@ function oscColor(color) {
  * @param	{String}	color	Color
  */
 function triBg(element, {
-	speed = 26,
+	speed = 34,
 	color = "gray",
 	scale = 2,
 	triangleCount = 38
 } = {}) {
+	const DARKCOLOR = ["brown", "dark", "darkRed", "darkGreen", "darkBlue"]
 	let current = element.querySelector(".triBgContainer");
 
 	if (current)
@@ -963,25 +1137,38 @@ function triBg(element, {
 	let container = document.createElement("div");
 	container.classList.add("triBgContainer");
 	container.dataset.count = triangleCount;
-	container.dataset.anim = (scale > 5)
-		? "big"
-		: (scale > 1)
-			? "normal"
-			: "small";
+
+	const updateSize = () => {
+		let scaleStep = [50, 60, 70, 80, 90, 100, 120, 140, 160, 180, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 1000]
+
+		for (let i = 0; i < scaleStep.length; i++)
+			if (scaleStep[i] >= (container.offsetHeight + (0.866 * 30 * 2 * scale))) {
+				container.dataset.anim = scaleStep[i];
+				return;
+			}
+
+		container.dataset.anim = "full";
+	}
+
+	(new ResizeObserver(() => updateSize())).observe(container);
+	updateSize();
 
 	for (let i = 0; i < triangleCount; i++) {
-		let randScale = randBetween(0.4, 2.0, false);
-		let randBright = ["brown", "dark"].indexOf(color) !== -1
+		let randScale = randBetween(0.4, 2.0, false) * scale;
+		let width = 15 * randScale;
+		let height = 0.866 * (30 * randScale);
+
+		let randBright = DARKCOLOR.includes(color)
 			? randBetween(1.1, 1.3, false)
 			: randBetween(0.9, 1.2, false)
 
 		let randLeftPos = randBetween(0, 98, false);
-		let delay = randBetween(- speed / 2, speed / 2, false);
+		let delay = randBetween(-speed / 2, speed / 2, false);
 
 		let triangle = document.createElement("span");
 		triangle.style.filter = `brightness(${randBright})`;
-		triangle.style.transform = `translate(-50%, -50%) scale(${randScale * scale})`;
-		triangle.style.left = `${randLeftPos}%`;
+		triangle.style.borderWidth = `0 ${width}px ${height}px`;
+		triangle.style.left = `calc(${randLeftPos}% - ${width}px)`;
 		triangle.style.animationDelay = `${delay}s`;
 		triangle.style.animationDuration = `${speed / randScale}s`;
 
@@ -993,6 +1180,14 @@ function triBg(element, {
 	return {
 		setColor(color) {
 			element.dataset.triColor = color;
+
+			for (let triangle of container.childNodes) {
+				let randBright = DARKCOLOR.includes(color)
+					? randBetween(1.1, 1.3, false)
+					: randBetween(0.9, 1.2, false)
+
+				triangle.style.filter = `brightness(${randBright})`;
+			}
 		}
 	}
 }
@@ -1008,6 +1203,34 @@ function randBetween(min, max, toInt = true) {
 	return toInt
 		? Math.floor(Math.random() * (max - min + 1) + min)
 		: (Math.random() * (max - min) + min)
+}
+
+/**
+ * Generate Random String
+ * @param	{Number}	len		Length of the randomized string
+ * @param	{String}	charSet
+ * @returns	{String}
+ */
+function randString(len = 16, charSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789") {
+	let randomString = "";
+
+	for (let i = 0; i < len; i++) {
+		let p = Math.floor(Math.random() * charSet.length);
+		randomString += charSet.substring(p, p + 1);
+	}
+
+	return randomString;
+}
+
+/**
+ * Pick a random item in an Array
+ * @param {Array} array 
+ */
+function randItem(array) {
+	if (typeof array.length !== "number")
+		throw { code: -1, description: `randItem(): not a valid array` }
+
+	return array[randBetween(0, array.length - 1, true)];
 }
 
 const Easing = {
@@ -1199,23 +1422,6 @@ function Animator(duration, timingFunction, animate) {
 	}
 }
 
-/**
- * Generate Random String
- * @param	{Number}	len		Length of the randomized string
- * @param	{String}	charSet
- * @returns	{String}
- */
-function randString(len = 16, charSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789") {
-	let randomString = "";
-
-	for (let i = 0; i < len; i++) {
-		let p = Math.floor(Math.random() * charSet.length);
-		randomString += charSet.substring(p, p + 1);
-	}
-
-	return randomString;
-}
-
 if (typeof $ !== "function")
 	/**
 	 * A shorthand of querySelector
@@ -1259,7 +1465,10 @@ function createInput({
 	label = "Sample Input",
 	value = "",
 	color = "default",
-	required = false
+	required = false,
+	autofill = true,
+	spellcheck = false,
+	options = {}
 } = {}) {
 	let formGroup = document.createElement("div");
 	formGroup.classList.add("formGroup");
@@ -1267,23 +1476,44 @@ function createInput({
 	formGroup.dataset.soundhoversoft = "";
 	formGroup.dataset.soundselectsoft = "";
 
-	if (sounds)
+	if (typeof sounds === "object")
 		sounds.applySound(formGroup);
 
+	if (!["text", "textarea", "number", "date", "time", "select"].includes(type))
+		type = "text";
+
+	/**
+	 * @type {HTMLInputElement}
+	 */
 	let formField = document.createElement(type === "textarea" ? type : "input");
+
 	formField.type = type;
 	formField.id = id;
 	formField.classList.add("formField");
 	formField.placeholder = label;
-	formField.value = value;
+	formField.autocomplete = autofill ? "on" : "off";
+	formField.spellcheck = !!spellcheck;
 
 	if (required)
 		formField.required = true;
 
-	if (type === "textarea") {
-		formField.style.fontFamily = "Consolas";
-		formField.style.fontWeight = "bold";
-		formField.style.fontSize = "15px";
+	switch(type) {
+		case "textarea":
+			formField.style.fontFamily = "Consolas";
+			formField.style.fontWeight = "bold";
+			formField.style.fontSize = "15px";
+			break;
+
+		case "select": {
+			for (let key of Object.keys(options)) {
+				let option = document.createElement("option");
+				option.value = key;
+				option.innerHTML = options[key];
+				formField.appendChild(option);
+			}
+
+			break;
+		}
 	}
 
 	let formLabel = document.createElement("label");
@@ -1294,24 +1524,80 @@ function createInput({
 	formGroup.appendChild(formField);
 	formGroup.appendChild(formLabel);
 
-	return { group: formGroup, input: formField }
+	// Events
+	let onInputHandlers = [];
+	let onChangeHandlers = [];
+
+	formField.addEventListener("input", (e) => onInputHandlers.forEach(f => f(formField.value, e)));
+	formField.addEventListener("change", (e) => onChangeHandlers.forEach(f => f(formField.value, e)));
+
+	formField.value = value;
+
+	return {
+		group: formGroup,
+		input: formField,
+
+		set({
+			value,
+			label,
+			options
+		}) {
+			if (typeof options === "object" && formField.tagName.toLowerCase() === "select") {
+				emptyNode(formField);
+
+				for (let key of Object.keys(options)) {
+					let option = document.createElement("option");
+					option.value = key;
+					option.innerHTML = options[key];
+					formField.appendChild(option);
+				}
+			}
+
+			if (typeof value !== "undefined") {
+				formField.value = value;
+				formField.dispatchEvent(new Event("input"));
+				formField.dispatchEvent(new Event("change"));
+			}
+
+			if (label)
+				formLabel.innerText = label;
+		},
+
+		/**
+		 * @param {function} f
+		 */
+		onInput: (f) => {
+			if (typeof f !== "function")
+				throw { code: -1, description: `createInput(${type}).onInput(): Not a valid function` }
+
+			onInputHandlers.push(f);
+			f(formField.value, null);
+		},
+
+		/**
+		 * @param {function} f
+		 */
+		onChange: (f) => {
+			if (typeof f !== "function")
+				throw { code: -1, description: `createInput(${type}).onChange(): Not a valid function` }
+
+			onChangeHandlers.push(f);
+			f(formField.value, null);
+		}
+	}
 }
 
 /**
- * Create Switch Element, require switch.css
- * @param	{String}	text		Switch Label
- * @param	{String}	color		Switch Color
- * @param	{String}	value		Switch Value
- * @param	{String}	type		Switch Type
+ * Create Checkbox Element, require switch.css
  */
-function createSwitch({
+function createCheckbox({
 	label = "Sample Switch",
 	color = "pink",
 	value = false,
 	type = "checkbox"
 } = {}) {
 	let container = document.createElement("div");
-	container.classList.add("switchContainer");
+	container.classList.add("checkboxContainer");
 	container.dataset.soundhoversoft = "";
 	sounds.applySound(container);
 
@@ -1327,7 +1613,7 @@ function createSwitch({
 	input.checked = value;
 	input.dataset.soundcheck = "";
 
-	if (sounds)
+	if (typeof sounds === "object")
 		sounds.applySound(input);
 
 	let mark = document.createElement("span");
@@ -1364,7 +1650,7 @@ function createSlider({
 	o.dataset.color = color;
 	o.dataset.soundhover = true;
 
-	if (sounds)
+	if (typeof sounds === "object")
 		sounds.applySound(o);
 
 	o.input.type = "range";
@@ -1405,6 +1691,11 @@ function createSlider({
 		group: container.tree,
 		input: o.input,
 
+		setValue(value) {
+			o.input.value = value;
+			o.input.dispatchEvent(new Event("input"));
+		},
+
 		onInput(f) {
 			if (!f || typeof f !== "function")
 				throw { code: -1, description: "createSlider().onInput(): not a valid function" }
@@ -1429,19 +1720,163 @@ function createSlider({
  * @param	{String}	color		Button Color
  * @returns	{HTMLButtonElement}		Button Element
  */
-function createBtn(text, color = "blue") {
-	let btn = document.createElement("button");
-	btn.classList.add("sq-btn");
-	btn.type = "button";
-	btn.innerText = text;
-	btn.dataset.color = color;
-	btn.dataset.soundhover = "";
-	btn.dataset.soundselect = "";
+function createBtn(text, color = "blue", {
+	element = "button",
+	type = "button",
+	icon = null,
+	align = "left",
+	complex = false
+} = {}) {
+	let button = document.createElement(element);
+	button.classList.add("sq-btn");
+	button.type = type;
+	button.dataset.color = color;
+	button.dataset.soundhover = "";
+	button.dataset.soundselect = "";
 
-	if (sounds)
-		sounds.applySound(btn);
+	let textNode = document.createElement("span");
+	textNode.classList.add("text");
+	textNode.innerText = text;
 
-	return btn;
+	if (icon)
+		button.innerHTML = `<icon class="${align}" data-icon="${icon}"></icon>`;
+
+	button.appendChild(textNode);
+	button.changeText = (text) => textNode.innerText = text;
+
+	if (complex)
+		triBg(button, {
+			scale: 1.6,
+			speed: 12,
+			color: color,
+			triangleCount: 8
+		});
+
+	if (typeof sounds === "object")
+		sounds.applySound(button);
+
+	return button;
+}
+
+function createImageInput({
+	id = randString(6),
+	label = "Sample Image",
+	resetLabel = "Đặt Lại",
+	accept = "image/*",
+	src = "//:0"
+} = {}) {
+	if (!src)
+		src = "//:0";
+
+	let container = document.createElement("div");
+	container.classList.add("imageInput");
+
+	let input = document.createElement("input");
+	input.type = "file";
+	input.id = id;
+	input.accept = accept;
+
+	let labelNode = document.createElement("t");
+	labelNode.classList.add("label");
+	labelNode.innerText = label;
+
+	let resetHandlers = []
+
+	let imageContainer = document.createElement("label");
+	imageContainer.htmlFor = id;
+	imageContainer.title = "Chọn Ảnh";
+	sounds.applySound(imageContainer, ["soundhover", "soundselect"]);
+
+	let lazyloadImage = new lazyload({
+		container: imageContainer,
+		source: src,
+		classes: ["imageBox", item.display || "square"]
+	});
+
+	let resetButton = document.createElement("button");
+	resetButton.type = "button";
+	resetButton.classList.add("sq-btn", "pink", "sound");
+	resetButton.innerText = resetLabel;
+	sounds.applySound(resetButton, ["soundhover", "soundselect"]);
+	
+	let clearButton = document.createElement("icon");
+	clearButton.classList.add("clear");
+	clearButton.dataset.icon = "close";
+	sounds.applySound(clearButton, ["soundhoversoft", "soundselectsoft"]);
+
+	input.addEventListener("change", (e) => {
+		let file = e.target.files[0];
+
+		if (file) {
+			lazyloadImage.src = URL.createObjectURL(file);
+			clearButton.classList.add("show");
+		} else
+			clearButton.classList.remove("show");
+	});
+
+	clearButton.addEventListener("click", () => {
+		clearButton.classList.remove("show");
+		input.value = null;
+		lazyloadImage.src = src;
+	});
+
+	resetButton.addEventListener("click", async (e) => {
+		resetButton.disabled = true;
+
+		for (let f of resetHandlers)
+			await f(e);
+	});
+
+	input.dispatchEvent(new Event("change"));
+	container.append(input, labelNode, imageContainer, clearButton, resetButton);
+
+	return {
+		group: container,
+		input,
+		image: lazyloadImage,
+
+		src(src = "//:0") {
+			if (!src)
+				src = "//:0";
+
+			lazyloadImage.src = src;
+			resetButton.disabled = (src === "//:0");
+		},
+
+		onReset(f) {
+			if (typeof f !== "function")
+				throw { code: -1, description: `createImageInput().onReset(): not a valid function` }
+
+			resetHandlers.push(f);
+		}
+	}
+}
+
+function createNote({
+	level = "info",
+	message = "Smaple Note"
+} = {}) {
+	let container = document.createElement("div");
+	container.classList.add("note");
+	container.dataset.level = level;
+
+	let inner = document.createElement("span");
+	inner.classList.add("inner");
+	inner.innerHTML = message;
+
+	container.appendChild(inner);
+
+	return {
+		group: container,
+
+		set({ level, message } = {}) {
+			if (level)
+				container.dataset.level = level;
+
+			if (message)
+				inner.innerHTML = message;
+		}
+	}
 }
 
 const cookie = {
@@ -1493,7 +1928,7 @@ const cookie = {
 //? |-----------------------------------------------------------------------------------------------|
 
 function clog(level, ...args) {
-	const font = "Calibri";
+	const font = "Consolas";
 	const size = "12";
 	let date = new Date();
 	const rtime = round(sc.stop, 3).toFixed(3);
@@ -1638,7 +2073,7 @@ const popup = {
 	},
 
 	init() {
-		const tree = [{type:"div",class:"popupWindow",name:"popup",list:[{type:"div",class:"header",name:"header",list:[{type:"span",class:"top",name:"top",list:[{type:"t",class:["windowTitle","text-overflow"],name:"windowTitle"},{type:"span",class:"close",name:"close"}]},{type:"span",class:"icon",name:"icon"},{type:"t",class:"text",name:"text"}]},{type:"div",class:"body",name:"body",list:[{type:"div",class:"top",name:"top",list:[{type:"t",class:"message",name:"message"},{type:"t",class:"description",name:"description"}]},{type:"div",class:"note",name:"note",list:[{type:"span",class:"inner",name:"inner"}]},{type:"div",class:"customNode",name:"customNode"},{type:"div",class:"buttonGroup",name:"button"}]}]}];
+		const tree = [{type:"div",class:"popupWindow",name:"popup",list:[{type:"div",class:"header",name:"header",list:[{type:"span",class:"top",name:"top",list:[{type:"t",class:["windowTitle","text-overflow"],name:"windowTitle"},{type:"span",class:"close",name:"close"}]},{type:"icon",name:"icon"},{type:"t",class:"text",name:"text"}]},{type:"div",class:"body",name:"body",list:[{type:"div",class:"top",name:"top",list:[{type:"t",class:"message",name:"message"},{type:"t",class:"description",name:"description"}]},{type:"div",class:"note",name:"note",list:[{type:"span",class:"inner",name:"inner"}]},{type:"div",class:"customNode",name:"customNode"},{type:"div",class:"buttonGroup",name:"button"}]}]}];
 
 		this.tree = buildElementTree("div", "popupContainer", tree);
 		this.popupNode = this.tree.tree;
@@ -1687,7 +2122,12 @@ const popup = {
 			else
 				reject({ code: -1, description: `Unknown level: ${level}` })
 
-			triBg(this.popup.header, { color: (typeof bgColor === "string") ? bgColor : template.bg });
+			triBg(this.popup.header, {
+				scale: 4,
+				speed: 64,
+				color: (typeof bgColor === "string") ? bgColor : template.bg
+			});
+
 			this.popup.header.icon.dataset.icon = (typeof icon === "string") ? icon : template.icon;
 			this.popup.header.setAttribute("theme", (typeof headerTheme === "string") ? headerTheme : template.h);
 			this.popup.body.setAttribute("theme", (typeof bodyTheme === "string") ? bodyTheme : template.b);
@@ -1723,29 +2163,26 @@ const popup = {
 
 			emptyNode(this.popup.body.button);
 			let buttonKeyList = Object.keys(buttonList);
-			if (buttonKeyList.length) {
-				for (let key of buttonKeyList) {
-					let item = buttonList[key];
-					let button = document.createElement("button");
+			
+			for (let key of buttonKeyList) {
+				let item = buttonList[key];
 
-					button.classList.add("sq-btn", item.color || "blue", item.full ? "full" : "normal");
-					button.innerText = item.text || "Text";
-					button.onclick = item.onClick || null;
-					button.returnValue = key;
-					button.dataset.soundhover = "";
-					button.dataset.soundselect = "";
+				let button = createBtn(item.text || "Text", item.color || "blue", {
+					icon: item.icon || null,
+					complex: !!item.complex
+				});
 
-					if (typeof sounds !== "undefined")
-						sounds.applySound(button);
+				button.classList.add(item.full ? "full" : "normal");
+				button.onclick = item.onClick || null;
+				button.returnValue = key;
 
-					if (!(typeof item.resolve === "boolean") || item.resolve !== false)
-						button.addEventListener("mouseup", e => {
-							resolve(e.target.returnValue);
-							this.hide();
-						});
+				if (!(typeof item.resolve === "boolean") || item.resolve !== false)
+					button.addEventListener("mouseup", e => {
+						resolve(e.target.returnValue);
+						this.hide();
+					});
 
-					this.popup.body.button.appendChild(button);
-				}
+				this.popup.body.button.appendChild(button);
 			}
 
 			this.popupNode.classList.add("show");

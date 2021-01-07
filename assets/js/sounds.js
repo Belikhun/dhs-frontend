@@ -7,284 +7,265 @@
 
 
 const sounds = {
-    disabled: false,
-    initialized: false,
-    soundsLoaded: false,
-    ROOT_DIR: "/assets/sounds",
+	disabled: false,
+	initialized: false,
+	soundsLoaded: false,
+	LOCATION: "/assets/sounds",
 
-    soundList: [{
-        key: "checkOff",
-        name: "check-off.mp3"
-    }, {
-        key: "checkOn",
-        name: "check-on.mp3"
-    }, {
-        key: "hover",
-        name: "generic-hover.mp3"
-    }, {
-        key: "hoverSoft",
-        name: "generic-hover-soft.mp3"
-    }, {
-        key: "select",
-        name: "generic-select.mp3"
-    }, {
-        key: "selectSoft",
-        name: "generic-select-soft.mp3"
-    }, {
-        key: "overlayPopIn",
-        name: "overlay-pop-in.mp3"
-    }, {
-        key: "overlayPopOut",
-        name: "overlay-pop-out.mp3"
-    }, {
-        key: "confirm",
-        name: "generic-confirm.mp3"
-    }, {
-        key: "confirm2",
-        name: "generic-confirm-2.mp3"
-    }, {
-        key: "confirm3",
-        name: "generic-confirm-3.mp3"
-    }, {
-        key: "warning",
-        name: "generic-warning.mp3"
-    }, {
-        key: "notification",
-        name: "notification.mp3"
-    }, {
-        key: "valueChange",
-        name: "generic-value-change.mp3"
-    }],
+	sounds: {
+		checkOff: { path: "check-off.mp3", require: ["btnClick"] },
+		checkOn: { path: "check-on.mp3", require: ["btnClick"] },
+		confirm: { path: "generic-confirm.mp3", require: ["others"] },
+		confirm2: { path: "generic-confirm-2.mp3", require: ["others"] },
+		confirm3: { path: "generic-confirm-3.mp3", require: ["others"] },
+		hover: { path: "generic-hover.mp3", require: ["mouseOver"], volume: 0.4 },
+		hoverSoft: { path: "generic-hover-soft.mp3", require: ["mouseOver"] },
+		notification: { path: "notification.mp3", require: ["notification"] },
+		overlayPopIn: { path: "overlay-pop-in.mp3", require: ["panelToggle"] },
+		overlayPopOut: { path: "overlay-pop-out.mp3", require: ["panelToggle"] },
+		select: { path: "generic-select.mp3", require: ["btnClick"] },
+		selectSoft: { path: "generic-select-soft.mp3", require: ["btnClick"] },
+		sliderHigh: { path: "slider-high.mp3", require: ["others"] },
+		sliderLow: { path: "slider-low.mp3", require: ["others"] },
+		sliderSlide: { path: "slider-slide.mp3", require: ["others"] },
+		warning: { path: "generic-warning.mp3", require: ["others"] }
+	},
+	
+	enable: {
+		master: false,
+		mouseOver: true,
+		btnClick: true,
+		panelToggle: true,
+		others: true,
+		notification: true,
+	},
 
-    sounds: {
-        checkOff: null,
-        checkOn: null,
-        hover: null,
-        hoverSoft: null,
-        select: null,
-        selectSoft: null,
-        overlayPopIn: null,
-        overlayPopOut: null,
-        confirm: null,
-        notification: null,
-    },
-    
-    enable: {
-        master: false,
-        mouseOver: true,
-        btnClick: true,
-        panelToggle: true,
-        others: true,
-        notification: true,
-    },
+	async init(set = () => {}) {
+		if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+			clog("WARN", "Sounds does not support on iPhone devices, disabling...");
+			cookie.set("__s_m", false);
+			this.disabled = true;
+			return false;
+		}
 
-    async init(set = () => {}) {
-        if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
-            clog("WARN", "Sounds does not support on iPhone devices, disabling...");
-            cookie.set("__s_m", false);
-            this.disabled = true;
-            return false;
-        }
+		set({ p: 0, m: "sounds", d: `Getting Default Sound Settings` });
+		for (let key of Object.keys(this.enable)) {
+			let value = localStorage.getItem(`sounds.${key}`);
 
-        set(0, "Taking Cookies 🍪");
-        this.enable.master = cookie.get("__s_m", false) == "true";
-        this.enable.mouseOver = cookie.get("__s_mo", true) == "true";
-        this.enable.btnClick = cookie.get("__s_bc", true) == "true";
-        this.enable.panelToggle = cookie.get("__s_pt", true) == "true";
-        this.enable.others = cookie.get("__s_ot", true) == "true";
-        this.enable.notification = cookie.get("__s_nf", true) == "true";
+			if (value === null) {
+				value = this.enable[key];
+				localStorage.setItem(`sounds.${key}`, value);
+			} else
+				value = (value == "true")
 
-        set(10, "Loading Sounds");
-        await this.loadSound((p, t) => {
-            set(10 + p*0.85, `Loading: ${t}`);
-        });
+			this.enable[key] = value;
+		}
 
-        this.soundsLoaded = true;
+		set({ p: 10, m: "sounds", d: "Loading Sounds" });
+		await this.loadSound((p, t) => {
+			set({ p: 10 + p*0.85, m: "sounds", d: `Loading: ${t}` });
+		});
 
-        set(95, "Scanning");
-        this.scan();
+		this.soundsLoaded = true;
 
-        set(100, "Done");
-        this.initialized = true;
-        clog("okay", "Initialised:", {
-            color: flatc("red"),
-            text: "sounds"
-        });
-    },
+		set({ p: 95, m: "sounds", d: "Scanning" });
+		this.scan();
 
-    async loadSound(set = () => {}) {
-        if (this.disabled)
-            throw { code: -1, description: "Sounds Module Disabled" }
+		set({ p: 100, m: "sounds", d: "Done" });
+		this.initialized = true;
 
-        for (var i = 0; i < this.soundList.length; i++) {
-            const item = this.soundList[i];
-            set((i / (this.soundList.length - 1)) * 100, item.name);
-            this.sounds[item.key] = await this.__loadSoundAsync(`${this.ROOT_DIR}/${item.name}`);
-        }
-    },
+		clog("OKAY", "Initialised:", {
+			color: flatc("red"),
+			text: "sounds"
+		});
+	},
 
-    async __loadSoundAsync(url, volume = 0.6) {
-        if (this.disabled)
-            throw { code: -1, description: "Sounds Module Disabled" }
+	async loadSound(set = () => {}) {
+		if (this.disabled)
+			throw { code: -1, description: "Sounds Module Disabled" }
 
-        var sound = new Audio();
-        sound.src = (typeof chrome !== "undefined" && chrome.extension) ? chrome.extension.getURL(url) : url;
-        clog("DEBG", `Loading sound: ${url}`);
+		let keys = Object.keys(this.sounds);
+		for (let i = 0; i < keys.length; i++) {
+			let key = keys[i]
+			let item = this.sounds[key]
 
-        return new Promise((resolve, reject) => {
-            sound.addEventListener("canplaythrough", handler = e => {
-                sound.removeEventListener("canplaythrough", handler);
-                sound.volume = volume;
-                clog("DEBG", `Sound loaded: ${url}`);
-                resolve(sound);
-            });
+			set((i / (keys.length - 1)) * 100, key);
+			this.sounds[key].sound = await this.__loadSoundAsync(`${this.LOCATION}/${item.path}`, item.volume || 0.6);
+		}
+	},
 
-            sound.addEventListener("error", e => {
-                clog("ERRR", `Error loading sound: ${url}`);
-                console.log(e);
-                reject(e);
-            })
-        })
-    },
+	async __loadSoundAsync(url, volume = 0.6) {
+		if (this.disabled)
+			throw { code: -1, description: "Sounds Module Disabled" }
 
-    __soundToggle(sound) {
-        if (!sound || sound.readyState < 3 || !this.initialized)
-            return false;
+		let sound = new Audio();
+		sound.src = (typeof chrome !== "undefined" && chrome.extension) ? chrome.extension.getURL(url) : url;
+		clog("DEBG", `Loading sound: ${url}`);
 
-        if (!sound.paused)
-            sound.pause();
+		return new Promise((resolve, reject) => {
+			sound.addEventListener("canplaythrough", handler = e => {
+				sound.removeEventListener("canplaythrough", handler);
+				sound.volume = volume;
+				clog("DEBG", `Sound loaded: ${url}`);
+				resolve(sound);
+			});
 
-        sound.currentTime = 0;
-        sound.play()
-            .catch(e => clog("errr", "Error occurred while trying to play sounds."));
-    },
+			sound.addEventListener("error", e => {
+				clog("ERRR", `Error loading sound: ${url}`, e);
+				reject(e);
+			})
+		})
+	},
 
-    select(variation = 0) {
-        if (this.disabled || !this.initialized)
-            return;
+	soundToggle(sound) {
+		sound = (typeof sound === "string" && this.sounds[sound] && this.sounds[sound].sound)
+			? this.sounds[sound]
+			: sound;
 
-        let sound = [
-            this.sounds.select,
-            this.sounds.selectSoft
-        ][variation]
+		if (!this.enable.master || !sound || !sound.sound || sound.sound.readyState < 3 || !this.initialized)
+			return false;
 
-        if (this.enable.master && this.enable.others)
-            this.__soundToggle(sound);
-    },
+		for (let key of sound.require)
+			if (!this.enable[key])
+				return false;
 
-    confirm(variation = 0) {
-        if (this.disabled || !this.initialized)
-            return;
+		if (!sound.sound.paused)
+			sound.sound.pause();
 
-        let sound = [
-            this.sounds.confirm,
-            this.sounds.confirm2,
-            this.sounds.confirm3
-        ][variation]
+		sound.sound.currentTime = 0;
+		sound.sound.play()
+			.catch(e => clog("ERRR", "An error occurred while trying to play sounds", e));
+	},
 
-        if (this.enable.master && this.enable.others)
-            this.__soundToggle(sound);
-    },
+	select(variation = 0) {
+		if (this.disabled || !this.initialized)
+			return;
 
-    toggle(variation = 0) {
-        if (this.disabled || !this.initialized)
-            return;
+		let sound = [
+			this.sounds.select,
+			this.sounds.selectSoft
+		][variation]
 
-        let sound = [
-            this.sounds.overlayPopIn,
-            this.sounds.overlayPopOut
-        ][variation]
+		this.soundToggle(sound);
+	},
 
-        if (this.enable.master && this.enable.others)
-            this.__soundToggle(sound);
-    },
+	confirm(variation = 0) {
+		if (this.disabled || !this.initialized)
+			return;
 
-    notification() {
-        if (this.disabled || !this.initialized)
-            return;
+		let sound = [
+			this.sounds.confirm,
+			this.sounds.confirm2,
+			this.sounds.confirm3
+		][variation]
 
-        if (this.enable.master && this.enable.notification)
-            this.__soundToggle(this.sounds.notification);
-    },
+		this.soundToggle(sound);
+	},
 
-    warning() {
-        if (this.disabled || !this.initialized)
-            return;
+	toggle(variation = 0) {
+		if (this.disabled || !this.initialized)
+			return;
 
-        if (this.enable.master && this.enable.others)
-            this.__soundToggle(this.sounds.warning);
-    },
+		let sound = [
+			this.sounds.overlayPopIn,
+			this.sounds.overlayPopOut
+		][variation]
 
-    scan() {
-        if (this.disabled)
-            throw { code: -1, description: "Sounds Module Disabled" }
+		if (this.enable.others)
+			this.soundToggle(sound);
+	},
 
-        const list = document.getElementsByClassName("sound");
+	notification() {
+		if (this.disabled || !this.initialized)
+			return;
 
-        for (var item of list) {
-            if (typeof item.dataset === "undefined") {
-                clog("DEBG", `Unknown element: ${e} in sounds.scan`);
-                continue;
-            }
+		if (this.enable.notification)
+			this.soundToggle(this.sounds.notification);
+	},
 
-            this.applySound(item);
-        }
+	slider(variation = 0) {
+		if (this.disabled || !this.initialized)
+			return;
 
-        return true;
-    },
-    
-    applySound(item) {
-        if (!item.nodeType || item.nodeType <= 0 || item.dataset.soundApplied || !this.soundsLoaded || this.disabled)
-            return false;
+		let sound = [
+			this.sounds.sliderSlide,
+			this.sounds.sliderHigh,
+			this.sounds.sliderLow
+		][variation]
 
-        if (typeof item.dataset.soundhover !== "undefined")
-            item.addEventListener("mouseenter", e => {
-                if (this.enable.master && this.enable.mouseOver)
-                    this.__soundToggle(this.sounds.hover);
-            })
+		if (this.enable.others)
+			this.soundToggle(sound);
+	},
 
-        if (typeof item.dataset.soundhoversoft !== "undefined")
-            item.addEventListener("mouseenter", e => {
-                if (this.enable.master && this.enable.mouseOver)
-                    this.__soundToggle(this.sounds.hoverSoft);
-            })
+	warning() {
+		if (this.disabled || !this.initialized)
+			return;
 
-        if (typeof item.dataset.soundselect !== "undefined")
-            item.addEventListener("mousedown", e => {
-                if (this.enable.master && this.enable.btnClick)
-                    this.__soundToggle(this.sounds.select);
-            })
+		if (this.enable.others)
+			this.soundToggle(this.sounds.warning);
+	},
 
-        if (typeof item.dataset.soundselectsoft !== "undefined")
-            item.addEventListener("mousedown", e => {
-                if (this.enable.master && this.enable.btnClick)
-                    this.__soundToggle(this.sounds.selectSoft);
-            })
+	scan() {
+		if (this.disabled)
+			throw { code: -1, description: "Sounds Module Disabled" }
 
-        if (typeof item.dataset.soundchange !== "undefined")
-            item.addEventListener("change", e => {
-                if (this.enable.master && this.enable.others)
-                    this.__soundToggle(this.sounds.valueChange);
-            })
+		const list = document.getElementsByClassName("sound");
 
-        if (typeof item.dataset.soundcheck !== "undefined")
-            item.addEventListener("change", e => {
-                if (this.enable.master && this.enable.btnClick)
-                    if (e.target.checked === true)
-                        this.__soundToggle(this.sounds.checkOn);
-                    else
-                        this.__soundToggle(this.sounds.checkOff);
-            })
+		for (var item of list) {
+			if (typeof item.dataset === "undefined") {
+				clog("DEBG", `sounds.scan(): Unknown element: ${e}`);
+				continue;
+			}
 
-        if (typeof item.dataset.soundtoggle === "string")
-            new ClassWatcher(item, item.dataset.soundtoggle, () => {
-                if (this.enable.master && this.enable.panelToggle)
-                    this.__soundToggle(this.sounds.overlayPopIn);
-            }, () => {
-                if (this.enable.master && this.enable.panelToggle)
-                    this.__soundToggle(this.sounds.overlayPopOut);
-            });
+			this.applySound(item);
+		}
 
-        item.dataset.soundApplied = true;
-    }
+		return true;
+	},
+	
+	/**
+	 * @param {HTMLElement}		item
+	 */
+	applySound(item, flags) {
+		if (!item.nodeType || item.nodeType <= 0 || item.dataset.soundApplied || this.disabled)
+			return false;
+
+		if (flags && typeof flags === "object" && flags.length)
+			for (let flag of flags)
+				item.dataset[flag] = true;
+
+		if (typeof item.dataset.soundhover !== "undefined")
+			item.addEventListener("mouseenter", (e) => e.isTrusted ? this.soundToggle(this.sounds.hover) : 0);
+
+		if (typeof item.dataset.soundhoversoft !== "undefined")
+			item.addEventListener("mouseenter", (e) => e.isTrusted ? this.soundToggle(this.sounds.hoverSoft) : 0);
+
+		if (typeof item.dataset.soundselect !== "undefined")
+			item.addEventListener("mousedown", (e) => e.isTrusted ? this.soundToggle(this.sounds.select) : 0);
+
+		if (typeof item.dataset.soundselectsoft !== "undefined")
+			item.addEventListener("mousedown", (e) => e.isTrusted ? this.soundToggle(this.sounds.selectSoft) : 0);
+
+		if (typeof item.dataset.soundchange !== "undefined")
+			item.addEventListener("change", (e) => e.isTrusted ? this.soundToggle(this.sounds.sliderSlide) : 0);
+
+		if (typeof item.dataset.soundcheck !== "undefined")
+			item.addEventListener("change", (e) => {
+				if (!e.isTrusted)
+					return;
+
+				if (e.target.checked === true)
+					this.soundToggle(this.sounds.checkOn);
+				else
+					this.soundToggle(this.sounds.checkOff);
+			})
+
+		if (typeof item.dataset.soundtoggle === "string")
+			new ClassWatcher(item, item.dataset.soundtoggle,
+				() => this.soundToggle(this.sounds.overlayPopIn),
+				() => this.soundToggle(this.sounds.overlayPopOut)
+			);
+
+		item.dataset.soundApplied = true;
+	}
 }
