@@ -9,7 +9,7 @@ try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
 	const VERSION = "7.1";
-	const STATE = "indev";
+	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
 	var   CONTACT_ADDR = "https://m.me/DealHunterSuite";
@@ -444,7 +444,7 @@ try {
 
 					let tagsString = core.session.keyData.tags
 						.filter((i) => i !== "")
-						.map((i) => `<tag ${(typeof core.tagsColor[item.toLowerCase()] === "string") ? `style="background-color: ${core.tagsColor[item.toLowerCase()]}"` : ""}>${item}</tag>`);
+						.map((i) => `<tag ${(typeof core.tagsColor[i.toLowerCase()] === "string") ? `style="background-color: ${core.tagsColor[i.toLowerCase()]}"` : ""}>${i}</tag>`);
 					
 					core.tool.navbar.userName.innerText = core.session.keyData.name;
 					core.tool.navbar.userTag.innerHTML = tagsString;
