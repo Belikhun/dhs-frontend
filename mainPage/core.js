@@ -8,7 +8,7 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "7.0";
+	const VERSION = "7.1";
 	const STATE = "indev";
 	
 	const AUTHOR = "Team DHS";
@@ -442,9 +442,9 @@ try {
 						]}
 					]);
 
-					let tagsString = "";
-					for (let item of core.session.keyData.tags)
-						tagsString += `<tag ${(typeof core.tagsColor[item.toLowerCase()] === "string") ? `style="background-color: ${core.tagsColor[item.toLowerCase()]}"` : ""}>${item}</tag>`;
+					let tagsString = core.session.keyData.tags
+						.filter((i) => i !== "")
+						.map((i) => `<tag ${(typeof core.tagsColor[item.toLowerCase()] === "string") ? `style="background-color: ${core.tagsColor[item.toLowerCase()]}"` : ""}>${item}</tag>`);
 					
 					core.tool.navbar.userName.innerText = core.session.keyData.name;
 					core.tool.navbar.userTag.innerHTML = tagsString;
@@ -894,7 +894,7 @@ try {
 
 			async init() {
 				for (let item of core.session.keyData.licenses)
-					if ((item.allow === "proxy" || item.allow === "*") && !item.expired)
+					if ((item.allow.split(";").includes("proxy") || item.allow === "*") && !item.expired)
 						this.allowed = true;
 
 				if (!this.allowed) {
