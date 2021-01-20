@@ -8,7 +8,7 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "7.1";
+	const VERSION = "7.2";
 	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
