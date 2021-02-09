@@ -52,7 +52,7 @@ const errorHandler = async (error, returnable = true) => {
 			contact: { text: "Báo Lỗi", color: "pink", resolve: false, onClick: () => window.open(SERVER.REPORT_ERROR, "_blank") },
 			...returnBtn
 		}
-    })
+    });
     
     _gaq.push(["_trackEvent", core.session.keyData.name, "errored", `${e.code} >>> ${e.description}`]);
 }

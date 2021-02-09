@@ -1422,7 +1422,7 @@ try {
 			clear({
 				resetLine = true,
 				keepGroup = false,
-			}) {
+			} = {}) {
 				if (keepGroup)
 					for (let node of this.log.childNodes)
 						if (!node.classList.contains("group"))
@@ -2437,8 +2437,7 @@ try {
 					this.changeLayout(3);
 				}
 
-			})().catch(async e => {
-				scriptCancelHandler(true);
+			})().catch(async (e) => {
 				await errorHandler(e, true);
 				this.changeLayout(3);
 			});
