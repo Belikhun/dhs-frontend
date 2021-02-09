@@ -1550,9 +1550,7 @@ if (typeof $ !== "function")
 	}
 
 /**
- * Remove all child in a Node
- * 
- * eq: node.innerHTML = ""
+ * Remove all childs in a Node
  * @param	{Element}	node	Node to empty
  */
 function emptyNode(node) {
@@ -1597,7 +1595,7 @@ function createInput({
 	/**
 	 * @type {HTMLInputElement}
 	 */
-	let formField = document.createElement(type === "textarea" ? type : "input");
+	let formField = document.createElement(["textarea", "select"].includes(type) ? type : "input");
 
 	formField.type = type;
 	formField.id = id;

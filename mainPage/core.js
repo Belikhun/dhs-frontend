@@ -8,7 +8,7 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "7.4";
+	const VERSION = "7.5";
 	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
@@ -663,6 +663,53 @@ try {
 						save: "proxy.port",
 						onInput: (value) => core.proxy.port = value
 					}, proxy);
+
+					//
+					// LOGVIEWER SETTINGS
+					//
+					let logsViewer = new smenu.Child({ label: "Nhật Kí" }, this.group);
+
+					new smenu.components.Checkbox({
+						label: "Tự động xóa",
+						color: "pink",
+						save: "logsViewer.autoClear",
+						defaultValue: true,
+						onChange: (v) => core.logsViewer.autoClear = v
+					}, logsViewer);
+
+					let sliderStep = {
+						1: 10,		2: 20,		3: 30,		4: 40,		5: 50,
+						6: 80,		7: 100,		8: 150,		9: 200,		10: 250,
+						11: 300,	12: false
+					}
+
+					let logsViewerLimits = new smenu.components.Slider({
+						label: "Số dòng tối đa",
+						color: "blue",
+						save: "logsViewer.limits",
+						min: 1,
+						max: 12,
+						unit: "dòng",
+						defaultValue: 9,
+						valueStep: sliderStep
+					}, logsViewer);
+
+					logsViewerLimits.onInput((v) => logsViewerLimits.set({ color: (v <= 5 || v == 12) ? "red" : "blue" }));
+					logsViewerLimits.onChange((v) => core.logsViewer.limits = sliderStep[v]);
+
+					let logsViewerGroupLimits = new smenu.components.Slider({
+						label: "Số dòng tối đa (nhóm)",
+						color: "blue",
+						save: "logsViewer.groupLimits",
+						min: 1,
+						max: 12,
+						unit: "dòng",
+						defaultValue: 7,
+						valueStep: sliderStep
+					}, logsViewer);
+
+					logsViewerGroupLimits.onInput((v) => logsViewerGroupLimits.set({ color: (v <= 5 || v == 12) ? "red" : "blue" }));
+					logsViewerGroupLimits.onChange((v) => core.logsViewer.groupLimits = sliderStep[v]);
 				}
 			},
 
@@ -843,10 +890,9 @@ try {
 			},
 	
 			add(handler) {
-				if (typeof handler === "function") {
-					this.list.push(handler);
-					return this.list.length - 1;
-				} else
+				if (typeof handler === "function")
+					return this.list.push(handler);
+				else
 					throw new Error(`frame.add: expect handler are a function, instead got ${typeof handler}`);
 			},
 	
@@ -865,6 +911,9 @@ try {
 					let _a = document.getElementsByClassName("triBgContainer");
 					for (let item of _a)
 						emptyNode(item);
+
+					if (core.logsViewer.autoClear)
+						core.logsViewer.clear({ resetLine: false, keepGroup: true });
 				}
 	
 				this.tick = 0;
@@ -904,7 +953,7 @@ try {
 
 				core.splash.classList.add("proxyInfo");
 				smenu.container.classList.add("navHaveProxy");
-				triBg(this.bar, { color: "brown", scale: 1, speed: 10 })
+				triBg(this.bar, { color: "brown", scale: 4, speed: 36 });
 				this.expand.addEventListener("click", () => core.splash.classList.toggle("proxyDetail"));
 				this.reload.addEventListener("click", () => this.scan(true));
 
@@ -1258,7 +1307,10 @@ try {
 			toBottomBtn: $("#scriptRunLogsBottom"),
 			lockLogs: true,
 			limits: 200,
+			groupLimits: 100,
 			line: 1,
+
+			autoClear: false,
 	
 			init() {
 				new Scrollable(this.log);
@@ -1325,6 +1377,7 @@ try {
 
 				return {
 					line: 1,
+					limits: core.logsViewer.groupLimits,
 
 					write(text) {
 						let logItem = document.createElement("li");
@@ -1338,6 +1391,9 @@ try {
 			
 						content.appendChild(logItem);
 						this.line++;
+
+						while (content.childElementCount > this.limits)
+							content.removeChild(content.children[0]);
 
 						if (core.logsViewer.lockLogs)
 							core.logsViewer.toBottom();
@@ -1363,8 +1419,16 @@ try {
 				this.log.scrollTop = this.log.scrollHeight;
 			},
 	
-			clear(resetLine = true) {
-				emptyNode(this.log);
+			clear({
+				resetLine = true,
+				keepGroup = false,
+			}) {
+				if (keepGroup)
+					for (let node of this.log.childNodes)
+						if (!node.classList.contains("group"))
+							this.log.removeChild(node);
+				else
+					emptyNode(this.log);
 
 				if (resetLine)
 					this.line = 1;
