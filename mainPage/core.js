@@ -8,7 +8,7 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "7.5";
+	const VERSION = "7.6";
 	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
@@ -78,10 +78,18 @@ try {
 
 		script: {
 			container: $("#scriptListContainer"),
+
+			search: {
+				container: $("#scriptSearch"),
+				input: $("#scriptSearchInput"),
+				clear: $("#scriptSearchClear")
+			},
+
 			autorunList: $("#scriptAutorunList"),
 			thisPageList: $("#scriptThisPageList"),
 			undependList: $("#scriptUndependList"),
 			availableList: $("#scriptAvailableList"),
+
 			settings: {
 				container: ("#scriptSettings"),
 				header: {
@@ -331,7 +339,7 @@ try {
 	
 			splash.set({ p: 80, i: "Lấy thông tin danh sách script" });
 			new Scrollable(this.script.container);
-			await this.fetchScriptList();
+			await this.fetchScriptList(true);
 	
 			//? |----------------------------------|
 			//? |    ATTACH LISTENER / INTERVAL    |
@@ -340,6 +348,22 @@ try {
 			splash.set({ p: 85, i: "Setting up Listeners" });
 			chrome.tabs.onUpdated.addListener((t, c) => this.checkPage(t, c));
 			this.tool.reloadBtn.addEventListener("mouseup", () => this.reload({ hard: true }));
+
+			let searchDelay = null;
+			this.script.search.input.addEventListener("input", (e) => {
+				if (e.target.value !== "")
+					this.script.search.container.classList.add("typing");
+				else
+					this.script.search.container.classList.remove("typing");
+
+				clearTimeout(searchDelay);
+				searchDelay = setTimeout(() => this.fetchScriptList(false), 500);
+			});
+
+			this.script.search.clear.addEventListener("click", () => {
+				this.script.search.input.value = "";
+				this.script.search.input.dispatchEvent(new Event("input"));
+			});
 	
 			//? |-----------------------|
 			//? |       INIT PROXY      |
@@ -1800,6 +1824,9 @@ try {
 			emptyNode(this.script.thisPageList);
 			emptyNode(this.script.undependList);
 			emptyNode(this.script.availableList);
+			let searchKeyword = this.script.search.input.value
+				.toLowerCase()
+				.split(" ");
 	
 			for (let key of Object.keys(this.scriptList)) {
 				let item = this.scriptList[key];
@@ -1818,24 +1845,33 @@ try {
 				
 					continue;
 				}
+
+				if (searchKeyword.length > 0 && searchKeyword[0] !== "") {
+					let match = false;
+					for (let field of [item.id, item.name, item.description, item.site])
+						if (field.toLowerCase().includes(...searchKeyword)) {
+							match = true;
+							break;
+						}
 	
-				let itemBox = document.createElement("div");
-				itemBox.classList.add("item");
-	
+					if (!match)
+						continue;
+				}
+
+				let itemBox = buildElementTree("div", "item", [
+					{ name: "icon", node: new lazyload({ source: `${SERVER_ADDR()}/api/scripts/icon?id=${item.id}`, classes: "icon" }) },
+					{ type: "span", class: "left", name: "left", list: [
+						{ type: "t", class: "name", name: "scriptName", text: item.name },
+						{ type: "t", class: "description", name: "description", text: item.description }
+					]},
+					{ type: "span", class: "right", name: "right", list: [
+						{ type: "t", class: "id", name: "scriptID", text: item.id },
+						{ type: "t", class: "version", name: "version", text: `v${pleft(item.version, 3)}` }
+					]}
+				]).obj;
+
 				if (!item.allow)
 					itemBox.setAttribute("disabled", true);
-
-				itemBox.innerHTML += `
-					<img class="icon" src="${SERVER_ADDR()}/api/scripts/icon?id=${item.id}">
-					<span class="left">
-						<t class="name">${item.name}</t>
-						<t class="description">${item.description}</t>
-					</span>
-					<span class="right">
-						<t class="id">${item.id}</t>
-						<t class="version">v${pleft(item.version, 3)}</t>
-					</span>
-				`
 	
 				itemBox.title = [
 					`ID: ${item.id}`,
@@ -1872,7 +1908,7 @@ try {
 				this.script.availableList.appendChild(itemBox.cloneNode(true));
 			}
 	
-			if (this.page.status === "complete")
+			if (this.page.status === "complete" && hard)
 				this.autorun.runAll();
 		},
 	

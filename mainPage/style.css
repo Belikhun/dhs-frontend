@@ -785,6 +785,93 @@ body.disableTransition * {
     overflow-y: auto;
 }
 
+.main > .container > .scriptContainer > .scriptList > .searchBox {
+	position: sticky;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+
+    top: 0;
+	margin: 0 10px;
+	padding: 10px 5px;
+	border-radius: 12px;
+    z-index: 1;
+
+    background-color: rgb(24, 24, 24);
+}
+
+.main > .container > .scriptContainer > .scriptList > .searchBox.typing {
+    background-color: rgb(38, 38, 38);
+}
+
+.main > .container > .scriptContainer > .scriptList > .searchBox > input {
+	flex-grow: 1;
+	height: auto;
+	font-size: 28px;
+	font-weight: 800;
+
+	padding: 0 80px 0 0;
+	background-color: unset;
+
+    transition:
+        padding 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.main > .container > .scriptContainer > .scriptList > .searchBox > input::placeholder {
+	color: rgba(145, 145, 145, 0.5);
+	transition: color 0.2s ease-out;
+}
+
+.main > .container > .scriptContainer > .scriptList > .searchBox:hover > input::placeholder {
+	color: rgba(145, 145, 145, 0.7);
+}
+
+.main > .container > .scriptContainer > .scriptList > .searchBox > icon::after {
+	font-size: 36px;
+}
+
+.main > .container > .scriptContainer > .scriptList > .searchBox > icon {
+	position: absolute;
+	right: 0;
+
+	opacity: 0;
+    cursor: pointer;
+	transition:
+        right 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+        opacity 0.2s ease-out;
+}
+
+.main > .container > .scriptContainer > .scriptList > .searchBox > .search {
+	opacity: 1;
+}
+
+.main > .container > .scriptContainer > .scriptList > .searchBox > .search::after {
+	font-size: 30px;
+	color: rgba(145, 145, 145, 0.5);
+	transition: color 0.2s ease-out;
+}
+
+.main > .container > .scriptContainer > .scriptList > .searchBox:hover > .search::after {
+	color: rgb(148, 148, 148);
+}
+
+.main > .container > .scriptContainer > .scriptList > .searchBox.typing > input {
+    padding-left: 10px;
+}
+
+.main > .container > .scriptContainer > .scriptList > .searchBox.typing > icon {
+    right: 15px;
+}
+
+.main > .container > .scriptContainer > .scriptList > .searchBox.typing > .search {
+    opacity: 0;
+    z-index: -1;
+}
+
+.main > .container > .scriptContainer > .scriptList > .searchBox.typing > .clear {
+    opacity: 1;
+}
+
 .main > .container > .scriptContainer > .scriptList > .itemList {
     position: relative;
     display: flex;
@@ -855,6 +942,7 @@ body.disableTransition * {
 .main > .container > .scriptContainer > .scriptList > .itemList > .item > .icon {
     position: relative;
     display: inline-block;
+    flex-shrink: 0;
 
     width: 56px;
     height: 56px;
@@ -1467,6 +1555,7 @@ body.disableTransition * {
 
 .main > .container > .scriptRunLogs > .view > li {
     overflow-anchor: none;
+    word-break: break-word;
 }
 
 .main > .container > .scriptRunLogs > .view > li.group {
