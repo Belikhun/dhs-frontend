@@ -836,7 +836,7 @@ try {
 					new smenu.components.Footer({
 						icon: "/assets/img/icon@64x64.png",
 						appName: APPNAME,
-						version: VERSION
+						version: `${VERSION} - ${CODENAME}`
 					}, teams);
 				}
 			}
