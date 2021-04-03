@@ -204,7 +204,7 @@
     padding: 10px;
 }
 
-#subScreen[layout="dealHunt"] > .container > .itemList > .item > .name {
+#subScreen[layout="dealHunt"] > .container > .itemList > .item .name {
 	position: relative;
     display: block;
     flex-grow: 1;
@@ -216,7 +216,7 @@
 }
 
 
-#subScreen[layout="dealHunt"] > .container > .item > .coupon {
+#subScreen[layout="dealHunt"] > .container > .itemList > .item .coupon {
 	position: relative;
     display: flex;
     flex-direction: column;
@@ -226,7 +226,7 @@
     border-bottom: 1px solid #797979;
 }
 
-#subScreen[layout="dealHunt"] > .container > .item > .coupon > .code {
+#subScreen[layout="dealHunt"] > .container > .itemList > .item .coupon > .code {
 	position: relative;
     display: block;
     font-family: Calibri;
@@ -239,19 +239,19 @@
     background-color: #a2c9ff;
 }
 
-#subScreen[layout="dealHunt"] > .container > .item > .coupon > .price {
+#subScreen[layout="dealHunt"] > .container > .itemList > .item .coupon > .price {
 	font-family: Calibri;
     font-weight: bold;
     font-size: 18px;
     color: #fb9a7c;
 }
 
-#subScreen[layout="dealHunt"] > .container > .item > .coupon > .sale {
+#subScreen[layout="dealHunt"] > .container > .itemList > .item .coupon > .sale {
 	font-weight: bold;
     color: #76d7e0;
 }
 
-#subScreen[layout="dealHunt"] > .container > .itemList > .item > .priceInfo {
+#subScreen[layout="dealHunt"] > .container > .itemList > .item .priceInfo {
 	position: relative;
     display: flex;
     flex-direction: column;
@@ -261,14 +261,14 @@
 	margin-top: 10px;
 }
 
-#subScreen[layout="dealHunt"] > .container > .itemList > .item > .priceInfo > .current {
+#subScreen[layout="dealHunt"] > .container > .itemList > .item .priceInfo > .current {
 	font-family: Calibri;
     font-weight: bold;
     font-size: 18px;
     color: #98ea98;
 }
 
-#subScreen[layout="dealHunt"] > .container > .itemList > .item > .priceInfo > .old {
+#subScreen[layout="dealHunt"] > .container > .itemList > .item .priceInfo > .old {
 	font-family: Calibri;
     font-weight: bold;
     font-size: 16px;
@@ -276,13 +276,13 @@
     text-decoration: line-through;
 }
 
-#subScreen[layout="dealHunt"] > .container > .itemList > .item > .priceInfo > .discount {
+#subScreen[layout="dealHunt"] > .container > .itemList > .item .priceInfo > .discount {
 	font-weight: bold;
 	color: #76d7e0;
     margin-left: 10px;
 }
 
-#subScreen[layout="dealHunt"] > .container > .itemList > .item > .dealInfo {
+#subScreen[layout="dealHunt"] > .container > .itemList > .item .dealInfo {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -292,12 +292,12 @@
     border-top: 1px solid #797979;
 }
 
-#subScreen[layout="dealHunt"] > .container > .itemList > .item > .dealInfo > .open {
+#subScreen[layout="dealHunt"] > .container > .itemList > .item .dealInfo > .open {
     font-size: 11px;
     text-align: right;
 }
 
-#subScreen[layout="dealHunt"] > .container > .itemList > .item > .blackList {
+#subScreen[layout="dealHunt"] > .container > .itemList > .item .blackList {
     position: absolute;
     display: block;
     bottom: 10px;
@@ -305,7 +305,7 @@
     cursor: pointer;
 }
 
-#subScreen[layout="dealHunt"] > .container > .itemList > .item > .blackList::before {
+#subScreen[layout="dealHunt"] > .container > .itemList > .item .blackList::before {
     content: "\f05e";
     font-family: "Font Awesome 5 Free";
     font-size: 20px;
@@ -315,7 +315,7 @@
     transition: color 0.3s ease;
 }
 
-#subScreen[layout="dealHunt"] > .container > .itemList > .item > .blackList:hover::before {
+#subScreen[layout="dealHunt"] > .container > .itemList > .item .blackList:hover::before {
     color: rgb(244, 108, 108);
 }
 
@@ -332,35 +332,35 @@
     box-sizing: border-box;
 }
 
-#subScreen[layout="dealHunt"] > .container.allList > .item > .name {
+#subScreen[layout="dealHunt"] > .container.allList > .itemList > .item > .name {
 	display: flex;
     align-items: center;
     font-size: 15px;
 	flex-grow: 1;
 }
 
-#subScreen[layout="dealHunt"] > .container.allList > .item > .coupon {
+#subScreen[layout="dealHunt"] > .container.allList > .itemList > .item > .coupon {
 	margin-top: unset;
 	border-bottom: unset;
 	padding: 0 20px 0 10px;
     border-right: 1px solid #797979;
 }
 
-#subScreen[layout="dealHunt"] > .container.allList > .item > .priceInfo {
+#subScreen[layout="dealHunt"] > .container.allList > .itemList > .item > .priceInfo {
 	flex-direction: column;
 	margin-top: unset;
     padding-left: 20px;
 }
 
-#subScreen[layout="dealHunt"] > .container.allList > .item > .priceInfo > .current {
+#subScreen[layout="dealHunt"] > .container.allList > .itemList > .item > .priceInfo > .current {
 	margin-right: unset;
 }
 
-#subScreen[layout="dealHunt"] > .container.allList > .item > .priceInfo > .old {
+#subScreen[layout="dealHunt"] > .container.allList > .itemList > .item > .priceInfo > .old {
     font-size: 13px;
 }
 
-#subScreen[layout="dealHunt"] > .container.allList > .item .priceInfo > .discount {
+#subScreen[layout="dealHunt"] > .container.allList > .itemList > .item > .priceInfo > .discount {
 	margin-left: unset;
 }
 
