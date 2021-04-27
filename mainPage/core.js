@@ -8,11 +8,13 @@
 try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "7.7";
+	const VERSION = "7.8";
 	const STATE = "release";
 	
 	const AUTHOR = "Team DHS";
 	var   CONTACT_ADDR = "https://m.me/DealHunterSuite";
+
+	const CHONK = window["CryptoJS"];
 	
 	const SERVER_LIST = {
 		release: {
@@ -259,6 +261,16 @@ try {
 						continue: { text: "Tiếp tục chạy!", color: "yellow" }
 					}
 				});
+			}
+
+			//? |-----------------------|
+			//? |     CHECK CRYPTOJS    |
+			//? |-----------------------|
+			if (!CHONK) {
+				splash.errored();
+				splash.set({ p: 20, i: "CryptoJS not available!" });
+
+				return;
 			}
 	
 			//? |-----------------------|
@@ -672,6 +684,14 @@ try {
 
 					let proxy = new smenu.Child({ label: "Proxy" }, this.group);
 
+					new smenu.components.Checkbox({
+						label: "Tự động quét khi khởi động",
+						color: "pink",
+						save: "proxy.autoscan",
+						defaultValue: true,
+						onChange: (v) => core.proxy.autoscan = v
+					}, proxy);
+
 					new smenu.components.Textbox({
 						label: "IP Prefix",
 						type: "text",
@@ -959,8 +979,11 @@ try {
 
 			listBox: $("#proxyLists"),
 
+			updateTimeout: null,
+
 			allowed: false,
 			scanning: false,
+			autoscan: true,
 			ipPrefix: cookie.get(`proxy.prefix`, `192.168.1`),
 			port: 25685,
 			list: {},
@@ -981,9 +1004,19 @@ try {
 				this.expand.addEventListener("click", () => core.splash.classList.toggle("proxyDetail"));
 				this.reload.addEventListener("click", () => this.scan(true));
 
-				await this.scan();
-				this.__update();
+				this.reload.disabled = false;
+				this.updateStatus({
+					running: false,
+					detail: "Chưa Khởi Động",
+					detailSub: `Khởi động proxy bằng cách nhấn nút quét`,
+					progress: "WAIT",
+					color: "dark"
+				});
 
+				if (this.autoscan)
+					await this.scan();
+
+				this.__update();
 				clog("OKAY", "core.proxy(): Initialized");
 			},
 
@@ -1022,6 +1055,7 @@ try {
 			},
 
 			async __update() {
+				clearTimeout(this.updateTimeout);
 				let start = time();
 
 				try {
@@ -1030,7 +1064,10 @@ try {
 					clog("ERRR", e);
 				}
 
-				setTimeout(() => this.__update(), ((core.splash.classList.contains("proxyDetail") ? 1 : 5) - (time() - start)) * 1000);
+				this.updateTimeout = setTimeout(
+					() => this.__update(),
+					((core.splash.classList.contains("proxyDetail") ? 1 : 5) - (time() - start)) * 1000
+				);
 			},
 
 			async update(soft = false) {
@@ -1179,7 +1216,7 @@ try {
 								detail: "Đang Quét",
 								detailSub: `Đã tìm thấy <b>${found}</b> proxy`,
 								progress: (scanned / 255)
-							})
+							});
 
 							if (scanned >= 255) {
 								this.updateStatus({
@@ -1187,7 +1224,7 @@ try {
 									detail: `${found} proxy`,
 									detailSub: `${noConnection} proxy không có mạng`,
 									progress: "IDLE"
-								})
+								});
 
 								this.expand.disabled = false;
 								this.reload.disabled = false;
@@ -1214,11 +1251,11 @@ try {
 							
 							this.list[ip] = data.data;
 							update();
-						}).catch(e => update())
+						}).catch(() => update())
 
 						await delayAsync(50);
 					}
-				})
+				});
 			},
 
 			assign() {
@@ -2044,19 +2081,19 @@ try {
 			let decryptedScript = "";
 
 			try {
-				let decrypted = CryptoJS.AES.decrypt(
-					{ ciphertext: CryptoJS.enc.Base64.parse(response.data.script) },
-					CryptoJS.HmacSHA256(this.session.token + response.data.iv, this.session.keyData.key),
+				let decrypted = CHONK.AES.decrypt(
+					{ ciphertext: CHONK.enc.Base64.parse(response.data.script) },
+					CHONK.HmacSHA256(this.session.token + response.data.iv, this.session.keyData.key),
 					{
-						mode: CryptoJS.mode.CBC,
-						padding: CryptoJS.pad.Pkcs7,
-						iv: CryptoJS.enc.Hex.parse(response.data.iv)
+						mode: CHONK.mode.CBC,
+						padding: CHONK.pad.Pkcs7,
+						iv: CHONK.enc.Hex.parse(response.data.iv)
 					}
 				);
 
-				decryptedScript = decrypted.toString(CryptoJS.enc.Utf8);
+				decryptedScript = decrypted.toString(CHONK.enc.Utf8);
 			} catch(e) {
-				errorHandler({ code: 69420, description: `Lỗi khi giải mã dữ liệu: ${e.message} 🤔\n🐶: *sniff *sniff`, stack: e.stack });
+				errorHandler({ code: 69420, description: `Lỗi khi giải mã dữ liệu: ${e.message} 🤔\n🐶: *sniff* *sniff*`, stack: e.stack });
 				return;
 			}
 
@@ -2847,17 +2884,17 @@ try {
 					let decryptedScript = "";
 
 					try {
-						let decrypted = CryptoJS.AES.decrypt(
-							{ ciphertext: CryptoJS.enc.Base64.parse(response.data.script) },
-							CryptoJS.HmacSHA256(core.session.token + response.data.iv, core.session.keyData.key),
+						let decrypted = CHONK.AES.decrypt(
+							{ ciphertext: CHONK.enc.Base64.parse(response.data.script) },
+							CHONK.HmacSHA256(core.session.token + response.data.iv, core.session.keyData.key),
 							{
-								mode: CryptoJS.mode.CBC,
-								padding: CryptoJS.pad.Pkcs7,
-								iv: CryptoJS.enc.Hex.parse(response.data.iv)
+								mode: CHONK.mode.CBC,
+								padding: CHONK.pad.Pkcs7,
+								iv: CHONK.enc.Hex.parse(response.data.iv)
 							}
 						);
 
-						decryptedScript = decrypted.toString(CryptoJS.enc.Utf8);
+						decryptedScript = decrypted.toString(CHONK.enc.Utf8);
 					} catch(e) {
 						this.scriptLoaded = false;
 						this.errored({ code: 69420, description: `Lỗi khi giải mã dữ liệu: ${e.message} 🤔\n🐶: *sniff *sniff`, stack: e.stack });

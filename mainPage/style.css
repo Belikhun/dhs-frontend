@@ -952,7 +952,7 @@ body.disableTransition * {
 
 .main > .container > .scriptContainer > .scriptList > .itemList > .item > .left {
     position: relative;
-    flex-grow: 2;
+    flex-grow: 1;
     flex-shrink: 1;
     padding-right: 10px;
 }
@@ -978,7 +978,7 @@ body.disableTransition * {
 .main > .container > .scriptContainer > .scriptList > .itemList > .item > .right {
     position: relative;
     display: inline-block;
-    flex-grow: 1;
+    flex-grow: 0;
     flex-shrink: 0;
 }
 

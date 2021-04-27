@@ -1,7 +1,7 @@
 //? |-----------------------------------------------------------------------------------------------|
 //? |  /assets/js/belibrary.js                                                                      |
 //? |                                                                                               |
-//? |  Copyright (c) 2018-2020 Belikhun. All right reserved                                         |
+//? |  Copyright (c) 2018-2021 Belikhun. All right reserved                                         |
 //? |  Licensed under the MIT License. See LICENSE in the project root for license information.     |
 //? |-----------------------------------------------------------------------------------------------|
 
@@ -229,9 +229,13 @@ function myajax({
 
 function delayAsync(time) {
 	return new Promise((resolve, reject) => {
-		setTimeout(e => {
-			resolve();
-		}, time);
+		setTimeout(() => resolve(), time);
+	});
+}
+
+function nextFrameAsync() {
+	return new Promise((resolve, reject) => {
+		requestAnimationFrame(() =>  resolve());
 	});
 }
 
@@ -301,6 +305,20 @@ function escapeHTML(str) {
 }
 
 /**
+ * Truncate String if String's length is too large
+ * @param {String}	string	String to truncate 
+ * @param {Number}	length	Maximum length of string
+ * @returns {String}
+ */
+function truncateString(string, length = 20, {
+	surfix = "..."
+} = {}) {
+	return (string.length > length)
+		? string.substr(0, length - surfix.length - 1) + surfix
+		: string;
+}
+
+/**
  * Return the first element with the given className
  * @param	{Element}	node			Container
  * @param	{String}	className		Class
@@ -331,6 +349,7 @@ function htmlToElement(html) {
 function buildElementTree(type = "div", __class = [], data = new Array(), __keypath = "") {
 	let svgTag = ["svg", "g", "path", "line", "circle", "polyline"]
 
+	/** @type {HTMLElement|SVGElement} */
 	let tree = (svgTag.includes(type))
 		? document.createElementNS("http://www.w3.org/2000/svg", type)
 		: document.createElement(type);
@@ -338,6 +357,8 @@ function buildElementTree(type = "div", __class = [], data = new Array(), __keyp
 	if (typeof __class == "string")
 		__class = new Array([__class]);
 	tree.classList.add.apply(tree.classList, __class);
+
+	/** @type {HTMLElement} */
 	let objtree = tree;
 
 	for (let i = 0; i < data.length; i++) {
@@ -626,7 +647,7 @@ function round(number, to = 2) {
 	return Math.round(number * d) / d;
 }
 
-class stopClock {
+class StopClock {
 	__time(date = new Date()) {
 		return date.getTime();
 	}
@@ -764,28 +785,41 @@ class Pager {
 			emptyNode(this.container);
 	
 			for (let i = 0; i <= response.data.lists.length; i++)
-				if (response.data.lists[i])
-					this.renderItemHandler(response.data.lists[i], this.container);
-				else
+				if (response.data.lists[i]) {
+					let node = this.renderItemHandler(response.data.lists[i], this.container);
+
+					if (typeof node === "object" && node.classList && node.tagName)
+						this.container.appendChild(node);
+				} else
 					clog("DEBG", `Pager.render(): listData does not contain data at index`, { text: i, color: flatc("red") });
 		} else {
-			let listData = (typeof this.filterHandler === "function") ? this.listData.filter(this.filterHandler) : this.listData;
+			let listData = (typeof this.filterHandler === "function")
+				? this.listData.filter(this.filterHandler)
+				: this.listData;
+
 			let total = Math.max(listData.length, 1);
-			let maxPage = parseInt(Math.floor(total / this.showCount) + ((total % this.showCount === 0) ? 0 : 1));
+			let showCount = (this.showCount > 0)
+				? this.showCount
+				: total;
+
+			let maxPage = parseInt(Math.floor(total / showCount) + ((total % showCount === 0) ? 0 : 1));
 	
 			if (this.__currentPage > maxPage || this.__currentPage === "last")
 				this.__currentPage = maxPage;
 	
-			let from = (this.__currentPage - 1) * this.showCount;
-			let to = Math.min(this.__currentPage * this.showCount - 1, total - 1);
+			let from = (this.__currentPage - 1) * showCount;
+			let to = Math.min(this.__currentPage * showCount - 1, total - 1);
 	
 			this.updateHandler({ total, maxPage, currentPage: this.__currentPage, from, to });
 			emptyNode(this.container);
 	
 			for (let i = from; i <= to; i++)
-				if (listData[i])
-					this.renderItemHandler(listData[i], this.container);
-				else
+				if (listData[i]) {
+					let node = this.renderItemHandler(listData[i], this.container);
+
+					if (typeof node === "object" && node.classList && node.tagName)
+						this.container.appendChild(node);
+				} else
 					clog("DEBG", `Pager.render(): listData does not contain data at index`, { text: i, color: flatc("red") });
 		}
 	}
@@ -939,6 +973,7 @@ class lazyload {
 			: this.container.removeAttribute("data-errored");
 	}
 
+	/** @returns {Boolean} */
 	get errored() {
 		return this.isErrored;
 	}
@@ -948,7 +983,7 @@ class lazyload {
 	 */
 	onLoaded(f) {
 		if (typeof f !== "function")
-			throw { code: -1, description: `pager.onLoaded: not a valid function` }
+			throw { code: -1, description: `lazyload.onLoaded: not a valid function` }
 
 		this.onLoadedHandler.push(f);
 	}
@@ -1589,7 +1624,7 @@ function createInput({
 	if (typeof sounds === "object")
 		sounds.applySound(formGroup);
 
-	if (!["text", "textarea", "number", "date", "time", "select"].includes(type))
+	if (!["text", "textarea", "number", "date", "time", "select", "file"].includes(type))
 		type = "text";
 
 	/**
@@ -2033,7 +2068,7 @@ const cookie = {
 //? |-----------------------------------------------------------------------------------------------|
 //? |  from web-clog.js                                                                             |
 //? |                                                                                               |
-//? |  Copyright (c) 2018-2020 Belikhun. All right reserved                                         |
+//? |  Copyright (c) 2018-2021 Belikhun. All right reserved                                         |
 //? |  Licensed under the MIT License. See LICENSE in the project root for license information.     |
 //? |-----------------------------------------------------------------------------------------------|
 
@@ -2081,25 +2116,24 @@ function clog(level, ...args) {
 	text = text.concat(args);
 	let n = 2;
 	let out = new Array();
-	out[0] = "%c";
-	out[1] = "padding-left: 10px";
+
+	out[0] = "%c ";
+	out[1] = `padding-left: ${["INFO", "OKAY", "DEBG"].includes(level) ? 10 : 0}px`;
+
 	// i | 1   2   3   4   5     6
 	// j | 0   1   2   3   4     5
 	// n | 1 2 3 4 5 6 7 8 9 10 11
-
 	for (let i = 1; i <= text.length; i++) {
-		item = text[i-1];
+		item = text[i - 1];
 		if (typeof item === "string" || typeof item === "number") {
 			if (i > 4)
 				str += `${item} `;
 
 			out[0] += `%c${item} `;
-			out[n] = `font-size: ${size}px; font-family: ${font}; color: ${flatc("black")}`;
-			n += 1;
+			out[n++] = `font-size: ${size}px; font-family: ${font}; color: ${flatc("black")}`;
 		} else if (typeof item === "object") {
 			if (item === null || item === undefined || typeof item.text === "undefined") {
-				out[n] = item;
-				n += 1;
+				out[n++] = item;
 
 				if (item && item.code && item.description)
 					str += `[${item.code}] ${item.description} `;
@@ -2119,20 +2153,16 @@ function clog(level, ...args) {
 
 			if (item.separate) {
 				out[0] += "%c| ";
-				out[n] = `font-size: ${size}px; color: ${item.color};`;
-				out[n+1] = `font-size: ${size}px; color: ${item.color}; font-weight: bold;`;
-				n += 2;
+				out[n++] = out[n++] = `font-size: ${size}px; color: ${item.color}; font-weight: bold;`;
 			} else {
 				out[0] += " ";
-				out[n] = `font-size: ${size}px; font-family: ${font}; color: ${item.color}`;
-				n += 1;
+				out[n++] = `font-size: ${size}px; font-family: ${font}; color: ${item.color}`;
 			}
 		} else
-			console.error(`error: type ${typeof item}`)
+			console.error(`clog(): unknown type ${typeof item}`, item);
 	}
 
 	document.__onclog(level, rtime, str);
-
 	switch (level) {
 		case "DEBG":
 			console.debug.apply(this, out);
@@ -2393,7 +2423,7 @@ const __connection__ = {
 							return;
 
 						// Start time
-						let timer = new stopClock();
+						let timer = new StopClock();
 
 						try {
 							await checker();
@@ -2452,16 +2482,15 @@ const __connection__ = {
 if (typeof document.__onclog === "undefined")
 	document.__onclog = (lv, t, m) => {};
 
-let sc = new stopClock();
+let sc = new StopClock();
 clog("info", "Log started at:", {
 	color: flatc("green"),
 	text: (new Date()).toString()
 })
 
 // Error handling
-
 window.addEventListener("error", e => {
-	clog("crit", {
+	clog("CRIT", {
 		color: flatc("red"),
 		text: e.message
 	}, "at", {
