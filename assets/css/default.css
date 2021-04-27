@@ -852,12 +852,12 @@ icon[data-icon="search"]::after {
 	position: relative;
 	display: block;
 	transform: translateY(-5px);
-	color: #1b1b1b;
 }
 
 .popupContainer > .popupWindow > .header > icon::after {
 	font-size: 68px;
 	line-height: unset;
+	color: #1b1b1b;
 }
 
 .popupContainer > .popupWindow > .header > .text {
