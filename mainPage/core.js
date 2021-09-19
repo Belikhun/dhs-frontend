@@ -9,7 +9,7 @@ try {
 	const APPNAME = "Deal Hunter Suite";
 	const CODENAME = "Nadeshiko";
 	const VERSION = "7.8";
-	const STATE = "release";
+	const STATE = "indev";
 	
 	const AUTHOR = "Team DHS";
 	var   CONTACT_ADDR = "https://m.me/DealHunterSuite";
@@ -124,8 +124,8 @@ try {
 	
 		authorList: [{
 				name: "Belikhun",
-				avatar: `${SERVER_ADDR() + API["avatar"]}?u=belivipro9x99`,
-				link: `https://github.com/belivipro9x99`,
+				avatar: `${SERVER_ADDR() + API["avatar"]}?u=Belikhun`,
+				link: `https://github.com/Belikhun`,
 				role: [
 					"Core Developer",
 					"UI/UX Designer"
@@ -2554,7 +2554,7 @@ try {
 	
 				constructor(data) {
 					//? VARIABLE INIT
-					this.timer = new stopClock();
+					this.timer = new StopClock();
 					this.data = data;
 					this.scriptDisabled = !this.data.allow;
 					this.scriptLoaded = false;
