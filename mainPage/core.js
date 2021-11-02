@@ -6,9 +6,9 @@
 //? |-----------------------------------------------------------------------------------------------|
 
 try {
-	const APPNAME = "Deal Hunter Suite";
+	const APPNAME = "Deal Hunter Suite E.O.S";
 	const CODENAME = "Nadeshiko";
-	const VERSION = "7.8";
+	const VERSION = "8.0";
 	const STATE = "indev";
 	
 	const AUTHOR = "Team DHS";
@@ -31,18 +31,18 @@ try {
 
 		indev: {
 			master: {
-				name: "Máy Chủ Chính",
+				name: "Máy Chủ Cục Bộ",
+				addr: "http://localhost"
+			},
+			
+			dhs: {
+				name: "DHS Hostinger",
 				addr: "https://dealhuntersuite.com"
 			},
 
 			backup: {
 				name: "Máy Chủ Dự Phòng",
 				addr: "https://huntbug.000webhostapp.com"
-			},
-
-			local: {
-				name: "Máy Chủ Cục Bộ",
-				addr: "http://localhost"
 			}
 		}
 	}[STATE];
