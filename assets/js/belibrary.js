@@ -5,6 +5,80 @@
 //? |  Licensed under the MIT License. See LICENSE in the project root for license information.     |
 //? |-----------------------------------------------------------------------------------------------|
 
+const HTTP_STATUS_MESSAGES = {
+	100: `Continue`,
+	101: `Switching Protocols`,
+	102: `Processing`,
+
+	// 2×× Success
+	200: `OK`,
+	201: `Created`,
+	202: `Accepted`,
+	203: `Non-authoritative Information`,
+	204: `No Content`,
+	205: `Reset Content`,
+	206: `Partial Content`,
+	207: `Multi-Status`,
+	208: `Already Reported`,
+	226: `IM Used`,
+
+	// 3×× Redirection
+	300: `Multiple Choices`,
+	301: `Moved Permanently`,
+	302: `Found`,
+	303: `See Other`,
+	304: `Not Modified`,
+	305: `Use Proxy`,
+	307: `Temporary Redirect`,
+	308: `Permanent Redirect`,
+
+	// 4×× Client Error
+	400: `Bad Request`,
+	401: `Unauthorized`,
+	402: `Payment Required`,
+	403: `Forbidden`,
+	404: `Not Found`,
+	405: `Method Not Allowed`,
+	406: `Not Acceptable`,
+	407: `Proxy Authentication Required`,
+	408: `Request Timeout`,
+	409: `Conflict`,
+	410: `Gone`,
+	411: `Length Required`,
+	412: `Precondition Failed`,
+	413: `Payload Too Large`,
+	414: `Request-URI Too Long`,
+	415: `Unsupported Media Type`,
+	416: `Requested Range Not Satisfiable`,
+	417: `Expectation Failed`,
+	418: `I'm a teapot`,
+	421: `Misdirected Request`,
+	422: `Unprocessable Entity`,
+	423: `Locked`,
+	424: `Failed Dependency`,
+	426: `Upgrade Required`,
+	428: `Precondition Required`,
+	429: `Too Many Requests`,
+	431: `Request Header Fields Too Large`,
+	444: `Connection Closed Without Response`,
+	451: `Unavailable For Legal Reasons`,
+	499: `Client Closed Request`,
+
+	// 5×× Server Error
+	500: `Internal Server Error`,
+	501: `Not Implemented`,
+	502: `Bad Gateway`,
+	503: `Service Unavailable`,
+	504: `Gateway Timeout`,
+	505: `HTTP Version Not Supported`,
+	506: `Variant Also Negotiates`,
+	507: `Insufficient Storage`,
+	508: `Loop Detected`,
+	510: `Not Extended`,
+	511: `Network Authentication Required`,
+	599: `Network Connect Timeout Error`,
+}
+
 /**
  * An AJAX function designed for my API
  * @param	{Object}		param0		request data
@@ -27,7 +101,8 @@ function myajax({
 	changeState = true,
 	reRequest = true,
 	withCredentials = false,
-	timeout = 0
+	timeout = 0,
+	formEncodeURL = false
 }, callout = () => {}, error = () => {}) {
 	let argumentsList = arguments;
 
@@ -54,10 +129,19 @@ function myajax({
 		let formData = null;
 
 		if (method.toUpperCase() === "POST") {
-			formData = new FormData();
-			
-			for (let key of Object.keys(form))
-				formData.append(key, form[key]);
+			if (formEncodeURL) {
+				formData = Array();
+
+				for (let key of Object.keys(form))
+					formData.push(`${key}=${encodeURIComponent(form[key])}`);
+
+				formData = formData.join("&");
+			} else {
+				formData = new FormData();
+				
+				for (let key of Object.keys(form))
+					formData.append(key, form[key]);
+			}
 		}
 
 		let queryKey = Object.keys(query);
@@ -70,8 +154,12 @@ function myajax({
 		xhr.addEventListener("progress", e => onDownload(e), false);
 
 		xhr.addEventListener("readystatechange", async function() {
+			let statusText = (typeof HTTP_STATUS_MESSAGES[this.status] !== "undefined")
+				? HTTP_STATUS_MESSAGES[this.status]
+				: this.statusText;
+
 			if (this.readyState === this.DONE) {
-				if (this.status === 0) {
+				if (this.status === 0 && this.responseText === "") {
 					if (changeState === true)
 						__connection__.stateChange("offline");
 
@@ -92,9 +180,9 @@ function myajax({
 					}, {
 						color: flatc("red"),
 						text: `HTTP ${this.status}:`
-					}, this.statusText);
+					}, statusText);
 
-					let errorObj = { code: 1, description: `HTTP ${this.status}: ${this.statusText} (${method} ${url})`, data: { status: this.status, method, url } }
+					let errorObj = { code: 1, description: `HTTP ${this.status}: ${statusText} (${method} ${url})`, data: { status: this.status, method, url } }
 					error(errorObj);
 					reject(errorObj);
 
@@ -130,7 +218,7 @@ function myajax({
 							}, {
 								color: flatc("red"),
 								text: `HTTP ${this.status}:`
-							}, this.statusText, ` >>> ${response.description}`);
+							}, statusText, ` >>> ${response.description}`);
 	
 							if (this.status === 429 && response.code === 32 && reRequest === true) {
 								// Wait for :?unratelimited:?
@@ -154,7 +242,7 @@ function myajax({
 							}
 						}
 
-						let errorObj = { code: 3, description: `HTTP ${this.status}: ${this.statusText} (${method} ${url})`, data: response }
+						let errorObj = { code: 3, description: `HTTP ${this.status}: ${statusText} (${method} ${url})`, data: response }
 						error(errorObj);
 						reject(errorObj);
 
@@ -167,7 +255,7 @@ function myajax({
 
 					if (this.status >= 400) {
 						let code = `HTTP ${this.status}`;
-						let text = (this.statusText === "") ? "?Unknown statusText" : this.statusText;
+						let text = (statusText === "") ? "?Unknown statusText" : statusText;
 						let resData = response;
 
 						let header = this.getResponseHeader("output-json");
@@ -212,17 +300,26 @@ function myajax({
 		xhr.withCredentials = withCredentials;
 		xhr.timeout = timeout;
 
-		let sendData = (raw !== null) ? raw : formData;
+		let sendData = (raw !== null)
+			? raw
+			: formData;
 
 		for (let key of Object.keys(header))
 			xhr.setRequestHeader(key, header[key]);
 
-		if (Object.keys(json).length !== 0) {
-			sendData = JSON.stringify(json);
-			xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+		if (method === "POST") {
+			if (formEncodeURL)
+				xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+	
+			if (Object.keys(json).length !== 0) {
+				sendData = JSON.stringify(json);
+				xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+			}
 		}
 
-		xhr.setRequestHeader("Accept", `${type === "json" ? "application/json" : "text/plain"};charset=UTF-8`);
+		if (typeof header["Accept"] !== "string")
+			xhr.setRequestHeader("Accept", `${type === "json" ? "application/json" : "text/plain"};charset=UTF-8`);
+
 		xhr.send(sendData);
 	});
 }
@@ -285,11 +382,17 @@ function waitFor(checker = async () => {}, handler = () => {}, retry = 10, timeo
 	})
 }
 
-function escapeHTML(str) {
-	if ((str === null) || (str === ""))
-		return "";
-	else
-		str = str.toString();
+/**
+ * Replace some special character with printable
+ * character in html. Mainly use to avoid code
+ * execution
+ * 
+ * @param 	{*} 	string	Input String
+ * @returns	New String
+ */
+function escapeHTML(string) {
+	if (typeof string !== "string")
+		string = String(string);
 
 	let map = {
 		"&": "&amp;",
@@ -297,11 +400,9 @@ function escapeHTML(str) {
 		">": "&gt;",
 		"\"": "&quot;",
 		"'": "&#039;"
-	};
+	}
 
-	return str.replace(/[&<>"']/g, function (m) {
-		return map[m];
-	});
+	return string.replace(/[&<>"']/g, (m) => map[m]);
 }
 
 /**
@@ -340,7 +441,11 @@ function htmlToElement(html) {
 }
 
 /**
- * Deprecated
+ * This function is Deprecated!. We should avoid using
+ * this function as much as possible.
+ * 
+ * Please use `makeTree()` instead!
+ * 
  * @param {*} type 
  * @param {*} __class 
  * @param {*} data 
@@ -431,8 +536,111 @@ function buildElementTree(type = "div", __class = [], data = new Array(), __keyp
 	}
 }
 
-function buildNodeTree() {
+/**
+ * This is the replacement of `buildElementTree()`
+ * 
+ * @param	{String}		tag			Tag Name
+ * @param	{String|Array}	classes		Classes
+ * @param	{Object}		child		Child List
+ * @param	{String}		path		Path (optional)
+ * @returns	{HTMLElement}
+ */
+function makeTree(tag, classes, child = {}, path = "") {
+	let container = document.createElement(tag);
+	
+	switch (typeof classes) {
+		case "string":
+			container.classList.add(classes);
+			break;
+		
+		case "object":
+			if (classes.length && classes.length > 0)
+				container.classList.add(...classes);
+			else
+				throw { code: -1, description: `makeTree(${path}): Invalid or empty "classes" type: ${typeof classes}` }
 
+			break;
+	}
+
+	// If child list is invalid, we can just stop parsing
+	// now
+	if (typeof child !== "object")
+		return container;
+
+	let keys = Object.keys(child);
+
+	for (let key of keys) {
+		let item = child[key];
+		let currentPath = (path === "")
+			? key
+			: `${path}.${key}`
+
+		if (typeof container[key] !== "undefined")
+			throw { code: -1, description: `makeTree(${currentPath}): Illegal key name: "${key}"` }
+
+		/**
+		 * If node key is defined and is an object, this is
+		 * possibility a custom element data
+		 * 
+		 * Example: `createInput()`
+		 */
+		let customNode;
+
+		try {
+			customNode = (item.group && item.group.classList)
+				? item.group
+				: (item.container && item.container.classList)
+					? item.container
+					: (item.classList)
+						? item
+						: null;
+		} catch(e) {
+			throw { code: -1, description: `makeTree(${currentPath}): Custom node parse failed!`, data: e }
+		}
+
+		if (customNode) {
+			customNode.setAttribute("key", key);
+			customNode.dataset.path = currentPath;
+			container.appendChild(customNode);
+			container[key] = item;
+			continue;
+		}
+
+		// Normal Building
+		if (typeof item.tag !== "string")
+			throw { code: -1, description: `makeTree(${currentPath}): Invalid or undefined "tag" value` }
+
+		/** @type {HTMLElement} */
+		let node = makeTree(item.tag, item.class, item.child, currentPath);
+		node.dataset.path = currentPath;
+
+		if (typeof item.html === "string")
+			node.innerHTML = item.html;
+
+		if (typeof item.text !== "undefined")
+			node.innerText = item.text;
+
+		if (typeof item.for === "string")
+			node.htmlFor = item.for;
+
+		if (typeof item.data === "object")
+			for (let key of Object.keys(item.data))
+				node.dataset[key] = item.data[key];
+
+		if (typeof item.attribute === "object")
+			for (let key of Object.keys(item.attribute))
+				node.setAttribute(key, item.attribute[key]);
+
+		for (let key of Object.keys(item))
+			if (!["tag", "class", "child", "html", "for", "text", "data", "attribute"].includes(key) && typeof node[key] !== "undefined")
+				node[key] = item[key];
+
+		node.setAttribute("key", key);
+		container.appendChild(node);
+		container[key] = node;
+	}
+
+	return container;
 }
 
 function checkServer(ip, callback = () => {}) {
@@ -475,16 +683,47 @@ function time(date = new Date()) {
 	return date.getTime() / 1000;
 }
 
+/**
+ * Is date today??
+ * @param	{Date}	date
+ * @param	{Date}	today	Date to compare to
+ */
+function isToday(date, today = new Date()) {
+	return (date.getDate() === today.getDate() &&
+			date.getMonth() === today.getMonth() &&
+			date.getFullYear() === today.getFullYear())
+}
+
+/**
+ * Get current Week in a year
+ * @returns {Number}	Current Week
+ */
+Date.prototype.getWeek = function() {
+	let date = new Date(Date.UTC(this.getFullYear(), this.getMonth(), this.getDate()));
+	let dayNum = date.getUTCDay() || 7;
+	date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+	let yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+	return Math.ceil((((date - yearStart) / 86400000) + 1) / 7)
+}
+
 function parseTime(t = 0, {
 	forceShowHours = false,
 	msDigit = 3,
-	showPlus = false
+	showPlus = false,
+	strVal = true,
+	calcDays = false
 } = {}) {
 	let d = showPlus ? "+" : "";
+	let days = 0;
 	
 	if (t < 0) {
 		t = -t;
 		d = "-";
+	}
+
+	if (calcDays) {
+		days = Math.floor(t / 86400);
+		t %= 86400;
 	}
 	
 	let h = Math.floor(t / 3600);
@@ -493,18 +732,37 @@ function parseTime(t = 0, {
 	let ms = pleft(parseInt(t.toFixed(msDigit).split(".")[1]), msDigit);
 
 	return {
-		h: h,
-		m: m,
-		s: s,
-		ms: ms,
-		str: d + [h, m, s]
-			.map(v => v < 10 ? "0" + v : v)
-			.filter((v, i) => i > 0 || forceShowHours || v !== "00")
-			.join(":")
+		h, m, s, ms, d,
+		days,
+		str: (strVal)
+			? d + [h, m, s]
+				.map(v => v < 10 ? "0" + v : v)
+				.filter((v, i) => i > 0 || forceShowHours || v !== "00")
+				.join(":")
+			: null
 	}
 }
 
-function formatTime(seconds, { ended = "Đã kết thúc", endedCallback = () => {} } = {}) {
+/**
+ * Date to human readable time
+ * @param {Date} date 
+ */
+function humanReadableTime(date) {
+	let timeString = `${pleft(date.getHours(), 2)}:${pleft(date.getMinutes(), 2)}`;
+
+	if (date.getSeconds() > 0)
+		timeString += `:${pleft(date.getSeconds(), 2)}`;
+
+	let dateString = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+	return `${timeString} ${dateString}`;
+}
+
+function formatTime(seconds, {
+	ended = "Đã kết thúc",
+	surfix = "",
+	minimal = false,
+	endedCallback = () => {}
+} = {}) {
 	let time = { năm: 31536000, ngày: 86400, giờ: 3600, phút: 60, giây: 1 },
 		res = [];
 
@@ -517,17 +775,34 @@ function formatTime(seconds, { ended = "Đã kết thúc", endedCallback = () =>
 	}
 
 	for (let key in time)
-		if (seconds >= time[key]) {
-			let val = Math.floor(seconds / time[key]);
-			res.push(val += " " + key);
-			seconds = seconds % time[key];
+		if (minimal) {
+			if (seconds > time[key]) {
+				res[0] = `${Math.floor(seconds / time[key])} ${key}${surfix}`
+				break;
+			}
+		} else {
+			if (seconds >= time[key]) {
+				let val = Math.floor(seconds / time[key]);
+				res.push(`${val} ${key}${surfix}`);
+				seconds = seconds % time[key];
+			}
 		}
 
-	return res.length > 1 ? res.join(", ").replace(/,([^,]*)$/, " và" + "$1") : res[0];
+	return (res.length > 1)
+		? res.join(", ").replace(/,([^,]*)$/, " và" + "$1")
+		: res[0];
 }
 
-function liveTime(element, start = time(new Date()), { type = "full", count = "up", prefix = "", surfix = "", ended = "Đã kết thúc", endedCallback = () => {}, interval = 1000 } = {}) {
-	let updateInterval = setInterval(e => {
+function liveTime(element, start = time(new Date()), {
+	type = "full",
+	count = "up",
+	prefix = "",
+	surfix = "",
+	ended = "Đã kết thúc",
+	endedCallback = () => {},
+	interval = 1000
+} = {}) {
+	let updateInterval = setInterval(() => {
 		if (!document.body.contains(element)) {
 			clog("DEBG", "Live Time Element does not exist in document. Clearing...");
 			clearInterval(updateInterval);
@@ -581,14 +856,34 @@ function liveTime(element, start = time(new Date()), { type = "full", count = "u
 	}, interval);
 }
 
-function setDateTimeValue(dateNode, timeNode, value = time()) {
+/**
+ * Set date and time input to a specified time
+ * @param	{HTMLInputElement}		dateNode	Date Input
+ * @param	{HTMLInputElement}		timeNode	Time Input
+ * @param	{Number}				value		UNIX Time
+ */
+ function setDateTimeValue(dateNode, timeNode, value = time()) {
 	let date = new Date(value * 1000);
-	dateNode.value = [date.getFullYear(), date.getMonth() + 1, date.getDate()].map(i => pleft(i, 2)).join("-");
-	timeNode.value = [date.getHours(), date.getMinutes(), date.getSeconds()].map(i => pleft(i, 2)).join(":");
+
+	if (typeof dateNode === "object" && dateNode)
+		dateNode.value = [date.getFullYear(), date.getMonth() + 1, date.getDate()].map(i => pleft(i, 2)).join("-");
+
+	if (typeof timeNode === "object" && timeNode)
+		timeNode.value = [date.getHours(), date.getMinutes(), date.getSeconds()].map(i => pleft(i, 2)).join(":");
 }
 
 function getDateTimeValue(dateNode, timeNode) {
 	return time(new Date(`${dateNode.value}T${timeNode.value}`));
+}
+
+/**
+ * Return number of days between two dates
+ * @param	{Date}	start	Start date
+ * @param	{Date}	end		End date
+ * @returns {Number}
+ */
+function daysBetween(start, end) {
+	return (start.getTime() - end.getTime()) / (1000 * 3600 * 24);
 }
 
 function convertSize(bytes) {
@@ -647,17 +942,42 @@ function round(number, to = 2) {
 	return Math.round(number * d) / d;
 }
 
+/**
+ * Returns a number whose value is limited to the given range.
+ *
+ * Example: limit the output of this computation to between 0 and 255
+ * (x * 255).clamp(0, 255)
+ *
+ * @param		{Number}	value	The input value
+ * @param		{Number}	min		The lower boundary of the output range
+ * @param		{Number}	max		The upper boundary of the output range
+ * @returns		{Number}	A number in the range [min, max]
+ */
+function clamp(value, min, max) {
+	return Math.min(Math.max(value, min), max);
+}
+
 class StopClock {
-	__time(date = new Date()) {
-		return date.getTime();
+	__time(date) {
+		return (typeof date !== "undefined")
+			? date.getTime()
+			: performance.now();
 	}
 
-	constructor(date = new Date()) {
+	/**
+	 * Create a new StopClock instance
+	 * @param {Date} date 
+	 */
+	constructor(date) {
 		this.start = this.__time(date);
 	}
 
 	get stop() {
 		return (this.__time() - this.start) / 1000;
+	}
+
+	tick() {
+		return this.stop;
 	}
 }
 
@@ -786,7 +1106,14 @@ class Pager {
 	
 			for (let i = 0; i <= response.data.lists.length; i++)
 				if (response.data.lists[i]) {
-					let node = this.renderItemHandler(response.data.lists[i], this.container);
+					let node = null;
+
+					try {
+						node = this.renderItemHandler(response.data.lists[i], this.container);
+					} catch(e) {
+						clog("ERRR", `Pager.render(): An error occured while processing handler for item`, response.data.lists[i], e);
+						continue;
+					}
 
 					if (typeof node === "object" && node.classList && node.tagName)
 						this.container.appendChild(node);
@@ -815,7 +1142,14 @@ class Pager {
 	
 			for (let i = from; i <= to; i++)
 				if (listData[i]) {
-					let node = this.renderItemHandler(listData[i], this.container);
+					let node = null;
+
+					try {
+						node = this.renderItemHandler(listData[i], this.container);
+					} catch(e) {
+						clog("ERRR", `Pager.render(): An error occured while processing handler for item`, listData[i], e);
+						continue;
+					}
 
 					if (typeof node === "object" && node.classList && node.tagName)
 						this.container.appendChild(node);
@@ -827,62 +1161,26 @@ class Pager {
 
 class lazyload {
 	constructor({
-		container = undefined,
-		source = undefined,
-		classes = undefined,
+		container,
+		source,
+		classes,
+		tagName = "div",
+		spinner = "simpleSpinner",
 		doLoad = true
 	} = {}) {
+		/** @type {HTMLElement} */
+		this.container
+
 		if (container && container.classList)
 			this.container = container;
 		else
-			this.container = document.createElement("div");
+			this.container = document.createElement(tagName);
 
-		/**
-		 * @type	{String}	Source
-		 */
+		/** @type	{String}	Source */
 		this._src = null;
-
-		switch (typeof source) {
-			case "string":
-				// Assume as Image Src
-				this.sourceNode = document.createElement("img");
-				this._src = source;
-				break;
-		
-			case "object":
-				if (source.classList)
-					// Source is a Node. We just need to append it in container
-					this.sourceNode = source;
-				else if (source.type && source.src) {
-					switch (source.type) {
-						case "image":
-						case "iframe":
-							this.sourceNode = document.createElement(source.type);
-							this._src = source.src;
-							break;
-
-						case "document":
-							this.sourceNode = document.createElement("embed");
-							this._src = source.src;
-							break;
-
-						default:
-							throw { code: -1, description: `lazyload: source.type >>> ${source.type} is not a valid type` }
-					}
-				} else
-					throw { code: -1, description: `lazyload: source is not a valid node/object` }
-				break;
-
-			default:
-				throw { code: -1, description: `lazyload: source is not a valid string/node/object, got ${typeof source}` }
-		}
-
-		if (!this.sourceNode || !this._src)
-			throw { code: -1, description: `lazyload: an unexpected error occured while creating lazyload object` }
-
 		this.isLoaded = false;
 		this.isErrored = false;
-		this.onLoadedHandler = [];
+		this.onLoadedHandler = []
 		this.onErroredHandler = null;
 
 		this.container.classList.add("lazyload");
@@ -901,29 +1199,89 @@ class lazyload {
 					break;
 			}
 
-		this.sourceNode.addEventListener("load", () => this.loaded = true);
-		this.sourceNode.addEventListener("error", () => this.errored = true);
-
+		this.source = source;
 		this.spinner = document.createElement("div");
-		this.spinner.classList.add("simpleSpinner");
-
-		this.container.append(this.sourceNode, this.spinner);
+		this.spinner.classList.add(spinner);
+		this.spinner.setAttribute("spinner", "true");
+		this.container.append(this.spinner);
 
 		if (doLoad)
 			this.load();
 	}
 
 	load(src) {
+		if (!this._src)
+			return false;
+
 		if (src)
 			this._src = src;
 
 		this.src = this._src;
+		return true;
+	}
+
+	/**
+	 * @param {String|Object} source
+	 */
+	set source(source) {
+		let node;
+
+		switch (typeof source) {
+			case "string":
+				// Assume as Image Src
+				node = document.createElement("img");
+				this._src = source;
+				break;
+		
+			case "object":
+				if (source.classList)
+					// Source is a Node. We just need to append it in container
+					node = source;
+				else if (source.type && source.src) {
+					switch (source.type) {
+						case "image":
+						case "iframe":
+							node = document.createElement(source.type);
+							this._src = source.src;
+							break;
+
+						case "document":
+							node = document.createElement("embed");
+							this._src = source.src;
+							break;
+
+						default:
+							throw { code: -1, description: `lazyload: source.type >>> ${source.type} is not a valid type` }
+					}
+				} else
+					throw { code: -1, description: `lazyload: source is not a valid node/object` }
+				break;
+
+			default:
+				break;
+		}
+
+		if (node) {
+			node.addEventListener("load", () => this.loaded = true);
+			node.addEventListener("error", () => this.errored = true);
+
+			if (this.sourceNode) {
+				this.container.replaceChild(node, this.sourceNode);
+				this.sourceNode = node;
+			} else {
+				this.container.insertBefore(node, this.container.firstChild);
+				this.sourceNode = node;
+			}
+		}
 	}
 
 	/**
 	 * @param {String} src
 	 */
 	set src(src) {
+		if (!this.sourceNode)
+			throw { code: -1, description: `lazyload: cannot load source because sourceNode hasn't been initialized properly` }
+
 		this.loaded = false;
 		this.errored = false;
 		this.sourceNode.src = src;
@@ -1273,7 +1631,15 @@ function triBg(element, {
 	triangleCount = 38
 } = {}) {
 	const DARKCOLOR = ["brown", "dark", "darkRed", "darkGreen", "darkBlue"]
-	let current = element.querySelector(".triBgContainer");
+	const LIGHTCOLOR = ["lightBlue"]
+
+	let getRandBright = (color) => DARKCOLOR.includes(color)
+		? randBetween(1.1, 1.3, false)
+		: (LIGHTCOLOR.includes(color)
+			? randBetween(0.96, 1.05, false)
+			: randBetween(0.9, 1.2, false))
+
+	let current = element.querySelector(":scope > .triBgContainer");
 
 	if (current)
 		element.removeChild(current);
@@ -1304,11 +1670,7 @@ function triBg(element, {
 		let randScale = randBetween(0.4, 2.0, false) * scale;
 		let width = 15 * randScale;
 		let height = 0.866 * (30 * randScale);
-
-		let randBright = DARKCOLOR.includes(color)
-			? randBetween(1.1, 1.3, false)
-			: randBetween(0.9, 1.2, false)
-
+		let randBright = getRandBright(color);
 		let randLeftPos = randBetween(0, 98, false);
 		let delay = randBetween(-speed / 2, speed / 2, false);
 
@@ -1329,10 +1691,7 @@ function triBg(element, {
 			element.dataset.triColor = color;
 
 			for (let triangle of container.childNodes) {
-				let randBright = DARKCOLOR.includes(color)
-					? randBetween(1.1, 1.3, false)
-					: randBetween(0.9, 1.2, false)
-
+				let randBright = getRandBright(color);
 				triangle.style.filter = `brightness(${randBright})`;
 			}
 		}
@@ -1543,7 +1902,17 @@ function Animator(duration, timingFunction, animate) {
 
 	let update = () => {
 		let tPoint = (time() - start) / duration;
-		animate(Math.min(timingFunction(tPoint), 1));
+
+		// Safe executing update function to prevent stopping
+		// animation entirely
+		try {
+			if (animate(Math.min(timingFunction(tPoint), 1)) === false)
+				// Stop Animator
+				tPoint = 1.1;
+		} catch (e) {
+			let error = parseException(e);
+			clog("WARN", `Animator().update(): [${error.code}] ${error.description}`);
+		}
 
 		if (tPoint <= 1)
 			rAID = requestAnimationFrame(update);
@@ -1573,7 +1942,7 @@ if (typeof $ !== "function")
 	/**
 	 * A shorthand of querySelector
 	 * @param	{String}	selector	Selector
-	 * @returns	{Element}
+	 * @returns	{HTMLElement}
 	 */
 	function $(query) {
 		let r = document.querySelector(query);
@@ -1601,7 +1970,7 @@ function sanitizeHTML(html) {
 }
 
 /**
- * Create Input Element, require input.css
+ * Create Input Element, require `input.css`
  * @param	{Object}
  */
 function createInput({
@@ -1609,44 +1978,54 @@ function createInput({
 	id = randString(6),
 	label = "Sample Input",
 	value = "",
-	color = "default",
+	color = "blue",
 	required = false,
 	autofill = true,
 	spellcheck = false,
 	options = {}
 } = {}) {
-	let formGroup = document.createElement("div");
-	formGroup.classList.add("formGroup");
-	formGroup.dataset.color = color;
-	formGroup.dataset.soundhoversoft = "";
-	formGroup.dataset.soundselectsoft = "";
+	// Check valid input type can be used in this api. Will throw an error when input type is invalid
+	// Some types are not included because there are api to create that specific input
+	//
+	// See https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input#input_types
+	if (!["text", "textarea", "email", "password", "color", "number", "date", "time", "select", "file", "datetime-local", "month", "week", "tel", "url"].includes(type))
+		throw { code: -1, description: `createInput(${type}): Invalid type: ${type}` }
+
+	let container = makeTree("span", "sq-input", {
+		input: {
+			tag: ["textarea", "select"].includes(type) ? type : "input",
+			class: "input",
+			type,
+			id,
+			placeholder: label,
+			autocomplete: autofill ? "on" : "off",
+			spellcheck: !!spellcheck,
+			required
+		},
+
+		outline: { tag: "div", class: "outline", child: {
+			leading: { tag: "span", class: ["notch", "leading"] },
+
+			label: { tag: "span", class: ["notch", "label"], child: {
+				label: { tag: "label", htmlFor: id, text: label }
+			}},
+
+			trailing: { tag: "span", class: ["notch", "trailing"] }
+		}}
+	});
+
+	container.dataset.color = color;
+	container.dataset.soundhoversoft = "";
+	container.dataset.soundselectsoft = "";
 
 	if (typeof sounds === "object")
-		sounds.applySound(formGroup);
-
-	if (!["text", "textarea", "number", "date", "time", "select", "file"].includes(type))
-		type = "text";
-
-	/**
-	 * @type {HTMLInputElement}
-	 */
-	let formField = document.createElement(["textarea", "select"].includes(type) ? type : "input");
-
-	formField.type = type;
-	formField.id = id;
-	formField.classList.add("formField");
-	formField.placeholder = label;
-	formField.autocomplete = autofill ? "on" : "off";
-	formField.spellcheck = !!spellcheck;
-
-	if (required)
-		formField.required = true;
+		sounds.applySound(container, ["soundhoversoft", "soundselectsoft"]);
 
 	switch(type) {
 		case "textarea":
-			formField.style.fontFamily = "Consolas";
-			formField.style.fontWeight = "bold";
-			formField.style.fontSize = "15px";
+			container.input.style.fontFamily = "Consolas";
+			container.input.style.fontWeight = "bold";
+			container.input.style.fontSize = "15px";
 			break;
 
 		case "select": {
@@ -1654,58 +2033,53 @@ function createInput({
 				let option = document.createElement("option");
 				option.value = key;
 				option.innerHTML = options[key];
-				formField.appendChild(option);
+
+				container.input.appendChild(option);
 			}
 
 			break;
 		}
 	}
 
-	let formLabel = document.createElement("label");
-	formLabel.htmlFor = id;
-	formLabel.classList.add("formLabel");
-	formLabel.innerText = label;
-
-	formGroup.appendChild(formField);
-	formGroup.appendChild(formLabel);
-
 	// Events
 	let onInputHandlers = [];
 	let onChangeHandlers = [];
 
-	formField.addEventListener("input", (e) => onInputHandlers.forEach(f => f(formField.value, e)));
-	formField.addEventListener("change", (e) => onChangeHandlers.forEach(f => f(formField.value, e)));
-
-	formField.value = value;
+	container.input.addEventListener("input", (e) => onInputHandlers.forEach(f => f(container.input.value, e)));
+	container.input.addEventListener("change", (e) => onChangeHandlers.forEach(f => f(container.input.value, e)));
+	container.input.value = value;
 
 	return {
-		group: formGroup,
-		input: formField,
+		group: container,
+
+		/** @type {HTMLInputElement} */
+		input: container.input,
 
 		set({
 			value,
 			label,
 			options
 		}) {
-			if (typeof options === "object" && formField.tagName.toLowerCase() === "select") {
-				emptyNode(formField);
+			if (typeof options === "object" && container.input.tagName.toLowerCase() === "select") {
+				emptyNode(container.input);
 
 				for (let key of Object.keys(options)) {
 					let option = document.createElement("option");
 					option.value = key;
 					option.innerHTML = options[key];
-					formField.appendChild(option);
+
+					container.input.appendChild(option);
 				}
 			}
 
 			if (typeof value !== "undefined") {
-				formField.value = value;
-				formField.dispatchEvent(new Event("input"));
-				formField.dispatchEvent(new Event("change"));
+				container.input.value = value;
+				container.input.dispatchEvent(new Event("input"));
+				container.input.dispatchEvent(new Event("change"));
 			}
 
 			if (label)
-				formLabel.innerText = label;
+				container.input.innerText = label;
 		},
 
 		/**
@@ -1716,7 +2090,7 @@ function createInput({
 				throw { code: -1, description: `createInput(${type}).onInput(): Not a valid function` }
 
 			onInputHandlers.push(f);
-			f(formField.value, null);
+			f(container.input.value, null);
 		},
 
 		/**
@@ -1727,7 +2101,7 @@ function createInput({
 				throw { code: -1, description: `createInput(${type}).onChange(): Not a valid function` }
 
 			onChangeHandlers.push(f);
-			f(formField.value, null);
+			f(container.input.value, null);
 		}
 	}
 }
@@ -1736,7 +2110,7 @@ function createInput({
  * Create Checkbox Element, require switch.css
  */
 function createCheckbox({
-	label = "Sample Switch",
+	label = "Sample Checkbox",
 	color = "pink",
 	value = false,
 	type = "checkbox"
@@ -1777,6 +2151,208 @@ function createCheckbox({
 	}
 }
 
+/**
+ * Create Switch Element, require switch.css
+ */
+ function createSwitch({
+	label = "Sample Switch",
+	value = false,
+	color = "blue",
+	type = "checkbox",
+	id = `switch_${randString(8)}`
+} = {}) {
+	let container = document.createElement("div");
+	container.classList.add("checkboxContainer");
+	sounds.applySound(container, ["soundhoversoft"]);
+
+	let title = document.createElement("span");
+	title.innerHTML = label;
+
+	let switchLabel = document.createElement("div");
+	switchLabel.classList.add("sq-switch");
+	switchLabel.dataset.color = color;
+
+	let input = document.createElement("input");
+	input.classList.add("checkbox");
+	input.id = id;
+	input.type = type;
+	input.checked = value;
+
+	if (typeof sounds === "object")
+		sounds.applySound(input, ["soundcheck"]);
+
+	let track = document.createElement("label");
+	track.classList.add("track");
+	track.htmlFor = id;
+
+	switchLabel.appendChild(input);
+	switchLabel.appendChild(track);
+	container.appendChild(title);
+	container.appendChild(switchLabel);
+
+	return {
+		group: container,
+		input,
+		title,
+		label: switchLabel
+	}
+}
+
+function createSelectInput({
+	icon,
+	color = "blue",
+	fixed = false,
+	options = {},
+	value
+} = {}) {
+	let container = makeTree("div", "sq-selector", {
+		current: { tag: "div", class: "current", child: {
+			icon: { tag: "icon", class: "icon" },
+			value: { tag: "t", class: "value" },
+			arrow: { tag: "icon", class: "arrow", data: { icon: "arrowDown" } }
+		}},
+
+		select: { tag: "div", class: "select", child: {
+			list: { tag: "div", class: "list" }
+		}}
+	});
+
+	container.current.icon.style.display = "none";
+
+	if (typeof sounds === "object")
+		sounds.applySound(container.current, ["soundhover"]);
+
+	if (typeof Scrollable === "function")
+		new Scrollable(container.select, {
+			content: container.select.list
+		});
+
+	/** @type {HTMLDivElement} */
+	let activeNode = undefined;
+	let activeValue = undefined;
+	let currentOptions = {}
+	let changeHandlers = []
+	let showing = false;
+
+	const show = () => {
+		if (typeof sounds === "object")
+			sounds.select(1);
+
+		showing = true;
+		container.classList.add("show");
+		container.select.style.height = `${Math.min(150, container.select.list.scrollHeight)}px`;
+	}
+
+	const hide = (isSelected = false) => {
+		if (typeof sounds === "object" && !isSelected)
+			sounds.select(1);
+		
+		showing = false;
+		container.classList.remove("show");
+		container.select.style.height = null;
+	}
+
+	const toggle = () => {
+		if (showing)
+			hide();
+		else
+			show();
+	}
+
+	const set = ({
+		icon,
+		color,
+		options,
+		fixed,
+		value
+	} = {}) => {
+		if (typeof color === "string")
+			container.dataset.color = color;
+
+		if (typeof icon === "string") {
+			container.current.icon.style.display = null;
+			container.current.icon.dataset.icon = icon;
+		} else if (typeof icon !== "undefined")
+			container.current.icon.style.display = "none";
+
+		if (typeof options === "object") {
+			emptyNode(container.select.list);
+			activeNode = undefined;
+			activeValue = undefined;
+			currentOptions = {}
+
+			for (let key of Object.keys(options)) {
+				let item = document.createElement("div");
+				item.classList.add("item");
+				item.dataset.value = key;
+				item.innerText = options[key];
+				options[key] = item;
+
+				if (typeof sounds === "object")
+					sounds.applySound(item, ["soundhoversoft"]);
+
+				item.addEventListener("click", () => {
+					if (activeNode)
+						activeNode.classList.remove("active");
+					
+					activeNode = item;
+					activeValue = item.dataset.value;
+					item.classList.add("active");
+					container.current.value.innerText = item.innerText;
+					changeHandlers.forEach(f => f(item.dataset.value));
+
+					if (typeof sounds === "object")
+						sounds.soundToggle(sounds.sounds.valueChange);
+
+					hide(true);
+				});
+
+				container.select.list.appendChild(item);
+			}
+
+			currentOptions = options;
+		}
+
+		if (typeof fixed === "boolean") {
+			container.classList[fixed ? "add" : "remove"]("fixed");
+		}
+
+		if (typeof value === "string" && currentOptions[value]) {
+			if (activeNode)
+				activeNode.classList.remove("active");
+
+			activeNode = currentOptions[value];
+			activeNode.classList.add("active");
+			activeValue = value;
+			container.current.value.innerText = activeNode.innerText;
+			changeHandlers.forEach(f => f(activeValue));
+		}
+	}
+
+	set({ icon, color, options, fixed, value });
+
+	container.current.addEventListener("click", () => toggle());
+
+	return {
+		group: container,
+		showing,
+		value: () => activeValue,
+		show,
+		hide,
+		set,
+
+		onChange: (f) => {
+			if (typeof f !== "function")
+				throw { code: -1, description: `createSelectInput().onChange(): not a valid function` }
+
+			changeHandlers.push(f);
+
+			if (activeValue)
+				f(activeValue);
+		}
+	}
+}
+
 function createSlider({
 	color = "pink",
 	value = 0,
@@ -1791,6 +2367,7 @@ function createSlider({
 		{ type: "span", class: "rightTrack", name: "right" }
 	]);
 
+	let mouseDownTick = 0;
 	let o = container.obj;
 	o.dataset.color = color;
 	o.dataset.soundhover = true;
@@ -1805,6 +2382,10 @@ function createSlider({
 	o.input.value = value;
 
 	const update = (e) => {
+		mouseDownTick++;
+		if (mouseDownTick > 1)
+			o.classList.add("dragging");
+
 		let valP = (e.target.value - min) / (max - min);
 
 		o.thumb.style.left = `calc(20px + (100% - 40px) * ${valP})`;
@@ -1825,12 +2406,17 @@ function createSlider({
 	let inputHandlers = []
 	let changeHandlers = []
 
+	// Event train
 	o.input.addEventListener("input", (e) => {
 		inputHandlers.forEach(f => f(parseFloat(e.target.value), e));
 		update(e);
 	});
 
 	o.input.addEventListener("change", (e) => changeHandlers.forEach(f => f(parseFloat(e.target.value), e)));
+	o.addEventListener("mouseup", () => {
+		o.classList.remove("dragging");
+		mouseDownTick = 0;
+	});
 
 	return {
 		group: container.tree,
@@ -1865,127 +2451,153 @@ function createSlider({
  * @param	{String}	color		Button Color
  * @returns	{HTMLButtonElement}		Button Element
  */
-function createBtn(text, color = "blue", {
+function createButton(text, {
+	color = "blue",
 	element = "button",
 	type = "button",
+	style = "default",
+	classes,
 	icon = null,
 	align = "left",
-	complex = false
+	complex = false,
+	triangleCount = 16,
+	disabled = false
 } = {}) {
 	let button = document.createElement(element);
-	button.classList.add("sq-btn");
 	button.type = type;
+	button.dataset.style = style;
 	button.dataset.color = color;
-	button.dataset.soundhover = "";
-	button.dataset.soundselect = "";
+	button.disabled = disabled;
+	button.classList.add("sq-btn");
 
-	let textNode = document.createElement("span");
-	textNode.classList.add("text");
-	textNode.innerText = text;
+	switch (typeof classes) {
+		case "string":
+			button.classList.add(classes);
+			break;
+		
+		case "object":
+			if (classes.length && classes.length > 0)
+				button.classList.add(...classes);
+			else
+				throw { code: -1, description: `createButton(): Invalid or empty "classes" type: ${typeof classes}` }
+
+			break;
+	}
 
 	if (icon)
 		button.innerHTML = `<icon class="${align}" data-icon="${icon}"></icon>`;
 
-	button.appendChild(textNode);
+	let textNode = document.createElement("span");
+	textNode.classList.add("text");
 	button.changeText = (text) => textNode.innerText = text;
 
-	if (complex)
-		triBg(button, {
+	if (typeof text === "undefined" || text === null || text === "icon") {
+		button.classList.add("empty");
+	} else {
+		textNode.innerText = text;
+
+		if (align === "left")
+			button.appendChild(textNode);
+		else
+			button.insertBefore(textNode, button.firstChild);
+	}
+
+	let spinner = document.createElement("div");
+	spinner.classList.add("simpleSpinner");
+	button.appendChild(spinner);
+
+	button.loading = (loading) => {
+		if (loading) {
+			button.disabled = true;
+			button.dataset.loading = true;
+		} else {
+			button.disabled = false;
+			button.removeAttribute("data-loading");
+		}
+	}
+
+	if (complex && style !== "flat")
+		button.background = triBg(button, {
 			scale: 1.6,
-			speed: 12,
+			speed: 8,
 			color: color,
-			triangleCount: 8
+			triangleCount
 		});
 
 	if (typeof sounds === "object")
-		sounds.applySound(button);
+		sounds.applySound(button, ["soundhover", "soundselect"]);
 
 	return button;
 }
 
 function createImageInput({
 	id = randString(6),
-	label = "Sample Image",
-	resetLabel = "Đặt Lại",
+	resetText = "Đặt Lại",
 	accept = "image/*",
 	src = "//:0"
 } = {}) {
 	if (!src)
 		src = "//:0";
 
-	let container = document.createElement("div");
-	container.classList.add("imageInput");
+	let container = makeTree("div", "imageInput", {
+		input: { tag: "input", type: "file", id, accept },
+		image: { tag: "label", htmlFor: id, title: "Chọn Ảnh" },
 
-	let input = document.createElement("input");
-	input.type = "file";
-	input.id = id;
-	input.accept = accept;
-
-	let labelNode = document.createElement("t");
-	labelNode.classList.add("label");
-	labelNode.innerText = label;
+		clear: { tag: "icon", class: "clear", title: "Loại Bỏ Ảnh", data: { icon: "close" } },
+		reset: createButton(resetText, { color: "pink", complex: true })
+	});
 
 	let resetHandlers = []
-
-	let imageContainer = document.createElement("label");
-	imageContainer.htmlFor = id;
-	imageContainer.title = "Chọn Ảnh";
-	sounds.applySound(imageContainer, ["soundhover", "soundselect"]);
-
-	let lazyloadImage = new lazyload({
-		container: imageContainer,
+	let image = new lazyload({
+		container: container.image,
 		source: src,
 		classes: ["imageBox", item.display || "square"]
 	});
 
-	let resetButton = document.createElement("button");
-	resetButton.type = "button";
-	resetButton.classList.add("sq-btn", "pink", "sound");
-	resetButton.innerText = resetLabel;
-	sounds.applySound(resetButton, ["soundhover", "soundselect"]);
-	
-	let clearButton = document.createElement("icon");
-	clearButton.classList.add("clear");
-	clearButton.dataset.icon = "close";
-	sounds.applySound(clearButton, ["soundhoversoft", "soundselectsoft"]);
-
-	input.addEventListener("change", (e) => {
+	container.input.addEventListener("change", (e) => {
 		let file = e.target.files[0];
 
 		if (file) {
-			lazyloadImage.src = URL.createObjectURL(file);
-			clearButton.classList.add("show");
+			image.src = URL.createObjectURL(file);
+			container.clear.classList.add("show");
 		} else
-			clearButton.classList.remove("show");
+			container.clear.classList.remove("show");
 	});
 
-	clearButton.addEventListener("click", () => {
-		clearButton.classList.remove("show");
-		input.value = null;
-		lazyloadImage.src = src;
+	container.clear.addEventListener("click", () => {
+		container.clear.classList.remove("show");
+		container.input.value = null;
+		image.src = src;
 	});
 
-	resetButton.addEventListener("click", async (e) => {
-		resetButton.disabled = true;
+	container.reset.addEventListener("click", async (e) => {
+		container.reset.disabled = true;
 
 		for (let f of resetHandlers)
 			await f(e);
+
+		container.reset.disabled = false;
 	});
 
-	input.dispatchEvent(new Event("change"));
-	container.append(input, labelNode, imageContainer, clearButton, resetButton);
+	container.input.dispatchEvent(new Event("change"));
 
 	return {
 		group: container,
-		input,
-		image: lazyloadImage,
+		input: container.input,
+		image,
 
 		src(src = "//:0") {
 			if (!src)
 				src = "//:0";
 
-			lazyloadImage.src = src;
-			resetButton.disabled = (src === "//:0");
+			image.src = src;
+			container.reset.disabled = (src === "//:0");
+		},
+
+		clear() {
+			container.clear.classList.remove("show");
+			container.input.value = null;
+			image.src = src;
 		},
 
 		onReset(f) {
@@ -1999,11 +2611,13 @@ function createImageInput({
 
 function createNote({
 	level = "info",
-	message = "Smaple Note"
+	message = "Smaple Note",
+	style = "flat"
 } = {}) {
 	let container = document.createElement("div");
 	container.classList.add("note");
 	container.dataset.level = level;
+	container.dataset.style = style;
 
 	let inner = document.createElement("span");
 	inner.classList.add("inner");
@@ -2020,6 +2634,51 @@ function createNote({
 
 			if (message)
 				inner.innerHTML = message;
+		}
+	}
+}
+
+/**
+ * Create Timer Element
+ * @param	{Number|Object}	time	Time in seconds or object from parseTime()
+ */
+function createTimer(time = 0, {
+	style = "normal"
+} = {}) {
+	let timer = document.createElement("timer");
+	timer.dataset.style = style;
+
+	let days = document.createElement("days");
+	let inner = document.createElement("span");
+	let ms = document.createElement("ms");
+
+	timer.append(days, inner, ms);
+
+	const set = ({
+		time,
+		style
+	}) => {
+		if (typeof time === "number")
+			time = parseTime(time);
+
+		if (typeof time === "object") {
+			days.innerText = (time.days != 0) ? `${time.d}${time.days}` : "";
+			inner.innerText = time.str;
+			ms.innerText = time.ms;
+		}
+
+		if (typeof style === "string")
+			timer.dataset.style = style;
+	}
+
+	set({ time, style });
+
+	return {
+		group: timer,
+		set,
+
+		toggleMs: (show) => {
+			ms.style.display = (show) ? null : "none";
 		}
 	}
 }
@@ -2221,12 +2880,10 @@ const popup = {
 		document.body.insertBefore(this.popupNode, document.body.childNodes[0]);
 
 		this.popup.header.top.close.title = "Đóng";
-		this.popup.header.top.close.dataset.soundhover = "";
-		this.popup.header.top.close.dataset.soundselect = "";
 		this.popup.body.note.style.display = "none";
 
 		if (typeof sounds !== "undefined")
-			sounds.applySound(this.popup.header.top.close);
+			sounds.applySound(this.popup.header.top.close, ["soundhover", "soundselect"]);
 
 		this.initialized = true;
 	},
@@ -2307,7 +2964,8 @@ const popup = {
 			for (let key of buttonKeyList) {
 				let item = buttonList[key];
 
-				let button = createBtn(item.text || "Text", item.color || "blue", {
+				let button = createButton(item.text || "Text", {
+					color: item.color,
 					icon: item.icon || null,
 					complex: !!item.complex
 				});
@@ -2317,8 +2975,8 @@ const popup = {
 				button.returnValue = key;
 
 				if (!(typeof item.resolve === "boolean") || item.resolve !== false)
-					button.addEventListener("mouseup", e => {
-						resolve(e.target.returnValue);
+					button.addEventListener("mouseup", () => {
+						resolve(key);
 						this.hide();
 					});
 
@@ -2476,14 +3134,61 @@ const __connection__ = {
 
 }
 
+const mouseCursor = {
+	/**
+	 * X Position of Mouse cursor in the screen
+	 * @type {Number}
+	 */
+	x: 0,
+
+	/**
+	 * Y Position of Mouse cursor in the screen
+	 * @type {Number}
+	 */
+	y: 0,
+
+	/**
+	 * The change amount in X coordinates between current position
+	 * and last position
+	 * @type {Number}
+	 */
+	deltaX: 0,
+
+	/**
+	 * The change amount in Y coordinates between current position
+	 * and last position
+	 * @type {Number}
+	 */
+	deltaY: 0,
+
+	/**
+	 * Current element under the cursor
+	 * @type {HTMLElement}
+	 */
+	target: null,
+
+	/**
+	 * Update Function
+	 * @param {MouseEvent} event 
+	 */
+	update(event) {
+		this.x = event.clientX;
+		this.y = event.clientY;
+		this.deltaX = event.movementX;
+		this.deltaY = event.movementY;
+	}
+}
+
 //? =================
 //?    SCRIPT INIT
 
 if (typeof document.__onclog === "undefined")
-	document.__onclog = (lv, t, m) => {};
+	document.__onclog = (lv, t, m) => {}
+
+window.addEventListener("mousemove", (e) => mouseCursor.update(e), { passive: true });
 
 let sc = new StopClock();
-clog("info", "Log started at:", {
+clog("INFO", "Log started at:", {
 	color: flatc("green"),
 	text: (new Date()).toString()
 })
@@ -2497,7 +3202,25 @@ window.addEventListener("error", e => {
 		color: flatc("aqua"),
 		text: `${e.filename}:${e.lineno}:${e.colno}`
 	})
-})
+});
+
+if (typeof String.prototype.replaceAll !== "function")
+	/**
+	 * Returns a new string with all matches
+	 * of a `search` replaced by a `replacement`
+	 * 
+	 * @param	{String}	search
+	 * A String that is to be replaced by replacement.
+	 * It is treated as a literal string and is not
+	 * interpreted as a regular expression.
+	 * 
+	 * @param	{String}	replacement
+	 * The String that replaces the substring specified
+	 * by the specified search parameter.
+	 */
+	String.prototype.replaceAll = function(search, replacement) {
+		return this.replace(new RegExp(search, "g"), replacement);
+	}
 
 // window.addEventListener("unhandledrejection", (e) => {
 //      promise: e.promise; reason: e.reason

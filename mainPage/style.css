@@ -214,6 +214,10 @@ body.disableTransition * {
     margin-left: 4px;
 }
 
+.main > .splash > .toolHeader > .navbar > .user > .tags > tag {
+    --color: rgb(24, 24, 24);
+}
+
 .main > .splash > .toolHeader > .navbar > .hamburger {
     position: relative;
     width: 20px;
@@ -810,7 +814,8 @@ body.disableTransition * {
 	font-size: 28px;
 	font-weight: 800;
 
-	padding: 0 80px 0 0;
+	padding: 0 30px 0 0;
+    box-sizing: border-box;
 	background-color: unset;
 
     transition:

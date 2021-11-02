@@ -350,7 +350,9 @@ try {
 			//? |-----------------------|
 	
 			splash.set({ p: 80, i: "Lấy thông tin danh sách script" });
-			new Scrollable(this.script.container);
+			new Scrollable(this.script.container.parentElement, {
+				content: this.script.container
+			});
 			await this.fetchScriptList(true);
 	
 			//? |----------------------------------|
@@ -418,7 +420,9 @@ try {
 			//? |       END INIT        |
 			//? |-----------------------|
 	
-			new Scrollable(this.script.settings.formList);
+			new Scrollable(this.script.settings.formList.parentElement, {
+				content: this.script.settings.formList
+			});
 			splash.set({ p: 100, i: "Initialized" });
 			clog("OKAY", "Initialized");
 			_gaq.push(["_trackEvent", this.session.keyData.name, "initialized", "core.js Initialized"]);
@@ -1374,7 +1378,7 @@ try {
 			autoClear: false,
 	
 			init() {
-				new Scrollable(this.log);
+				new Scrollable(this.log.parentElement, { content: this.log });
 
 				this.log.addEventListener("scroll", (e) => {
 					if (e.target.scrollTop >= (e.target.scrollHeight - e.target.offsetHeight) - 10)
@@ -2170,7 +2174,7 @@ try {
 									input.input.step = item.step;
 	
 								if (["date", "time"].includes(item.type)) {
-									let btnNow = createBtn("Bây Giờ", "dark");
+									let btnNow = createButton("Bây Giờ", { color: "dark" });
 									btnNow.style.marginLeft = "10px";
 	
 									input.input.step = (typeof item.step === "number") ? item.step : 1;
@@ -2678,7 +2682,7 @@ try {
 								input.input.step = item.step;
 	
 							if (["date", "time"].includes(item.type)) {
-								let btnNow = createBtn("Bây Giờ", "dark");
+								let btnNow = createButton("Bây Giờ", { color: "dark" });
 								btnNow.style.marginLeft = "10px";
 	
 								input.input.step = (typeof item.step === "number") ? item.step : 1;
