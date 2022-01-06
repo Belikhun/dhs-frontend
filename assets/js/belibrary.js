@@ -127,8 +127,9 @@ function myajax({
 
 		let xhr = new XMLHttpRequest();
 		let formData = null;
+		method = method.toUpperCase();
 
-		if (method.toUpperCase() === "POST") {
+		if (method !== "GET") {
 			if (formEncodeURL) {
 				formData = Array();
 
@@ -307,7 +308,7 @@ function myajax({
 		for (let key of Object.keys(header))
 			xhr.setRequestHeader(key, header[key]);
 
-		if (method === "POST") {
+		if (method !== "GET") {
 			if (formEncodeURL)
 				xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
 	
@@ -745,16 +746,28 @@ function parseTime(t = 0, {
 
 /**
  * Date to human readable time
- * @param {Date} date 
+ * 
+ * @param	{Date}			date		Date to display
+ * @param	{Boolean}		beautify	Will return beautified html code
+ * @return	{String}
  */
-function humanReadableTime(date) {
-	let timeString = `${pleft(date.getHours(), 2)}:${pleft(date.getMinutes(), 2)}`;
+function humanReadableTime(date, {
+	beautify = false,
+	onlyDate = false,
+	alwayShowSecond = false
+} = {}) {
+	let dateString = `${pleft(date.getDate(), 2)}/${pleft(date.getMonth() + 1, 2)}/${date.getFullYear()}`;
 
-	if (date.getSeconds() > 0)
+	if (onlyDate)
+		return dateString;
+
+	let timeString = `${pleft(date.getHours(), 2)}:${pleft(date.getMinutes(), 2)}`;
+	if (date.getSeconds() > 0 || alwayShowSecond)
 		timeString += `:${pleft(date.getSeconds(), 2)}`;
 
-	let dateString = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-	return `${timeString} ${dateString}`;
+	return beautify
+		? `<b>${timeString}</b> ${dateString}`
+		: `${timeString} ${dateString}`;
 }
 
 function formatTime(seconds, {
@@ -958,18 +971,18 @@ function clamp(value, min, max) {
 }
 
 class StopClock {
-	__time(date) {
-		return (typeof date !== "undefined")
-			? date.getTime()
-			: performance.now();
-	}
-
 	/**
 	 * Create a new StopClock instance
 	 * @param {Date} date 
 	 */
 	constructor(date) {
 		this.start = this.__time(date);
+	}
+
+	__time(date) {
+		return (typeof date !== "undefined")
+			? date.getTime()
+			: performance.now();
 	}
 
 	get stop() {
@@ -1534,14 +1547,15 @@ function currentScript() {
  * + 21 with length 3: 021
  * + "sample" with length 8: "  sample"
  *
- * @param	{string/number}		input Input
- * @param	{number}			length Length
+ * @param	{String|Number}		input	Input String
+ * @param	{Number}			length	Length
+ * @param	{Boolean}			right	Align right???
  */
-function pleft(inp, length = 0, right = false) {
-	let type = typeof inp;
+function pleft(input, length = 0, right = false) {
+	let type = typeof input;
 	let padd = "";
 
-	inp = (type === "number") ? inp.toString() : inp;
+	input = (type === "number") ? input.toString() : input;
 
 	switch (type) {
 		case "number":
@@ -1557,8 +1571,8 @@ function pleft(inp, length = 0, right = false) {
 			return false;
 	}
 
-	padd = padd.repeat(Math.max(0, length - inp.length));
-	return (right) ? inp + padd : padd + inp;
+	padd = padd.repeat(Math.max(0, length - input.length));
+	return (right) ? input + padd : padd + input;
 }
 
 /**
@@ -1614,6 +1628,20 @@ function oscColor(color) {
 	}
 
 	return (clist[color]) ? clist[color] : clist.dark;
+}
+
+/**
+ * Scale value from range [a, b] to [c, d]
+ * 
+ * @param	{Number}		value		Value to scale
+ * @param	{Number[]}		from		Contain 2 points of input value range. Ex: [0, 1]
+ * @param	{Number[]}		to			Target scale range of input value. Ex: [50, 100]
+ * @returns	{Number}		Scaled value
+ */
+function scaleValue(value, from, to) {
+	let scale = (to[1] - to[0]) / (from[1] - from[0]);
+	let capped = Math.min(from[1], Math.max(from[0], value)) - from[0];
+	return capped * scale + to[0];
 }
 
 /**
@@ -1889,24 +1917,32 @@ const Easing = {
 	}
 }
 
-/**
- * Animate a value
- * @param {Number}		duration 			Animation Duration
- * @param {Function}	timingFunction 		Animation Timing Function
- * @param {Function}	animate 			Function To Animate
- */
-function Animator(duration, timingFunction, animate) {
-	let completeHandlers = []
-	let start = time();
-	let rAID = null;
+class Animator {
+	/**
+	 * Animate a value
+	 * @param {Number}		duration 			Animation Duration in Seconds
+	 * @param {Function}	timingFunction 		Animation Timing Function
+	 * @param {Function}	animate 			Function To Handle Animation
+	 */
+	constructor(duration, timingFunction, animate) {
+		this.duration = duration;
+		this.timingFunction = timingFunction;
+		this.animate = animate;
 
-	let update = () => {
-		let tPoint = (time() - start) / duration;
+		/** @type {Function[]} */
+		this.completeHandlers = []
+
+		this.start = time();
+		this.animationFrameID = requestAnimationFrame(() => this.update());
+	}
+
+	update() {
+		let tPoint = (time() - this.start) / this.duration;
 
 		// Safe executing update function to prevent stopping
 		// animation entirely
 		try {
-			if (animate(Math.min(timingFunction(tPoint), 1)) === false)
+			if (this.animate(Math.min(this.timingFunction(tPoint), 1)) === false)
 				// Stop Animator
 				tPoint = 1.1;
 		} catch (e) {
@@ -1915,26 +1951,26 @@ function Animator(duration, timingFunction, animate) {
 		}
 
 		if (tPoint <= 1)
-			rAID = requestAnimationFrame(update);
+			this.animationFrameID = requestAnimationFrame(() => this.update());
 		else {
-			animate(1);
-			completeHandlers.forEach(f => f());
+			this.animate(1);
+			this.completeHandlers.forEach(f => f());
 		}
 	}
 
-	rAID = requestAnimationFrame(() => update());
+	cancel() {
+		cancelAnimationFrame(this.animationFrameID);
+	}
 
-	return {
-		cancel() {
-			cancelAnimationFrame(rAID);
-		},
+	/**
+	 * Animation complete handler
+	 * @param	{Function}	f
+	 */
+	onComplete(f) {
+		if (!f || typeof f !== "function")
+			throw { code: -1, description: "Animator().onComplete(): not a valid function" }
 
-		onComplete(f) {
-			if (!f || typeof f !== "function")
-				throw { code: -1, description: "Animator().onComplete(): not a valid function" }
-
-			completeHandlers.push(f);
-		}
+		this.completeHandlers.push(f);
 	}
 }
 
@@ -2353,6 +2389,119 @@ function createSelectInput({
 	}
 }
 
+/**
+ * Check current agent is a mobile phone?
+ * @returns {Boolean}
+ */
+function checkAgentMobile() {
+	if (typeof navigator.userAgentData === "object"
+		&& typeof navigator.userAgentData.mobile === "boolean")
+		return navigator.userAgentData.mobile;
+
+	// Borrowed from Stack Overflow
+	// https://stackoverflow.com/questions/11381673/detecting-a-mobile-browser
+	const toMatch = Array(
+		/Android/i,
+		/webOS/i,
+		/iPhone/i,
+		/iPad/i,
+		/iPod/i,
+		/BlackBerry/i,
+		/Windows Phone/i
+	);
+		
+	return toMatch.some((i) => navigator.userAgent.match(i));
+}
+
+function createChoiceInput({
+	color,
+	choice,
+	value,
+	classes
+} = {}) {
+	let container = document.createElement("div");
+	container.classList.add("sq-choice");
+
+	switch (typeof classes) {
+		case "string":
+			container.classList.add(classes);
+			break;
+		
+		case "object":
+			if (classes.length && classes.length > 0)
+				container.classList.add(...classes);
+			else
+				throw { code: -1, description: `createChoiceInput(): Invalid or empty "classes" type: ${typeof classes}` }
+
+			break;
+	}
+
+	let choiceNodes = {}
+	let activeNode = null;
+	let activeValue = null;
+	let changeHandlers = []
+
+	const setValue = (value) => {
+		if (value === activeValue)
+			return;
+
+		if (!choiceNodes[value])
+			return;
+
+		if (activeNode)
+			activeNode.classList.remove("active");
+
+		choiceNodes[value].classList.add("active");
+		activeValue = value;
+		activeNode = choiceNodes[value];
+		changeHandlers.forEach(f => f(value));
+	}
+
+	const set = ({
+		color,
+		choice,
+		value
+	} = {}) => {
+		if (typeof color === "string")
+			container.dataset.color = color;
+
+		if (typeof choice === "object") {
+			choiceNodes = {}
+			activeNode = null;
+			activeValue = null;
+
+			for (let key of Object.keys(choice)) {
+				let node = document.createElement("icon");
+				node.dataset.icon = choice[key].icon || "circle";
+				
+				if (typeof choice[key].title === "string")
+					node.title = choice[key].title;
+
+				container.appendChild(node);
+				choiceNodes[key] = node;
+				node.addEventListener("click", () => setValue(key));
+			}
+		}
+
+		if (typeof value !== "undefined")
+			setValue(value);
+	}
+
+	set({ color, choice, value });
+
+	return {
+		container,
+		set,
+
+		onChange(f) {
+			if (typeof f !== "function")
+				throw { code: -1, description: `createChoiceInput().onChange(): not a valid function` }
+
+			changeHandlers.push(f);
+		}
+	}
+}
+
 function createSlider({
 	color = "pink",
 	value = 0,
@@ -2683,6 +2832,93 @@ function createTimer(time = 0, {
 	}
 }
 
+function createProgressBar({
+	transition = true,
+	warningZone = 0,
+	blink,
+	duration,
+	color = "blue",
+	progress = 0,
+	left,
+	right
+} = {}) {
+	let container = document.createElement("div");
+	container.classList.add("progressBar");
+
+	let bar = document.createElement("bar");
+	bar.classList.add("bar");
+
+	let leftNode = document.createElement("bar");
+	leftNode.classList.add("left");
+
+	let rightNode = document.createElement("bar");
+	rightNode.classList.add("right");
+
+	let warning = document.createElement("div");
+	warning.classList.add("warningZone");
+
+	container.append(bar, warning, leftNode, rightNode);
+
+	const set = ({
+		transition,
+		warningZone,
+		blink,
+		duration,
+		color,
+		progress,
+		left,
+		right
+	} = {}) => {
+		if (typeof transition === "boolean")
+			container.classList[transition ? "remove" : "add"]("noTransition");
+
+		if (typeof warningZone === "number")
+			if (warningZone > 0) {
+				warning.style.display = null;
+				warning.style.width = `${warningZone}%`;
+			} else
+				warning.style.display = "none";
+
+		if (typeof blink === "string")
+			bar.dataset.blink = blink;
+
+		if (typeof duration === "number")
+			bar.dataset.slow = number;
+
+		if (typeof color === "string")
+			bar.dataset.color = color;
+
+		if (typeof progress === "number")
+			bar.style.width = `${progress}%`;
+
+		if (typeof left === "string")
+			leftNode.innerHTML = left;
+
+		if (typeof right === "string")
+			rightNode.innerHTML = right;
+	}
+
+	set({
+		transition,
+		warningZone,
+		blink,
+		duration,
+		color,
+		progress
+	});
+
+	return {
+		group: container,
+		set,
+
+		/**
+		 * Set ProgressBar's Progress
+		 * @param		{Number}	progress	Number in %
+		 */
+		progress: (progress) => set({ progress })
+	}
+}
+
 const cookie = {
 	cookie: null,
 
@@ -2731,7 +2967,16 @@ const cookie = {
 //? |  Licensed under the MIT License. See LICENSE in the project root for license information.     |
 //? |-----------------------------------------------------------------------------------------------|
 
+/**
+ * Log to console, with sparkles!
+ * @param	{String}				level	Log level
+ * @param	{...String|Object}		args	Log info
+ */
 function clog(level, ...args) {
+	// We only want to log DEBG level in development mode
+	if (level.toUpperCase() === "DEBG" && !(typeof DEBUG === "boolean" && DEBUG === true))
+		return;
+
 	const font = "Consolas";
 	const size = "12";
 	let date = new Date();
@@ -2846,9 +3091,12 @@ function clog(level, ...args) {
 }
 
 const popup = {
-	tree: {},
-	popup: {},
-	popupNode: null,
+	/** @type {HTMLElement} */
+	popup: undefined,
+
+	/** @type {HTMLElement} */
+	popupNode: undefined,
+
 	initialized: false,
 	showing: false,
 
@@ -2872,15 +3120,34 @@ const popup = {
 	},
 
 	init() {
-		const tree = [{type:"div",class:"popupWindow",name:"popup",list:[{type:"div",class:"header",name:"header",list:[{type:"span",class:"top",name:"top",list:[{type:"t",class:["windowTitle","text-overflow"],name:"windowTitle"},{type:"span",class:"close",name:"close"}]},{type:"icon",name:"icon"},{type:"t",class:"text",name:"text"}]},{type:"div",class:"body",name:"body",list:[{type:"div",class:"top",name:"top",list:[{type:"t",class:"message",name:"message"},{type:"t",class:"description",name:"description"}]},{type:"div",class:"note",name:"note",list:[{type:"span",class:"inner",name:"inner"}]},{type:"div",class:"customNode",name:"customNode"},{type:"div",class:"buttonGroup",name:"button"}]}]}];
+		this.popupNode = makeTree("div", "popupContainer", {
+			popup: { tag: "div", class: "popupWindow", child: {
+				header: { tag: "div", class: "header", child: {
+					top: { tag: "span", class: "top", child: {
+						windowTitle: { tag: "t", class: ["windowTitle", "text-overflow"] },
+						close: { tag: "span", class: "close", title: "Đóng" }
+					}},
 
-		this.tree = buildElementTree("div", "popupContainer", tree);
-		this.popupNode = this.tree.tree;
-		this.popup = this.tree.obj.popup;
+					icon: { tag: "icon" },
+					text: { tag: "t", class: "text" }
+				}},
+
+				body: { tag: "div", class: "body", child: {
+					top: { tag: "div", class: "top", child: {
+						message: { tag: "t", class: "message" },
+						description: { tag: "t", class: "description" }
+					}},
+
+					note: createNote(),
+					customNode: { tag: "div", class: "customNode" },
+					button: { tag: "div", class: "buttonGroup" }
+				}}
+			}}
+		});
+
+		this.popup = this.popupNode.popup;
+		this.popup.body.note.group.style.display = "none";
 		document.body.insertBefore(this.popupNode, document.body.childNodes[0]);
-
-		this.popup.header.top.close.title = "Đóng";
-		this.popup.body.note.style.display = "none";
 
 		if (typeof sounds !== "undefined")
 			sounds.applySound(this.popup.header.top.close, ["soundhover", "soundselect"]);
@@ -2912,7 +3179,9 @@ const popup = {
 			this.popup.dataset.level = level;
 
 			//* THEME
-			let template = document.body.classList.contains("dark") ? this.levelTemplate.dark : this.levelTemplate.light;
+			let template = document.body.classList.contains("dark")
+				? this.levelTemplate.dark
+				: this.levelTemplate.light;
 
 			if (template[level])
 				template = template[level];
@@ -2922,7 +3191,9 @@ const popup = {
 			triBg(this.popup.header, {
 				scale: 4,
 				speed: 64,
-				color: (typeof bgColor === "string") ? bgColor : template.bg
+				color: (typeof bgColor === "string")
+					? bgColor
+					: template.bg
 			});
 
 			this.popup.header.icon.dataset.icon = (typeof icon === "string") ? icon : template.icon;
@@ -2938,11 +3209,13 @@ const popup = {
 			this.popup.body.top.description.innerHTML = description;
 
 			if (note) {
-				this.popup.body.note.style.display = "flex";
-				this.popup.body.note.className = `note ${noteLevel || level}`;
-				this.popup.body.note.inner.innerHTML = note;
+				this.popup.body.note.group.style.display = null;
+				this.popup.body.note.set({
+					level: noteLevel || level,
+					message: note
+				});
 			} else
-				this.popup.body.note.style.display = "none";
+				this.popup.body.note.group.style.display = "none";
 
 			if (customNode && customNode.classList) {
 				customNode.classList.add("customNode");
@@ -2952,7 +3225,6 @@ const popup = {
 				this.popup.body.customNode.style.display = "none";
 
 			//* BODY BUTTON
-
 			this.popup.header.top.close.onclick = () => {
 				resolve("close");
 				this.hide();
@@ -2988,7 +3260,7 @@ const popup = {
 
 			if (typeof sounds !== "undefined")
 				sounds.select();
-		})
+		});
 	},
 
 	hide() {

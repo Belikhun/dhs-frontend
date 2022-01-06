@@ -126,6 +126,27 @@ body.dark code {
 	color: white;
 }
 
+.parallelogram {
+	position: relative;
+	display: inline-block;
+	--p-color: rgb(235, 235, 235);
+}
+
+.parallelogram::before {
+	content: "";
+	position: absolute;
+	display: block;
+	top: 0;
+	left: 5px;
+	right: 5px;
+	height: 100%;
+	
+	background-color: var(--p-color);
+	transform: skew(-9deg);
+	border-radius: 6px;
+	z-index: -1;
+}
+
 /** ======================== TIMER ======================== **/
 
 timer {
@@ -393,7 +414,7 @@ body.dark .lazyload::before,
 	display: inline-block;
 
 	border-radius: 4px;
-	background-color: rgba(65, 65, 65, 0.8);
+	background-color: rgba(92, 92, 92, 0.4);
 	backdrop-filter: saturate(80%) blur(6px);
 	pointer-events: none;
 	overflow: hidden;
@@ -449,11 +470,11 @@ body.dark .lazyload::before,
 
 @keyframes tooltip-blink {
     0% {
-        background-color: rgba(65, 65, 65, 0.8);
+        background-color: rgba(92, 92, 92, 0.4);
     }
 
     100% {
-        background-color: rgba(10, 10, 10, 0.6);
+        background-color: rgba(10, 10, 10, 0.4);
     }
 }
 
@@ -693,6 +714,10 @@ icon[data-icon="userLock"]::after {
 	content: "\f502";
 }
 
+icon[data-icon="userPortrait"]::after {
+	content: "\f007";
+}
+
 icon[data-icon="logout"]::after {
 	content: "\f2f5";
 }
@@ -720,6 +745,10 @@ icon[data-icon="reload"]::after {
 
 icon[data-icon="chart"]::after {
 	content: "\f080";
+}
+
+icon[data-icon="chartLine"]::after {
+	content: "\f201";
 }
 
 icon[data-icon="clock"]::after {
@@ -868,6 +897,14 @@ icon[data-icon="print"]::after {
 	content: "\f02f";
 }
 
+icon[data-icon="atom"]::after {
+	content: "\f5d2";
+}
+
+icon[data-icon="shapes"]::after {
+	content: "\f61f";
+}
+
 /** ======================== NOTE ======================== **/
 
 .note {
@@ -905,6 +942,10 @@ icon[data-icon="print"]::after {
 .note > .inner.inner > pre {
     font-size: 15px;
 	color: #343434;
+}
+
+.note > .inner.inner > a {
+	color: rgb(21, 76, 255);
 }
 
 .note.info,
@@ -1105,6 +1146,8 @@ body.dark .md2html code {
 	width: 100%;
 	max-width: 520px;
 	max-height: calc(100% - 40px);
+	border-radius: 9px;
+	overflow: hidden;
 }
 
 .popupContainer > .popupWindow > .header {
@@ -1134,7 +1177,7 @@ body.dark .md2html code {
 	flex-grow: 1;
 	font-family: "Open Sans";
 	font-size: 12px;
-	color: #425161;
+	color: black;
 	margin-left: 10px;
 }
 
@@ -1206,7 +1249,7 @@ body.dark .md2html code {
 }
 
 .popupContainer > .popupWindow > .header[theme="light"] > .top > .windowTitle {
-	color: rgb(224, 224, 224);
+	color: white;
 }
 
 .popupContainer > .popupWindow > .header[theme="light"] > .top > .close::before,
@@ -1261,6 +1304,11 @@ body.dark .md2html code {
 	overflow: auto;
 }
 
+.popupContainer > .popupWindow > .body > .customNode.progressBar {
+	overflow: visible;
+	margin-top: 25px;
+}
+
 .popupContainer > .popupWindow > .body > .buttonGroup {
     position: relative;
     display: flex;
@@ -1274,6 +1322,7 @@ body.dark .md2html code {
     margin: 5px;
 	flex: 1 1 0;
 	min-width: 30%;
+	border-radius: 5px;
 }
 
 .popupContainer > .popupWindow > .body > .buttonGroup > .sq-btn.full {
@@ -1611,7 +1660,7 @@ body.dark a.sq-btn:not(.light) {
 }
 
 body.dark t:not(.light) {
-	color: rgb(214, 214, 214);
+	color: rgb(225, 225, 225);
 }
 
 body.dark dot:not(.light) {

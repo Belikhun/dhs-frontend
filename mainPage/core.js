@@ -2544,6 +2544,10 @@ try {
 						getCookie: core.getCookie,
 					}
 				}
+
+				async getCookie(url, name) {
+					return await core.getCookie(url, name);
+				}
 	
 				set status(status) {
 					if (!this.statusList[status])

@@ -1,13 +1,14 @@
 //? |-----------------------------------------------------------------------------------------------|
 //? |  /assets/js/sounds.js                                                                         |
 //? |                                                                                               |
-//? |  Copyright (c) 2018-2020 Belikhun. All right reserved                                         |
+//? |  Copyright (c) 2018-2021 Belikhun. All right reserved                                         |
 //? |  Licensed under the MIT License. See LICENSE in the project root for license information.     |
 //? |-----------------------------------------------------------------------------------------------|
 
 
 const sounds = {
 	disabled: false,
+	initializing: false,
 	initialized: false,
 	soundsLoaded: false,
 	LOCATION: "/assets/sounds",
@@ -25,10 +26,11 @@ const sounds = {
 		overlayPopOut: { path: "overlay-pop-out.mp3", require: ["panelToggle"] },
 		select: { path: "generic-select.mp3", require: ["btnClick"] },
 		selectSoft: { path: "generic-select-soft.mp3", require: ["btnClick"] },
+		valueChange: { path: "generic-value-change.mp3", require: ["others"] },
 		sliderHigh: { path: "slider-high.mp3", require: ["others"] },
 		sliderLow: { path: "slider-low.mp3", require: ["others"] },
 		sliderSlide: { path: "slider-slide.mp3", require: ["others"] },
-		warning: { path: "generic-warning.mp3", require: ["others"] }
+		warning: { path: "generic-warning.mp3", require: ["others"] },
 	},
 	
 	enable: {
@@ -40,11 +42,23 @@ const sounds = {
 		notification: true,
 	},
 
-	async init(set = () => {}) {
+	volume: 0.6,
+
+	async init(set = ({ p, m, d, c }) => {}, {
+		clog = window.clog
+	} = {}) {
+		if (this.initializing) {
+			clog("DEBG", "Sounds is initializing!");
+			return;
+		}
+
+		this.initializing = true;
+
 		if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
 			clog("WARN", "Sounds does not support on iPhone devices, disabling...");
-			cookie.set("__s_m", false);
+			localStorage.setItem(`sounds.master`, false);
 			this.disabled = true;
+			this.initializing = false;
 			return false;
 		}
 
@@ -61,18 +75,25 @@ const sounds = {
 			this.enable[key] = value;
 		}
 
-		set({ p: 10, m: "sounds", d: "Loading Sounds" });
-		await this.loadSound((p, t) => {
-			set({ p: 10 + p*0.85, m: "sounds", d: `Loading: ${t}` });
-		});
+		if (!this.enable.master) {
+			set({ p: 100, m: "sounds", d: "Stopped Loading Sounds" });
+			clog("INFO", "Master Disabled! Stopped Loading Sounds");
+			clog("DEBG", "To enable sounds please set sounds.enable.master to true and call sounds.init() again");
+			this.initializing = false;
+			return false;
+		}
 
-		this.soundsLoaded = true;
+		set({ p: 10, m: "sounds", d: "Loading Sounds" });
+		await this.loadSound((p, t, c) => {
+			set({ p: 10 + p*0.85, m: "sounds", d: `Loading: ${t}`, c });
+		}, { clog });
 
 		set({ p: 95, m: "sounds", d: "Scanning" });
 		this.scan();
 
 		set({ p: 100, m: "sounds", d: "Done" });
 		this.initialized = true;
+		this.initializing = false;
 
 		clog("OKAY", "Initialised:", {
 			color: flatc("red"),
@@ -80,30 +101,45 @@ const sounds = {
 		});
 	},
 
-	async loadSound(set = () => {}) {
+	async loadSound(set = (p, t, c) => {}, {
+		clog = window.clog
+	} = {}) {
 		if (this.disabled)
 			throw { code: -1, description: "Sounds Module Disabled" }
 
+		let totalSize = 0;
 		let keys = Object.keys(this.sounds);
+
 		for (let i = 0; i < keys.length; i++) {
 			let key = keys[i]
 			let item = this.sounds[key]
 
-			set((i / (keys.length - 1)) * 100, key);
-			this.sounds[key].sound = await this.__loadSoundAsync(`${this.LOCATION}/${item.path}`, item.volume || 0.6);
+			set((i / (keys.length - 1)) * 100, key, `Đang tải ${i + 1}/${keys.length} (${convertSize(totalSize)})`);
+			this.sounds[key].sound = await this.__loadSoundAsync(`${this.LOCATION}/${item.path}`, item.volume || 0.6, { clog });
+
+			if (this.sounds[key].sound.webkitAudioDecodedByteCount)
+				totalSize += this.sounds[key].sound.webkitAudioDecodedByteCount * 8;
+
+			set(((i + 1) / (keys.length - 1)) * 100, key, `Đã tải ${i + 1}/${keys.length} (${convertSize(totalSize)})`);
 		}
+
+		this.soundsLoaded = true;
 	},
 
-	async __loadSoundAsync(url, volume = 0.6) {
+	async __loadSoundAsync(url, volume = 0.6, {
+		clog = window.clog
+	} = {}) {
 		if (this.disabled)
 			throw { code: -1, description: "Sounds Module Disabled" }
 
 		let sound = new Audio();
-		sound.src = (typeof chrome !== "undefined" && chrome.extension) ? chrome.extension.getURL(url) : url;
+		sound.src = (typeof chrome !== "undefined" && chrome.extension)
+			? chrome.extension.getURL(url)
+			: url;
+		
 		clog("DEBG", `Loading sound: ${url}`);
-
 		return new Promise((resolve, reject) => {
-			sound.addEventListener("canplaythrough", handler = e => {
+			sound.addEventListener("canplaythrough", handler = () => {
 				sound.removeEventListener("canplaythrough", handler);
 				sound.volume = volume;
 				clog("DEBG", `Sound loaded: ${url}`);
@@ -132,6 +168,7 @@ const sounds = {
 		if (!sound.sound.paused)
 			sound.sound.pause();
 
+		sound.sound.volume = this.volume;
 		sound.sound.currentTime = 0;
 		sound.sound.play()
 			.catch(e => clog("ERRR", "An error occurred while trying to play sounds", e));
